@@ -9,6 +9,9 @@ interface BottomNavProps {
   onTabChange: (tab: string) => void
 }
 
+const TAB_W = 82
+const TAB_H = 66
+
 const tabs = [
   { id: "dashboard", labelKey: "nav.home" as TranslationKey, icon: LayoutDashboard },
   { id: "training", labelKey: "nav.training" as TranslationKey, icon: Dumbbell },
@@ -39,18 +42,18 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       <nav
         role="tablist"
         aria-label="Main navigation"
-        className="pointer-events-auto relative flex items-stretch rounded-full p-[3px] liquid-glass"
+        className="pointer-events-auto relative flex items-stretch rounded-full p-[5px] liquid-glass"
       >
         {/* Sliding pill indicator */}
         <div
-          className="absolute top-[3px] rounded-full"
+          className="absolute rounded-full"
           style={{
-            width: isAnimating ? "88px" : "68px",
-            marginLeft: isAnimating ? "-10px" : "0px",
-            height: isAnimating ? "calc(100% + 14px)" : "calc(100% - 6px)",
-            top: isAnimating ? "-10px" : "3px",
-            transform: `translateX(${activeIndex * 68}px)`,
-            transition: "transform 280ms cubic-bezier(0, 0, 0.2, 1), width 150ms cubic-bezier(0, 0, 0.2, 1), margin-left 150ms cubic-bezier(0, 0, 0.2, 1), height 150ms cubic-bezier(0, 0, 0.2, 1), top 150ms cubic-bezier(0, 0, 0.2, 1)",
+            width: isAnimating ? `${TAB_W + 18}px` : `${TAB_W}px`,
+            marginLeft: isAnimating ? "-9px" : "0px",
+            height: isAnimating ? "calc(100% + 14px)" : "calc(100% - 10px)",
+            top: isAnimating ? "-7px" : "5px",
+            transform: `translateX(${activeIndex * TAB_W}px)`,
+            transition: "transform 350ms cubic-bezier(0.34, 1.56, 0.64, 1), width 150ms cubic-bezier(0, 0, 0.2, 1), margin-left 150ms cubic-bezier(0, 0, 0.2, 1), height 150ms cubic-bezier(0, 0, 0.2, 1), top 150ms cubic-bezier(0, 0, 0.2, 1)",
             background: "oklch(from var(--primary) l c h / 0.18)",
             boxShadow: "inset 0 1.5px 0 oklch(1 0 0 / 0.25), inset 0 -0.5px 0 oklch(0 0 0 / 0.06), 0 1px 4px oklch(0 0 0 / 0.06)",
           }}
@@ -66,13 +69,13 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               aria-selected={isActive}
               aria-label={label}
               onClick={() => onTabChange(tab.id)}
-              className="relative z-10 flex w-[68px] flex-col items-center justify-center gap-0.5 rounded-full"
-              style={{ height: "56px" }}
+              className="relative z-10 flex flex-col items-center justify-center gap-1 rounded-full"
+              style={{ width: `${TAB_W}px`, height: `${TAB_H}px` }}
             >
               <tab.icon
                 style={{
-                  width: "20px",
-                  height: "20px",
+                  width: "23px",
+                  height: "23px",
                   color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
                   strokeWidth: isActive ? 2.2 : 1.6,
                   transition: "color 0.25s ease, stroke-width 0.25s ease",
@@ -80,7 +83,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               />
               <span
                 style={{
-                  fontSize: "10px",
+                  fontSize: "11px",
                   fontWeight: isActive ? 600 : 500,
                   color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
                   transition: "color 0.25s ease",
