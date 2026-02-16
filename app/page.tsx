@@ -40,7 +40,9 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col bg-background pb-20 pt-8">
       <div className="flex min-h-0 flex-1 flex-col">
-        {activeTab === "dashboard" && <DashboardView refreshKey={refreshKey} />}
+        {activeTab === "dashboard" && (
+          <DashboardView refreshKey={refreshKey} onNavigate={setActiveTab} />
+        )}
         {activeTab === "training" && <TrainingView onUpdate={triggerRefresh} />}
         {activeTab === "meals" && <MealsView onUpdate={triggerRefresh} />}
         {activeTab === "profile" && <ProfileView />}

@@ -249,6 +249,28 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: var(--foreground);
 }
 
+/* ── iOS: date/time inputs (evitar zoom y mejorar aspecto) ── */
+input[type="date"]:not(.date-picker-input),
+input[type="time"] {
+  font-size: 16px; /* Evita zoom automático en iOS al enfocar */
+  min-height: 44px;
+  display: block;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
+/* Alinear valor mostrado en date/time en iOS */
+input[type="date"]:not(.date-picker-input)::-webkit-date-and-time-value {
+  text-align: left;
+}
+input[type="time"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 /* ── Liquid Glass (macOS / iOS 26 PBR-inspired) ── */
 .liquid-glass {
   position: relative;

@@ -32,6 +32,16 @@ const translations = {
   "dashboard.recentActivity": { en: "Recent Activity", es: "Actividad reciente" },
   "dashboard.noActivity": { en: "No activity logged today", es: "Sin actividad registrada hoy" },
   "dashboard.startAdding": { en: "Start by adding a training session or meal", es: "Comienza agregando un entreno o comida" },
+  "dashboard.todayProgress": { en: "Today's progress", es: "Progreso de hoy" },
+  "dashboard.remaining": { en: "remaining", es: "restantes" },
+  "dashboard.over": { en: "over", es: "de más" },
+  "dashboard.youTrained": { en: "You trained", es: "Entrenaste" },
+  "dashboard.noTrainingYet": { en: "No training yet", es: "Aún no entrenaste" },
+  "dashboard.addExercise": { en: "Add exercise", es: "Agregar ejercicio" },
+  "dashboard.addMeal": { en: "Log meal", es: "Registrar comida" },
+  "dashboard.weekTraining": { en: "Training", es: "Entrenos" },
+  "dashboard.weekMeals": { en: "Meals", es: "Comidas" },
+  "dashboard.quickLog": { en: "Quick log", es: "Registro rápido" },
 
   // Macros
   "macro.protein": { en: "Protein", es: "Proteína" },
@@ -121,6 +131,7 @@ const translations = {
 
   // Date navigation
   "date.today": { en: "Today", es: "Hoy" },
+  "date.yesterday": { en: "Yesterday", es: "Ayer" },
 
   // Units
   "unit.min": { en: "min", es: "min" },
