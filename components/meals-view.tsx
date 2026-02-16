@@ -1,24 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useRef } from "react"
 import {
   getMeals,
   saveMeal,
   deleteMeal,
   getTodayString,
-  getTodayMeals,
+  getProfile,
   type Meal,
 } from "@/lib/storage"
-import { useI18n } from "@/lib/i18n"
-import { Plus, Trash2, UtensilsCrossed, X, Flame, Beef, Wheat, Droplets } from "lucide-react"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Cell,
-} from "recharts"
+import { useI18n, type TranslationKey } from "@/lib/i18n"
+import { Plus, Trash2, UtensilsCrossed, X, ChevronLeft, ChevronRight } from "lucide-react"
+
+function shiftDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T00:00:00")
+  d.setDate(d.getDate() + days)
+  return d.toISOString().split("T")[0]
+}
 
 interface MealsViewProps {
   onUpdate: () => void
@@ -26,18 +24,22 @@ interface MealsViewProps {
 
 export function MealsView({ onUpdate }: MealsViewProps) {
   const { t, locale } = useI18n()
-  const [meals, setMeals] = useState<Meal[]>([])
-  const [todayMeals, setTodayMeals] = useState<Meal[]>([])
+  const [allMeals, setAllMeals] = useState<Meal[]>([])
+  const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [showForm, setShowForm] = useState(false)
+  const dateInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setMeals(getMeals())
-    setTodayMeals(getTodayMeals())
+    setAllMeals(getMeals())
   }, [])
 
+  const filteredMeals = useMemo(
+    () => allMeals.filter((m) => m.date === selectedDate),
+    [allMeals, selectedDate]
+  )
+
   const refresh = () => {
-    setMeals(getMeals())
-    setTodayMeals(getTodayMeals())
+    setAllMeals(getMeals())
     onUpdate()
   }
 
@@ -46,18 +48,21 @@ export function MealsView({ onUpdate }: MealsViewProps) {
     refresh()
   }
 
-  const todayTotals = {
-    calories: todayMeals.reduce((sum, m) => sum + m.calories, 0),
-    protein: todayMeals.reduce((sum, m) => sum + m.protein, 0),
-    carbs: todayMeals.reduce((sum, m) => sum + m.carbs, 0),
-    fat: todayMeals.reduce((sum, m) => sum + m.fat, 0),
-  }
+  const isToday = selectedDate === getTodayString()
+  const dateLabel = isToday
+    ? t("date.today")
+    : new Date(selectedDate + "T00:00:00").toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      })
 
-  const macroData = [
-    { name: t("macro.protein"), value: todayTotals.protein, color: "var(--chart-1)" },
-    { name: t("macro.carbs"), value: todayTotals.carbs, color: "var(--chart-4)" },
-    { name: t("macro.fat"), value: todayTotals.fat, color: "var(--chart-3)" },
-  ]
+  const totals = {
+    calories: filteredMeals.reduce((sum, m) => sum + m.calories, 0),
+    protein: filteredMeals.reduce((sum, m) => sum + m.protein, 0),
+    carbs: filteredMeals.reduce((sum, m) => sum + m.carbs, 0),
+    fat: filteredMeals.reduce((sum, m) => sum + m.fat, 0),
+  }
 
   return (
     <div className="flex flex-col gap-4 px-4 pb-6">
@@ -75,52 +80,37 @@ export function MealsView({ onUpdate }: MealsViewProps) {
         </button>
       </div>
 
-      {/* Today's Macro Summary */}
-      {todayMeals.length > 0 && (
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("meals.todayTotals")}
-          </h3>
-
-          {/* Calories total */}
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15">
-              <Flame className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{todayTotals.calories}</p>
-              <p className="text-xs text-muted-foreground">{t("meals.totalCalories")}</p>
-            </div>
-          </div>
-
-          {/* Macro bars */}
-          <div className="mb-3 h-32">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={macroData} barCategoryGap="30%">
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                />
-                <YAxis hide />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {macroData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Macro detail row */}
-          <div className="grid grid-cols-3 gap-3">
-            <MacroDetail icon={Beef} label={t("macro.protein")} value={`${todayTotals.protein}${t("unit.g")}`} color="text-chart-1" />
-            <MacroDetail icon={Wheat} label={t("macro.carbs")} value={`${todayTotals.carbs}${t("unit.g")}`} color="text-chart-4" />
-            <MacroDetail icon={Droplets} label={t("macro.fat")} value={`${todayTotals.fat}${t("unit.g")}`} color="text-chart-3" />
-          </div>
+      {/* Date selector */}
+      <div className="flex items-center justify-between rounded-xl border border-border bg-card px-2 py-1.5">
+        <button
+          onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="relative cursor-pointer" onClick={() => dateInputRef.current?.showPicker()}>
+          <span className={`block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
+            {dateLabel}
+          </span>
+          <input
+            ref={dateInputRef}
+            type="date"
+            value={selectedDate}
+            onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+            className="date-picker-input"
+            tabIndex={-1}
+          />
         </div>
-      )}
+        <button
+          onClick={() => setSelectedDate(shiftDate(selectedDate, 1))}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Nutrition Summary Card */}
+      <NutritionSummary totals={totals} />
 
       {showForm && (
         <MealForm
@@ -132,7 +122,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
         />
       )}
 
-      {meals.length === 0 && !showForm && (
+      {filteredMeals.length === 0 && !showForm && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
           <UtensilsCrossed className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">{t("meals.noMeals")}</p>
@@ -142,7 +132,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
 
       {/* Meal list */}
       <div className="flex flex-col gap-2">
-        {meals.map((meal) => (
+        {filteredMeals.map((meal) => (
           <div
             key={meal.id}
             className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
@@ -155,12 +145,6 @@ export function MealsView({ onUpdate }: MealsViewProps) {
                 <p className="truncate text-sm font-semibold text-foreground">{meal.name}</p>
                 <span className="shrink-0 text-xs text-muted-foreground">{meal.time}</span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {new Date(meal.date + "T00:00:00").toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-              </p>
               <div className="mt-1 flex flex-wrap gap-2">
                 <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                   {meal.calories} {t("unit.cal")}
@@ -179,7 +163,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
             <button
               onClick={() => handleDelete(meal.id)}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
-              aria-label={`${t("training.deleteSession")} ${meal.name}`}
+              aria-label={`${t("training.deleteTraining")} ${meal.name}`}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -190,22 +174,130 @@ export function MealsView({ onUpdate }: MealsViewProps) {
   )
 }
 
-function MacroDetail({
-  icon: Icon,
+function NutritionSummary({ totals }: { totals: { calories: number; protein: number; carbs: number; fat: number } }) {
+  const { t } = useI18n()
+  const profile = getProfile()
+  const calGoal = profile.calorieGoal || 2000
+  const protGoal = profile.proteinGoal || 150
+  const carbsGoal = profile.carbsGoal || 250
+  const fatGoal = profile.fatGoal || 65
+
+  const calPercent = Math.min((totals.calories / calGoal) * 100, 105)
+  const isOver = totals.calories > calGoal
+  const diff = isOver ? totals.calories - calGoal : calGoal - totals.calories
+
+  const arcR = 110
+  const arcStroke = 14
+  const size = 280
+  const cx = size / 2
+  const cy = size / 2
+  const startAngle = 170
+  const endAngle = 370
+  const totalAngle = endAngle - startAngle
+  const arcLen = (totalAngle / 360) * 2 * Math.PI * arcR
+  const arcOffset = arcLen * (1 - Math.min(calPercent / 100, 1))
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const startX = cx + arcR * Math.cos(toRad(startAngle))
+  const startY = cy + arcR * Math.sin(toRad(startAngle))
+  const endX = cx + arcR * Math.cos(toRad(endAngle))
+  const endY = cy + arcR * Math.sin(toRad(endAngle))
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5">
+      {/* Arc gauge */}
+      <div className="relative mx-auto w-full" style={{ maxWidth: size, aspectRatio: "1 / 0.75" }}>
+        <svg viewBox={`0 0 ${size} ${size * 0.75}`} className="w-full h-full" style={{ overflow: "visible" }}>
+          <defs>
+            <linearGradient id="arc-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FF6B00" />
+              <stop offset="100%" stopColor="#CC5500" />
+            </linearGradient>
+          </defs>
+          {/* Background arc */}
+          <path
+            d={`M ${startX} ${startY} A ${arcR} ${arcR} 0 1 1 ${endX} ${endY}`}
+            fill="none"
+            stroke="var(--secondary)"
+            strokeWidth={arcStroke}
+            strokeLinecap="round"
+          />
+          {/* Progress arc */}
+          <path
+            d={`M ${startX} ${startY} A ${arcR} ${arcR} 0 1 1 ${endX} ${endY}`}
+            fill="none"
+            stroke={isOver ? "var(--destructive)" : "url(#arc-gradient)"}
+            strokeWidth={arcStroke}
+            strokeLinecap="round"
+            strokeDasharray={arcLen}
+            strokeDashoffset={arcOffset}
+            className="transition-all duration-700 ease-out"
+          />
+        </svg>
+        {/* Center text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ paddingTop: "8%" }}>
+          <p className="text-3xl font-bold tracking-tight text-foreground leading-none">
+            {totals.calories.toLocaleString()}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            / {calGoal.toLocaleString()} {t("unit.kcal")}
+          </p>
+        </div>
+      </div>
+      <p className="mt-1 mb-4 text-center text-[11px] font-medium" style={{ color: isOver ? "var(--destructive)" : "var(--primary)" }}>
+        {diff.toLocaleString()} {t("unit.cal")} {isOver ? t("meals.over") : t("meals.remaining")}
+      </p>
+
+      {/* Macro progress bars */}
+      <div className="grid grid-cols-3 gap-4">
+        <MacroProgressBar
+          label={t("macro.protein")}
+          current={totals.protein}
+          goal={protGoal}
+          color="#FF6B00"
+        />
+        <MacroProgressBar
+          label={t("macro.carbs")}
+          current={totals.carbs}
+          goal={carbsGoal}
+          color="#22c55e"
+        />
+        <MacroProgressBar
+          label={t("macro.fat")}
+          current={totals.fat}
+          goal={fatGoal}
+          color="#eab308"
+        />
+      </div>
+    </div>
+  )
+}
+
+function MacroProgressBar({
   label,
-  value,
+  current,
+  goal,
   color,
 }: {
-  icon: React.ComponentType<{ className?: string }>
   label: string
-  value: string
+  current: number
+  goal: number
   color: string
 }) {
+  const percent = Math.min((current / goal) * 100, 100)
+
   return (
-    <div className="flex flex-col items-center gap-1 rounded-lg bg-secondary/50 p-2.5">
-      <Icon className={`h-4 w-4 ${color}`} />
-      <p className="text-sm font-semibold text-foreground">{value}</p>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+    <div className="flex flex-col items-center gap-1.5">
+      <span className="text-[11px] text-muted-foreground">{label}</span>
+      <p className="text-sm font-bold text-foreground">
+        {current} <span className="font-normal text-muted-foreground">/ {goal}</span>{" "}
+        <span className="text-[10px] font-normal text-muted-foreground">g</span>
+      </p>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+        <div
+          className="h-full rounded-full transition-all duration-500 ease-out"
+          style={{ width: `${percent}%`, backgroundColor: color }}
+        />
+      </div>
     </div>
   )
 }
@@ -348,3 +440,4 @@ function MealForm({
     </form>
   )
 }
+

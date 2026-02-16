@@ -63,6 +63,10 @@ const translations = {
   "training.weightKg": { en: "Weight (kg)", es: "Peso (kg)" },
   "training.saveTraining": { en: "Save Workout", es: "Guardar entreno" },
   "training.saveChanges": { en: "Save changes", es: "Guardar cambios" },
+  "training.saveExercise": { en: "Save Exercise", es: "Guardar ejercicio" },
+  "training.editExercise": { en: "Edit Exercise", es: "Editar ejercicio" },
+  "training.noExercises": { en: "No exercises yet", es: "Sin ejercicios aún" },
+  "training.tapToAdd": { en: "Tap + to add your first exercise", es: "Toca + para agregar tu primer ejercicio" },
   "training.today": { en: "Today", es: "Hoy" },
 
   // Meals
@@ -76,6 +80,10 @@ const translations = {
   "meals.mealName": { en: "Meal name (e.g., Grilled Chicken)", es: "Nombre (ej., Pollo a la plancha)" },
   "meals.macrosGrams": { en: "Macros (grams)", es: "Macros (gramos)" },
   "meals.saveMeal": { en: "Save Meal", es: "Guardar comida" },
+  "meals.calorieGoal": { en: "Daily Goal", es: "Meta diaria" },
+  "meals.remaining": { en: "remaining", es: "restantes" },
+  "meals.over": { en: "over", es: "de más" },
+  "meals.ofGoal": { en: "of", es: "de" },
 
   // Profile
   "profile.yourProfile": { en: "Your Profile", es: "Tu perfil" },
@@ -109,6 +117,9 @@ const translations = {
   "settings.system": { en: "System", es: "Sistema" },
   "settings.english": { en: "English", es: "English" },
   "settings.spanish": { en: "Español", es: "Español" },
+
+  // Date navigation
+  "date.today": { en: "Today", es: "Hoy" },
 
   // Units
   "unit.min": { en: "min", es: "min" },

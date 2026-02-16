@@ -56,6 +56,54 @@ export function deleteTrainingSession(id: string): void {
   localStorage.setItem('fittrack-training', JSON.stringify(sessions));
 }
 
+// Individual exercise helpers
+export function addExerciseToDate(date: string, exercise: Omit<Exercise, 'id'>): void {
+  const sessions = getTrainingSessions();
+  const existing = sessions.find((s) => s.date === date);
+  const newEx = { ...exercise, id: generateId() };
+  if (existing) {
+    existing.exercises.push(newEx);
+    localStorage.setItem('fittrack-training', JSON.stringify(sessions));
+  } else {
+    saveTrainingSession({ name: 'workout', date, exercises: [newEx] });
+  }
+}
+
+export function updateExercise(date: string, exercise: Exercise): void {
+  const sessions = getTrainingSessions();
+  for (const s of sessions) {
+    const idx = s.exercises.findIndex((e) => e.id === exercise.id);
+    if (idx !== -1) {
+      s.exercises[idx] = exercise;
+      localStorage.setItem('fittrack-training', JSON.stringify(sessions));
+      return;
+    }
+  }
+}
+
+export function deleteExercise(exerciseId: string): void {
+  const sessions = getTrainingSessions();
+  for (const s of sessions) {
+    const idx = s.exercises.findIndex((e) => e.id === exerciseId);
+    if (idx !== -1) {
+      s.exercises.splice(idx, 1);
+      if (s.exercises.length === 0) {
+        const filtered = sessions.filter((ss) => ss.id !== s.id);
+        localStorage.setItem('fittrack-training', JSON.stringify(filtered));
+      } else {
+        localStorage.setItem('fittrack-training', JSON.stringify(sessions));
+      }
+      return;
+    }
+  }
+}
+
+export function getExercisesForDate(date: string): Exercise[] {
+  return getTrainingSessions()
+    .filter((s) => s.date === date)
+    .flatMap((s) => s.exercises);
+}
+
 // Meals
 export function getMeals(): Meal[] {
   if (typeof window === 'undefined') return [];
