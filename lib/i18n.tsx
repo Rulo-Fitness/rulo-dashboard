@@ -40,21 +40,30 @@ const translations = {
   "macro.calories": { en: "Calories", es: "Calorías" },
 
   // Training
-  "training.title": { en: "Training", es: "Entreno" },
-  "training.subtitle": { en: "Log your gym sessions", es: "Registra tus sesiones" },
-  "training.noSessions": { en: "No sessions yet", es: "Sin sesiones aún" },
-  "training.tapToLog": { en: "Tap + to log your first workout", es: "Toca + para registrar tu primer entreno" },
-  "training.deleteSession": { en: "Delete session", es: "Eliminar sesión" },
-  "training.newSession": { en: "New Training Session", es: "Nueva sesión de entreno" },
-  "training.sessionName": { en: "Session name (e.g., Push Day)", es: "Nombre (ej., Día de empuje)" },
-  "training.durationMin": { en: "Duration (min)", es: "Duración (min)" },
+  "training.title": { en: "Training", es: "Entrenos" },
+  "training.subtitle": { en: "Your workouts", es: "Tus entrenos" },
+  "training.noTrainings": { en: "No workouts yet", es: "Sin entrenos aún" },
+  "training.tapToLog": { en: "Tap + to create your first workout", es: "Toca + para crear tu primer entreno" },
+  "training.newTraining": { en: "New Workout", es: "Nuevo entreno" },
+  "training.editTraining": { en: "Edit Workout", es: "Editar entreno" },
+  "training.deleteTraining": { en: "Delete workout", es: "Eliminar entreno" },
+  "training.trainingName": { en: "Day", es: "Día" },
+  "training.dayMonday": { en: "Monday", es: "Lunes" },
+  "training.dayTuesday": { en: "Tuesday", es: "Martes" },
+  "training.dayWednesday": { en: "Wednesday", es: "Miércoles" },
+  "training.dayThursday": { en: "Thursday", es: "Jueves" },
+  "training.dayFriday": { en: "Friday", es: "Viernes" },
+  "training.daySaturday": { en: "Saturday", es: "Sábado" },
+  "training.daySunday": { en: "Sunday", es: "Domingo" },
   "training.exercises": { en: "Exercises", es: "Ejercicios" },
   "training.addExercise": { en: "+ Add exercise", es: "+ Agregar ejercicio" },
   "training.exerciseName": { en: "Exercise name", es: "Nombre del ejercicio" },
   "training.sets": { en: "Sets", es: "Series" },
   "training.reps": { en: "Reps", es: "Reps" },
   "training.weightKg": { en: "Weight (kg)", es: "Peso (kg)" },
-  "training.saveSession": { en: "Save Session", es: "Guardar sesión" },
+  "training.saveTraining": { en: "Save Workout", es: "Guardar entreno" },
+  "training.saveChanges": { en: "Save changes", es: "Guardar cambios" },
+  "training.today": { en: "Today", es: "Hoy" },
 
   // Meals
   "meals.title": { en: "Meals", es: "Comidas" },
@@ -112,6 +121,7 @@ const translations = {
 } as const
 
 export type TranslationKey = keyof typeof translations
+
 
 interface I18nContextValue {
   locale: Locale

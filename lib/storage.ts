@@ -10,7 +10,6 @@ export interface TrainingSession {
   id: string;
   date: string;
   name: string;
-  duration: number; // minutes
   exercises: Exercise[];
 }
 
@@ -42,6 +41,14 @@ export function saveTrainingSession(session: Omit<TrainingSession, 'id'>): Train
   sessions.unshift(newSession);
   localStorage.setItem('fittrack-training', JSON.stringify(sessions));
   return newSession;
+}
+
+export function updateTrainingSession(session: TrainingSession): void {
+  const sessions = getTrainingSessions();
+  const index = sessions.findIndex((s) => s.id === session.id);
+  if (index === -1) return;
+  sessions[index] = session;
+  localStorage.setItem('fittrack-training', JSON.stringify(sessions));
 }
 
 export function deleteTrainingSession(id: string): void {

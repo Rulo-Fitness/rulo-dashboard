@@ -10,7 +10,7 @@ import {
   type TrainingSession,
 } from "@/lib/storage"
 import { useI18n } from "@/lib/i18n"
-import { Dumbbell, Flame, Beef, Wheat, Droplets, Timer, TrendingUp, Calendar } from "lucide-react"
+import { Dumbbell, Flame, Beef, Wheat, Droplets, TrendingUp, Calendar } from "lucide-react"
 
 interface DashboardViewProps {
   refreshKey: number
@@ -59,11 +59,10 @@ export function DashboardView({ refreshKey }: DashboardViewProps) {
   const todayProtein = todayMeals.reduce((sum, m) => sum + m.protein, 0)
   const todayCarbs = todayMeals.reduce((sum, m) => sum + m.carbs, 0)
   const todayFat = todayMeals.reduce((sum, m) => sum + m.fat, 0)
-  const todayDuration = todaySessions.reduce((sum, s) => sum + s.duration, 0)
   const todayExercises = todaySessions.reduce((sum, s) => sum + s.exercises.length, 0)
 
   const weekCalories = weekMeals.reduce((sum, m) => sum + m.calories, 0)
-  const weekDuration = weekSessions.reduce((sum, s) => sum + s.duration, 0)
+  const weekExercises = weekSessions.reduce((sum, s) => sum + s.exercises.length, 0)
 
   if (!mounted) {
     return (
@@ -125,10 +124,10 @@ export function DashboardView({ refreshKey }: DashboardViewProps) {
             sub={`${todayExercises} ${t("dashboard.exercises")}`}
           />
           <StatCard
-            icon={Timer}
-            label={t("dashboard.duration")}
-            value={`${todayDuration}m`}
-            sub={t("dashboard.totalTime")}
+            icon={Dumbbell}
+            label={t("dashboard.exercises")}
+            value={todayExercises.toString()}
+            sub={t("training.today")}
           />
         </div>
       </section>
@@ -143,7 +142,7 @@ export function DashboardView({ refreshKey }: DashboardViewProps) {
             icon={TrendingUp}
             label={t("dashboard.workouts")}
             value={weekSessions.length.toString()}
-            sub={`${weekDuration} ${t("dashboard.minTotal")}`}
+            sub={`${weekExercises} ${t("dashboard.exercises")}`}
           />
           <StatCard
             icon={Calendar}
@@ -172,7 +171,7 @@ export function DashboardView({ refreshKey }: DashboardViewProps) {
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm font-medium text-foreground">{session.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {session.exercises.length} {t("dashboard.exercises")} &middot; {session.duration}{t("unit.min")}
+                    {session.exercises.length} {t("dashboard.exercises")}
                   </p>
                 </div>
               </div>

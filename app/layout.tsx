@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     title: 'Rulo Fitness',
   },
   icons: {
-    icon: '/icons/icon-192.jpg',
-    apple: '/icons/icon-192.jpg',
+    icon: '/logo.png',
+    apple: '/logo.png',
   },
 }
 
@@ -42,7 +42,7 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.jpg" />
+        <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className="font-sans antialiased">
         <Providers>

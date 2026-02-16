@@ -22,7 +22,7 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-6">
+      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8">
         <div className="flex flex-col gap-6 px-4 pb-6 animate-pulse">
           <div className="flex flex-col gap-1">
             <div className="h-8 w-48 rounded-md bg-secondary" />
@@ -39,11 +39,13 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-6">
-      {activeTab === "dashboard" && <DashboardView refreshKey={refreshKey} />}
-      {activeTab === "training" && <TrainingView onUpdate={triggerRefresh} />}
-      {activeTab === "meals" && <MealsView onUpdate={triggerRefresh} />}
-      {activeTab === "profile" && <ProfileView />}
+    <main className="mx-auto flex min-h-dvh max-w-lg flex-col bg-background pb-20 pt-8">
+      <div className="flex min-h-0 flex-1 flex-col">
+        {activeTab === "dashboard" && <DashboardView refreshKey={refreshKey} />}
+        {activeTab === "training" && <TrainingView onUpdate={triggerRefresh} />}
+        {activeTab === "meals" && <MealsView onUpdate={triggerRefresh} />}
+        {activeTab === "profile" && <ProfileView />}
+      </div>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </main>
   )

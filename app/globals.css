@@ -17,7 +17,7 @@
   --secondary-foreground: oklch(0.25 0.005 260);
   --muted: oklch(0.93 0.005 260);
   --muted-foreground: oklch(0.48 0.01 260);
-  --accent: oklch(0.60 0.18 180);
+  --accent: oklch(0.68 0.17 50);
   --accent-foreground: oklch(0.98 0.002 260);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.98 0.002 260);
@@ -68,7 +68,7 @@ html.dark, .dark {
   --secondary-foreground: oklch(0.88 0.005 260);
   --muted: oklch(0.22 0.005 260);
   --muted-foreground: oklch(0.60 0.01 260);
-  --accent: oklch(0.75 0.15 180);
+  --accent: oklch(0.72 0.17 50);
   --accent-foreground: oklch(0.13 0.005 260);
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.96 0.005 260);
@@ -183,13 +183,9 @@ html.dark, .dark {
   }
 }
 
-/* Liquid Glass Nav */
+/* Nav buttons */
 @layer utilities {
-  .liquid-glass-nav button {
+  nav[role="tablist"] button {
     -webkit-tap-highlight-color: transparent;
-  }
-  .liquid-glass-nav button:active {
-    transform: scale(0.92);
-    transition: transform 0.12s ease;
   }
 }
