@@ -6,7 +6,6 @@ import { DashboardView } from "@/components/dashboard-view"
 import { TrainingView } from "@/components/training-view"
 import { MealsView } from "@/components/meals-view"
 import { ProfileView } from "@/components/profile-view"
-
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useRef, useEffect } from "react"
 import { LayoutDashboard, Dumbbell, UtensilsCrossed, User } from "lucide-react"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
 
@@ -18,6 +19,17 @@ const tabs = [
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const { t } = useI18n()
   const activeIndex = tabs.findIndex((tab) => tab.id === activeTab)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const prevIndex = useRef(activeIndex)
+
+  useEffect(() => {
+    if (prevIndex.current !== activeIndex) {
+      setIsAnimating(true)
+      prevIndex.current = activeIndex
+      const timer = setTimeout(() => setIsAnimating(false), 120)
+      return () => clearTimeout(timer)
+    }
+  }, [activeIndex])
 
   return (
     <div
@@ -27,27 +39,20 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
       <nav
         role="tablist"
         aria-label="Main navigation"
-        className="pointer-events-auto relative flex items-stretch rounded-full p-[3px]"
-        style={{
-          background: "linear-gradient(180deg, var(--glass-bg-from) 0%, var(--glass-bg-to) 100%)",
-          backdropFilter: "blur(50px) saturate(200%) brightness(1.1)",
-          WebkitBackdropFilter: "blur(50px) saturate(200%) brightness(1.1)",
-          boxShadow: [
-            "var(--glass-shadow-1)",
-            "var(--glass-shadow-2)",
-            "var(--glass-inset-top)",
-            "var(--glass-inset-bottom)",
-          ].join(", "),
-          border: "0.5px solid var(--glass-border)",
-        }}
+        className="pointer-events-auto relative flex items-stretch rounded-full p-[3px] liquid-glass"
       >
         {/* Sliding pill indicator */}
         <div
-          className="absolute top-[3px] bottom-[3px] rounded-full transition-transform duration-300 ease-out"
+          className="absolute top-[3px] rounded-full"
           style={{
-            width: "68px",
+            width: isAnimating ? "88px" : "68px",
+            marginLeft: isAnimating ? "-10px" : "0px",
+            height: isAnimating ? "calc(100% + 14px)" : "calc(100% - 6px)",
+            top: isAnimating ? "-10px" : "3px",
             transform: `translateX(${activeIndex * 68}px)`,
-            background: "oklch(from var(--primary) l c h / 0.2)",
+            transition: "transform 280ms cubic-bezier(0, 0, 0.2, 1), width 150ms cubic-bezier(0, 0, 0.2, 1), margin-left 150ms cubic-bezier(0, 0, 0.2, 1), height 150ms cubic-bezier(0, 0, 0.2, 1), top 150ms cubic-bezier(0, 0, 0.2, 1)",
+            background: "oklch(from var(--primary) l c h / 0.18)",
+            boxShadow: "inset 0 1.5px 0 oklch(1 0 0 / 0.25), inset 0 -0.5px 0 oklch(0 0 0 / 0.06), 0 1px 4px oklch(0 0 0 / 0.06)",
           }}
         />
 
@@ -68,15 +73,17 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
                 style={{
                   width: "20px",
                   height: "20px",
-                  color: isActive ? "var(--primary)" : "var(--glass-inactive-text)",
+                  color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
                   strokeWidth: isActive ? 2.2 : 1.6,
+                  transition: "color 0.25s ease, stroke-width 0.25s ease",
                 }}
               />
               <span
                 style={{
                   fontSize: "10px",
                   fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "var(--primary)" : "var(--glass-inactive-text)",
+                  color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
+                  transition: "color 0.25s ease",
                 }}
               >
                 {label}

@@ -106,7 +106,7 @@ html.dark, .dark {
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-sans: var(--font-geist), 'Geist', system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -188,4 +188,114 @@ html.dark, .dark {
   nav[role="tablist"] button {
     -webkit-tap-highlight-color: transparent;
   }
+}
+
+/* ── Liquid Glass (macOS / iOS 26 PBR-inspired) ── */
+.liquid-glass {
+  position: relative;
+
+  
+  background: linear-gradient(
+    168deg,
+    oklch(0.96 0.003 260 / 0.82) 0%,
+    oklch(0.92 0.003 260 / 0.75) 50%,
+    oklch(0.97 0.003 260 / 0.80) 100%
+  );
+
+  /* Heavy Gaussian blur + saturation boost (PBR diffuse scatter) */
+  backdrop-filter: blur(120px) saturate(200%) brightness(1.12);
+  -webkit-backdrop-filter: blur(120px) saturate(200%) brightness(1.12);
+
+  /* Refraction-style border — bright top edge, subtle elsewhere */
+  border: 0.5px solid oklch(1 0 0 / 0.35);
+  border-top-color: oklch(1 0 0 / 0.55);
+
+  /* Layered shadows: outer depth + inner specular highlight + inner bottom shadow */
+  box-shadow:
+    /* outer depth */
+    0 12px 48px oklch(0 0 0 / 0.12),
+    0 4px 16px oklch(0 0 0 / 0.08),
+    /* inner top specular (bloom highlight) */
+    inset 0 2px 1px oklch(1 0 0 / 0.50),
+    /* inner bottom depth */
+    inset 0 -1px 1px oklch(0 0 0 / 0.08);
+}
+
+/* Chromatic dispersion / specular highlight strip (::before) */
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+  background: linear-gradient(
+    175deg,
+    oklch(1 0 0 / 0.30) 0%,
+    oklch(1 0.02 300 / 0.06) 25%,
+    transparent 55%
+  );
+  mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
+}
+
+/* Edge glow ring (::after) */
+.liquid-glass::after {
+  content: "";
+  position: absolute;
+  inset: -0.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  overflow: hidden;
+  border: 1px solid transparent;
+  background: linear-gradient(
+    180deg,
+    oklch(1 0 0 / 0.18) 0%,
+    oklch(1 0 0 / 0.04) 40%,
+    oklch(1 0 0 / 0.08) 100%
+  ) border-box;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+
+/* ── Dark mode variant ── */
+.dark .liquid-glass {
+  background: linear-gradient(
+    168deg,
+    oklch(0.22 0.008 260 / 0.85) 0%,
+    oklch(0.16 0.008 260 / 0.78) 50%,
+    oklch(0.20 0.008 260 / 0.82) 100%
+  );
+
+  backdrop-filter: blur(120px) saturate(180%) brightness(0.85);
+  -webkit-backdrop-filter: blur(120px) saturate(180%) brightness(0.85);
+
+  border: 0.5px solid oklch(1 0 0 / 0.14);
+  border-top-color: oklch(1 0 0 / 0.22);
+
+  box-shadow:
+    0 12px 48px oklch(0 0 0 / 0.40),
+    0 4px 16px oklch(0 0 0 / 0.25),
+    inset 0 2px 1px oklch(1 0 0 / 0.12),
+    inset 0 -1px 1px oklch(0 0 0 / 0.18);
+}
+
+.dark .liquid-glass::before {
+  background: linear-gradient(
+    175deg,
+    oklch(1 0 0 / 0.10) 0%,
+    oklch(1 0.02 300 / 0.03) 25%,
+    transparent 55%
+  );
+}
+
+.dark .liquid-glass::after {
+  background: linear-gradient(
+    180deg,
+    oklch(1 0 0 / 0.10) 0%,
+    oklch(1 0 0 / 0.02) 40%,
+    oklch(1 0 0 / 0.05) 100%
+  ) border-box;
 }
