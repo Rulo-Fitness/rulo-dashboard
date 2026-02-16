@@ -107,6 +107,35 @@ html.dark, .dark {
   --glass-inactive-text: oklch(0.50 0.01 260);
 }
 
+/* Hide scrollbar in PWA (keep scroll behavior) */
+/* Disable text selection/copy in PWA */
+html,
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  -webkit-user-select: none;
+  user-select: none;
+}
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+button,
+[role="button"],
+a,
+select,
+label[for] {
+  cursor: pointer;
+}
+
 @theme inline {
   --font-sans: var(--font-geist), 'Geist', system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;

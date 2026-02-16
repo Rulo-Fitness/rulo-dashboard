@@ -119,6 +119,14 @@ export function saveMeal(meal: Omit<Meal, 'id'>): Meal {
   return newMeal;
 }
 
+export function updateMeal(meal: Meal): void {
+  const meals = getMeals();
+  const index = meals.findIndex((m) => m.id === meal.id);
+  if (index === -1) return;
+  meals[index] = meal;
+  localStorage.setItem('fittrack-meals', JSON.stringify(meals));
+}
+
 export function deleteMeal(id: string): void {
   const meals = getMeals().filter((m) => m.id !== id);
   localStorage.setItem('fittrack-meals', JSON.stringify(meals));

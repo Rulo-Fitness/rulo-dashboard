@@ -4,13 +4,14 @@ import { useEffect, useState, useMemo, useRef } from "react"
 import {
   getMeals,
   saveMeal,
+  updateMeal,
   deleteMeal,
   getTodayString,
   getProfile,
   type Meal,
 } from "@/lib/storage"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
-import { Plus, Trash2, UtensilsCrossed, X, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus, Trash2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Pencil } from "lucide-react"
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
@@ -27,6 +28,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
   const [allMeals, setAllMeals] = useState<Meal[]>([])
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [showForm, setShowForm] = useState(false)
+  const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
           <p className="text-sm text-muted-foreground">{t("meals.subtitle")}</p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { setShowForm(true); setEditingMeal(null) }}
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("meals.logMeal")}
         >
@@ -112,8 +114,11 @@ export function MealsView({ onUpdate }: MealsViewProps) {
       {/* Nutrition Summary Card */}
       <NutritionSummary totals={totals} />
 
-      {showForm && (
+      {/* Add form (only when adding new, at top) */}
+      {showForm && !editingMeal && (
         <MealForm
+          initial={null}
+          selectedDate={selectedDate}
           onSave={() => {
             setShowForm(false)
             refresh()
@@ -122,7 +127,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
         />
       )}
 
-      {filteredMeals.length === 0 && !showForm && (
+      {filteredMeals.length === 0 && !showForm && !editingMeal && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
           <UtensilsCrossed className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">{t("meals.noMeals")}</p>
@@ -130,43 +135,62 @@ export function MealsView({ onUpdate }: MealsViewProps) {
         </div>
       )}
 
-      {/* Meal list */}
+      {/* Meal list: edit form renders above the meal being edited */}
       <div className="flex flex-col gap-2">
         {filteredMeals.map((meal) => (
-          <div
-            key={meal.id}
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-chart-3/15">
-              <UtensilsCrossed className="h-5 w-5 text-chart-3" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
-                <p className="truncate text-sm font-semibold text-foreground">{meal.name}</p>
-                <span className="shrink-0 text-xs text-muted-foreground">{meal.time}</span>
-              </div>
-              <div className="mt-1 flex flex-wrap gap-2">
-                <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                  {meal.calories} {t("unit.cal")}
-                </span>
-                <span className="rounded-md bg-chart-1/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-1">
-                  P {meal.protein}{t("unit.g")}
-                </span>
-                <span className="rounded-md bg-chart-4/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-4">
-                  C {meal.carbs}{t("unit.g")}
-                </span>
-                <span className="rounded-md bg-chart-3/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-3">
-                  F {meal.fat}{t("unit.g")}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => handleDelete(meal.id)}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/15 hover:text-destructive"
-              aria-label={`${t("training.deleteTraining")} ${meal.name}`}
+          <div key={meal.id} className="flex flex-col gap-2">
+            {editingMeal?.id === meal.id && (
+              <MealForm
+                initial={editingMeal}
+                selectedDate={selectedDate}
+                onSave={() => {
+                  setEditingMeal(null)
+                  refresh()
+                }}
+                onCancel={() => setEditingMeal(null)}
+              />
+            )}
+            <div
+              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
             >
-              <Trash2 className="h-4 w-4" />
-            </button>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-chart-3/15">
+                <UtensilsCrossed className="h-5 w-5 text-chart-3" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <p className="truncate text-sm font-semibold text-foreground">{meal.name}</p>
+                  <span className="shrink-0 text-xs text-muted-foreground">{meal.time}</span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                    {meal.calories} {t("unit.cal")}
+                  </span>
+                  <span className="rounded-md bg-chart-1/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-1">
+                    P {meal.protein}{t("unit.g")}
+                  </span>
+                  <span className="rounded-md bg-chart-4/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-4">
+                    C {meal.carbs}{t("unit.g")}
+                  </span>
+                  <span className="rounded-md bg-chart-3/10 px-1.5 py-0.5 text-[10px] font-medium text-chart-3">
+                    F {meal.fat}{t("unit.g")}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => { setEditingMeal(meal); setShowForm(false) }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/15 hover:text-primary"
+                aria-label={t("meals.editMeal")}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => handleDelete(meal.id)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                aria-label={`${t("training.deleteTraining")} ${meal.name}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -303,46 +327,74 @@ function MacroProgressBar({
 }
 
 function MealForm({
+  initial,
+  selectedDate,
   onSave,
   onCancel,
 }: {
+  initial?: Meal | null
+  selectedDate: string
   onSave: () => void
   onCancel: () => void
 }) {
   const { t } = useI18n()
-  const [name, setName] = useState("")
-  const [date, setDate] = useState(getTodayString())
+  const formRef = useRef<HTMLFormElement>(null)
+  const isEdit = Boolean(initial?.id)
+  const [name, setName] = useState(initial?.name ?? "")
+
+  useEffect(() => {
+    if (isEdit && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [isEdit])
+  const [date, setDate] = useState(initial?.date ?? selectedDate)
   const [time, setTime] = useState(
-    new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+    initial?.time ?? new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
   )
-  const [calories, setCalories] = useState("")
-  const [protein, setProtein] = useState("")
-  const [carbs, setCarbs] = useState("")
-  const [fat, setFat] = useState("")
+  const [calories, setCalories] = useState(initial?.calories?.toString() ?? "")
+  const [protein, setProtein] = useState(initial?.protein?.toString() ?? "")
+  const [carbs, setCarbs] = useState(initial?.carbs?.toString() ?? "")
+  const [fat, setFat] = useState(initial?.fat?.toString() ?? "")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !calories) return
 
-    saveMeal({
-      name: name.trim(),
-      date,
-      time,
-      calories: Number(calories),
-      protein: Number(protein) || 0,
-      carbs: Number(carbs) || 0,
-      fat: Number(fat) || 0,
-    })
+    if (isEdit && initial) {
+      updateMeal({
+        id: initial.id,
+        name: name.trim(),
+        date,
+        time,
+        calories: Number(calories),
+        protein: Number(protein) || 0,
+        carbs: Number(carbs) || 0,
+        fat: Number(fat) || 0,
+      })
+    } else {
+      saveMeal({
+        name: name.trim(),
+        date,
+        time,
+        calories: Number(calories),
+        protein: Number(protein) || 0,
+        carbs: Number(carbs) || 0,
+        fat: Number(fat) || 0,
+      })
+    }
     onSave()
   }
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="rounded-xl border border-primary/30 bg-card p-4"
     >
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">{t("meals.logMeal")}</h3>
+        <h3 className="text-sm font-semibold text-foreground">
+          {isEdit ? t("meals.editMeal") : t("meals.logMeal")}
+        </h3>
         <button
           type="button"
           onClick={onCancel}

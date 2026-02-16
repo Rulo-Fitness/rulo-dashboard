@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import {
   getExercisesForDate,
   addExerciseToDate,
@@ -102,20 +102,16 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
         </button>
       </div>
 
-      {/* Add / Edit form */}
-      {(showForm || editingExercise) && (
+      {/* Add form (only when adding new, at top) */}
+      {showForm && !editingExercise && (
         <ExerciseForm
-          initial={editingExercise}
+          initial={null}
           selectedDate={selectedDate}
           onSave={() => {
             setShowForm(false)
-            setEditingExercise(null)
             refresh()
           }}
-          onCancel={() => {
-            setShowForm(false)
-            setEditingExercise(null)
-          }}
+          onCancel={() => setShowForm(false)}
         />
       )}
 
@@ -128,39 +124,51 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
         </div>
       )}
 
-      {/* Exercise list */}
+      {/* Exercise list: edit form renders above the exercise being edited */}
       {exercises.length > 0 && (
         <div className="flex flex-col gap-2">
           {exercises.map((ex) => (
-            <div
-              key={ex.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-                <Dumbbell className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{ex.name}</p>
-                <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
-                  <span>{ex.sets} {t("training.sets")}</span>
-                  <span>{ex.reps} {t("training.reps")}</span>
-                  <span>{ex.weight}{t("unit.kg")}</span>
+            <div key={ex.id} className="flex flex-col gap-2">
+              {editingExercise?.id === ex.id && (
+                <ExerciseForm
+                  initial={editingExercise}
+                  selectedDate={selectedDate}
+                  onSave={() => {
+                    setEditingExercise(null)
+                    refresh()
+                  }}
+                  onCancel={() => setEditingExercise(null)}
+                />
+              )}
+              <div
+                className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15">
+                  <Dumbbell className="h-5 w-5 text-primary" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{ex.name}</p>
+                  <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
+                    <span>{ex.sets} {t("training.sets")}</span>
+                    <span>{ex.reps} {t("training.reps")}</span>
+                    <span>{ex.weight}{t("unit.kg")}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setEditingExercise(ex); setShowForm(false) }}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary"
+                  aria-label={t("training.editExercise")}
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(ex.id)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={t("training.deleteTraining")}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                onClick={() => { setEditingExercise(ex); setShowForm(false) }}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary"
-                aria-label={t("training.editExercise")}
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(ex.id)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                aria-label={t("training.deleteTraining")}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
             </div>
           ))}
         </div>
@@ -181,11 +189,18 @@ function ExerciseForm({
   onCancel: () => void
 }) {
   const { t } = useI18n()
+  const formRef = useRef<HTMLFormElement>(null)
   const isEdit = Boolean(initial?.id)
   const [name, setName] = useState(initial?.name ?? "")
   const [sets, setSets] = useState(initial?.sets?.toString() ?? "")
   const [reps, setReps] = useState(initial?.reps?.toString() ?? "")
   const [weight, setWeight] = useState(initial?.weight?.toString() ?? "")
+
+  useEffect(() => {
+    if (isEdit && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+  }, [isEdit])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -212,12 +227,13 @@ function ExerciseForm({
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className="rounded-xl border border-primary/30 bg-card p-4"
     >
-      <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-foreground">
-          {isEdit ? t("training.editExercise") : t("training.addExercise")}
+          {isEdit ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
         </h3>
         <button
           type="button"
