@@ -332,6 +332,7 @@ function ExerciseForm({
             <label className="mb-1 block text-[10px] text-muted-foreground">{t("training.sets")}</label>
             <input
               type="number"
+              inputMode="decimal"
               placeholder="0"
               value={sets}
               onChange={(e) => setSets(e.target.value)}
@@ -343,6 +344,7 @@ function ExerciseForm({
             <label className="mb-1 block text-[10px] text-muted-foreground">{t("training.reps")}</label>
             <input
               type="number"
+              inputMode="decimal"
               placeholder="0"
               value={reps}
               onChange={(e) => setReps(e.target.value)}
@@ -354,6 +356,7 @@ function ExerciseForm({
             <label className="mb-1 block text-[10px] text-muted-foreground">{t("training.weightKg")}</label>
             <input
               type="number"
+              inputMode="decimal"
               placeholder="0"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}

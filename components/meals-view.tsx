@@ -483,6 +483,7 @@ function MealForm({
           <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("macro.calories")}</label>
           <input
             type="number"
+            inputMode="decimal"
             placeholder="0"
             value={calories}
             onChange={(e) => setCalories(e.target.value)}
@@ -499,6 +500,7 @@ function MealForm({
               <label className="mb-1 block text-[10px] text-chart-1">{t("macro.protein")}</label>
               <input
                 type="number"
+                inputMode="decimal"
                 placeholder="0"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
@@ -510,6 +512,7 @@ function MealForm({
               <label className="mb-1 block text-[10px] text-chart-4">{t("macro.carbs")}</label>
               <input
                 type="number"
+                inputMode="decimal"
                 placeholder="0"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value)}
@@ -521,6 +524,7 @@ function MealForm({
               <label className="mb-1 block text-[10px] text-chart-3">{t("macro.fat")}</label>
               <input
                 type="number"
+                inputMode="decimal"
                 placeholder="0"
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}

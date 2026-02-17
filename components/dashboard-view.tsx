@@ -7,6 +7,8 @@ import {
   getExercisesForDate,
   getMeals,
   getProfile,
+  getWeekSessions,
+  getWeekMeals,
 } from "@/lib/storage"
 import { useI18n } from "@/lib/i18n"
 import { Dumbbell, Flame, UtensilsCrossed, Plus, Check, Circle, X, Target, Smartphone, MessageCircle, Share, Mic, Camera, BarChart3, TrendingUp, Bell, Activity, Calendar, Zap, Lock } from "lucide-react"
@@ -45,8 +47,6 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const [openPlan, setOpenPlan] = useState(false)
   const [openInstall, setOpenInstall] = useState(false)
   const [openReport, setOpenReport] = useState(false)
-  const [reportText, setReportText] = useState("")
-  const [reportSent, setReportSent] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -90,15 +90,6 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const isOverCal = todayCalories > calGoal
   const calDiff = isOverCal ? todayCalories - calGoal : calGoal - todayCalories
 
-  const handleSendReport = () => {
-    if (!reportText.trim()) return
-    setReportSent(true)
-    setTimeout(() => {
-      setOpenReport(false)
-      setReportText("")
-      setReportSent(false)
-    }, 1500)
-  }
 
   const modalOverlayClass =
     "fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 transition-opacity duration-300 ease-out"
@@ -320,50 +311,60 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
         </div>
       )}
 
-      {/* Modal: Reporte */}
-      {openReport && (
-        <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => !reportSent && setOpenReport(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.reportTitle")}>
-          <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">{t("dashboard.reportTitle")}</h2>
-                <p className="text-xs text-muted-foreground">{t("dashboard.reportSubtitle")}</p>
-              </div>
-              {!reportSent && (
+      {/* Modal: Resumen de la semana */}
+      {openReport && (() => {
+        const weekSessions = getWeekSessions()
+        const weekMeals = getWeekMeals()
+        const totalExercises = weekSessions.reduce((sum, s) => sum + s.exercises.length, 0)
+        const totalCalories = weekMeals.reduce((sum, m) => sum + m.calories, 0)
+        return (
+          <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => setOpenReport(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.recapTitle")}>
+            <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">{t("dashboard.recapTitle")}</h2>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.recapSubtitle")}</p>
+                </div>
                 <button type="button" onClick={() => setOpenReport(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("profile.cancel")}>
                   <X className="h-4 w-4" />
                 </button>
-              )}
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              {reportSent ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in-0 duration-300">
-                  <Check className="h-12 w-12 text-primary mb-3" />
-                  <p className="text-lg font-semibold text-foreground">{t("dashboard.reportSent")}</p>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapSessions")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{weekSessions.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Target className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapExercises")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{totalExercises}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapMeals")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{weekMeals.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapCalories")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{totalCalories.toLocaleString()}</p>
+                  </div>
                 </div>
-              ) : (
-                <>
-                  <textarea
-                    value={reportText}
-                    onChange={(e) => setReportText(e.target.value)}
-                    placeholder={t("dashboard.reportPlaceholder")}
-                    rows={5}
-                    className="w-full rounded-xl border border-border bg-input px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSendReport}
-                    disabled={!reportText.trim()}
-                    className="mt-3 w-full rounded-xl bg-primary py-3 text-sm font-medium text-primary-foreground disabled:opacity-50 active:scale-[0.98]"
-                  >
-                    {t("dashboard.send")}
-                  </button>
-                </>
-              )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Today's calories vs goal */}
       <section aria-label={t("dashboard.todayProgress")}>
