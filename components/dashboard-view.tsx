@@ -9,7 +9,12 @@ import {
   getProfile,
 } from "@/lib/storage"
 import { useI18n } from "@/lib/i18n"
-import { Dumbbell, Flame, UtensilsCrossed, Plus, Check, Circle } from "lucide-react"
+import { Dumbbell, Flame, UtensilsCrossed, Plus, Check, Circle, X, Target, Smartphone, MessageCircle, Share } from "lucide-react"
+
+function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
 
 function getWeekDates(centerDate: string): string[] {
   const d = new Date(centerDate + "T12:00:00")
@@ -37,6 +42,11 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const [allMeals, setAllMeals] = useState<ReturnType<typeof getMeals>>([])
   const [greeting, setGreeting] = useState("")
   const [dateStr, setDateStr] = useState("")
+  const [openPlan, setOpenPlan] = useState(false)
+  const [openInstall, setOpenInstall] = useState(false)
+  const [openReport, setOpenReport] = useState(false)
+  const [reportText, setReportText] = useState("")
+  const [reportSent, setReportSent] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -80,6 +90,21 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const isOverCal = todayCalories > calGoal
   const calDiff = isOverCal ? todayCalories - calGoal : calGoal - todayCalories
 
+  const handleSendReport = () => {
+    if (!reportText.trim()) return
+    setReportSent(true)
+    setTimeout(() => {
+      setOpenReport(false)
+      setReportText("")
+      setReportSent(false)
+    }, 1500)
+  }
+
+  const modalOverlayClass =
+    "fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 transition-opacity duration-300 ease-out"
+  const modalContentClass =
+    "w-full max-w-lg rounded-t-2xl sm:rounded-2xl bg-card border border-border shadow-xl max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-300 ease-out slide-in-from-bottom-4 sm:slide-in-from-none"
+
   if (!mounted) {
     return (
       <div className="flex flex-col gap-6 px-4 pb-6 animate-pulse">
@@ -103,6 +128,175 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{greeting}</h1>
         <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
       </div>
+
+      {/* Tres cajitas cuadradas con fade: plan (purple-pink), install (naranja), reporte (azul) */}
+      <div className="grid grid-cols-3 gap-3">
+        <button
+          type="button"
+          onClick={() => setOpenPlan(true)}
+          className="aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#CC5500] p-3 text-center transition-transform active:scale-[0.98] shadow-lg shadow-orange-500/20"
+        >
+          <Target className="h-7 w-7 text-white/95 shrink-0" />
+          <p className="font-semibold text-white text-[13px] leading-tight line-clamp-2">{t("dashboard.boxPlan")}</p>
+          <p className="text-[10px] text-white/80 line-clamp-2">{t("dashboard.boxPlanHint")}</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpenInstall(true)}
+          className="aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-purple-500/90 to-pink-500/90 p-3 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
+        >
+          <Smartphone className="h-7 w-7 text-white/95 shrink-0" />
+          <p className="font-semibold text-white text-[13px] leading-tight line-clamp-2">{t("dashboard.boxInstall")}</p>
+          <p className="text-[10px] text-white/80 line-clamp-2">{t("dashboard.boxInstallHint")}</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpenReport(true)}
+          className="aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 p-3 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
+        >
+          <MessageCircle className="h-7 w-7 text-white/95 shrink-0" />
+          <p className="font-semibold text-white text-[13px] leading-tight line-clamp-2">{t("dashboard.boxReport")}</p>
+          <p className="text-[10px] text-white/80 line-clamp-2">{t("dashboard.boxReportHint")}</p>
+        </button>
+      </div>
+
+      {/* Modal: Tu plan */}
+      {openPlan && (
+        <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => setOpenPlan(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.planTitle")}>
+          <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">{t("dashboard.planTitle")}</h2>
+                <p className="text-xs text-muted-foreground">{t("dashboard.planSubtitle")}</p>
+              </div>
+              <button type="button" onClick={() => setOpenPlan(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("profile.cancel")}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="rounded-xl bg-primary/10 p-4">
+                <p className="text-sm font-medium text-foreground">{t("macro.calories")}</p>
+                <p className="text-2xl font-bold text-primary">{calGoal.toLocaleString()} {t("unit.kcal")}</p>
+                <p className="text-xs text-muted-foreground">{t("dashboard.perDay")}</p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xs text-muted-foreground">{t("macro.protein")}</p>
+                  <p className="text-lg font-bold text-foreground">{protGoal} {t("unit.g")}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xs text-muted-foreground">{t("macro.carbs")}</p>
+                  <p className="text-lg font-bold text-foreground">{carbsGoal} {t("unit.g")}</p>
+                </div>
+                <div className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-xs text-muted-foreground">{t("macro.fat")}</p>
+                  <p className="text-lg font-bold text-foreground">{fatGoal} {t("unit.g")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Descarga la app */}
+      {openInstall && (
+        <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => setOpenInstall(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.installTitle")}>
+          <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">{t("dashboard.installTitle")}</h2>
+                <p className="text-xs text-muted-foreground">{t("dashboard.installSubtitle")}</p>
+              </div>
+              <button type="button" onClick={() => setOpenInstall(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("profile.cancel")}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex gap-3 mb-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                  <Smartphone className="h-5 w-5 text-primary" />
+                </div>
+                <p className="text-sm text-muted-foreground">{t("install.subtitle")}</p>
+              </div>
+              <ol className="space-y-3 text-sm text-foreground">
+                {isIOS() ? (
+                  <>
+                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                      <span>{t("install.iosStep1")}</span>
+                      <Share className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </li>
+                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                      <span>{t("install.iosStep2")}</span>
+                    </li>
+                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
+                      <span>{t("install.iosStep3")}</span>
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                      <span>{t("install.androidStep1")}</span>
+                    </li>
+                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                      <span>{t("install.androidStep2")}</span>
+                    </li>
+                  </>
+                )}
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Reporte */}
+      {openReport && (
+        <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => !reportSent && setOpenReport(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.reportTitle")}>
+          <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">{t("dashboard.reportTitle")}</h2>
+                <p className="text-xs text-muted-foreground">{t("dashboard.reportSubtitle")}</p>
+              </div>
+              {!reportSent && (
+                <button type="button" onClick={() => setOpenReport(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("profile.cancel")}>
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {reportSent ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center animate-in fade-in-0 duration-300">
+                  <Check className="h-12 w-12 text-primary mb-3" />
+                  <p className="text-lg font-semibold text-foreground">{t("dashboard.reportSent")}</p>
+                </div>
+              ) : (
+                <>
+                  <textarea
+                    value={reportText}
+                    onChange={(e) => setReportText(e.target.value)}
+                    placeholder={t("dashboard.reportPlaceholder")}
+                    rows={5}
+                    className="w-full rounded-xl border border-border bg-input px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendReport}
+                    disabled={!reportText.trim()}
+                    className="mt-3 w-full rounded-xl bg-primary py-3 text-sm font-medium text-primary-foreground disabled:opacity-50 active:scale-[0.98]"
+                  >
+                    {t("dashboard.send")}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Today's calories vs goal */}
       <section aria-label={t("dashboard.todayProgress")}>

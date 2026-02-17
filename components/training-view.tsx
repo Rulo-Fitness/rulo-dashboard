@@ -10,7 +10,7 @@ import {
   type Exercise,
 } from "@/lib/storage"
 import { useI18n } from "@/lib/i18n"
-import { Plus, Trash2, Dumbbell, X, ChevronLeft, ChevronRight, Pencil } from "lucide-react"
+import { Plus, Trash2, Dumbbell, X, ChevronLeft, ChevronRight, Pencil, Check } from "lucide-react"
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
@@ -29,6 +29,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [showAddPanel, setShowAddPanel] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
+  const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
   const setPanelOpen = (open: boolean) => {
@@ -49,8 +50,9 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
     onUpdate()
   }
 
-  const handleDelete = (exId: string) => {
+  const handleDeleteConfirm = (exId: string) => {
     deleteExercise(exId)
+    setDeletingExerciseId(null)
     refresh()
   }
 
@@ -84,7 +86,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </button>
       </div>
 
-      {/* Panel deslizante desde abajo para agregar o editar ejercicio */}
+      {/* Panel deslizante desde abajo para agregar ejercicio */}
       <div
         className="fixed inset-0 z-50 flex flex-col justify-end"
         style={{
@@ -96,20 +98,20 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         <div
           className="absolute inset-0 bg-black/40 transition-opacity duration-300"
           style={{ opacity: showAddPanel ? 1 : 0 }}
-          onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
+          onClick={() => setPanelOpen(false)}
           aria-hidden
         />
         <div
           className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
           style={{ transform: showAddPanel ? "translateY(0)" : "translateY(100%)" }}
         >
-          <header className="flex shrink-0 items-center justify-between px-4 py-3">
+          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
             <h2 className="text-lg font-semibold text-foreground">
-              {editingExercise ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
+              {t("training.addExercise").replace(/^\+\s*/, "")}
             </h2>
             <button
               type="button"
-              onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
+              onClick={() => setPanelOpen(false)}
               className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
               aria-label={t("profile.cancel")}
             >
@@ -118,14 +120,13 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           </header>
           <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
             <ExerciseForm
-              initial={editingExercise ?? null}
+              initial={null}
               selectedDate={selectedDate}
               onSave={() => {
                 setPanelOpen(false)
-                setEditingExercise(null)
                 refresh()
               }}
-              onCancel={() => { setPanelOpen(false); setEditingExercise(null) }}
+              onCancel={() => setPanelOpen(false)}
               hideHeader
             />
           </div>
@@ -181,11 +182,22 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
       )}
 
-      {/* Exercise list */}
+      {/* Exercise list: edit form renders above the exercise being edited */}
       {exercises.length > 0 && (
         <div className="flex flex-col gap-2">
           {exercises.map((ex) => (
             <div key={ex.id} className="flex flex-col gap-2">
+              {editingExercise?.id === ex.id && (
+                <ExerciseForm
+                  initial={editingExercise}
+                  selectedDate={selectedDate}
+                  onSave={() => {
+                    setEditingExercise(null)
+                    refresh()
+                  }}
+                  onCancel={() => setEditingExercise(null)}
+                />
+              )}
               <div
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
               >
@@ -200,20 +212,41 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                     <span>{ex.weight}{t("unit.kg")}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => { setPanelOpen(true); setEditingExercise(ex) }}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary"
-                  aria-label={t("training.editExercise")}
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(ex.id)}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  aria-label={t("training.deleteTraining")}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {deletingExerciseId === ex.id ? (
+                  <>
+                    <button
+                      onClick={() => handleDeleteConfirm(ex.id)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:bg-green-500/15 dark:text-green-400"
+                      aria-label={t("profile.confirmDelete")}
+                    >
+                      <Check className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingExerciseId(null)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary"
+                      aria-label={t("profile.cancel")}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => { setPanelOpen(true); setEditingExercise(ex) }}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary"
+                      aria-label={t("training.editExercise")}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingExerciseId(ex.id)}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      aria-label={t("training.deleteTraining")}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -275,7 +308,7 @@ function ExerciseForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="rounded-xl bg-muted/30 p-4"
+      className="rounded-xl border border-primary/30 bg-card p-4"
     >
       {!hideHeader && (
       <div className="flex items-center justify-between mb-4">

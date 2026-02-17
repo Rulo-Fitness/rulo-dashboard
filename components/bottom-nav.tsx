@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { LayoutDashboard, Dumbbell, UtensilsCrossed, User } from "lucide-react"
+import { LayoutDashboard, Dumbbell, UtensilsCrossed, Settings } from "lucide-react"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
 
 interface BottomNavProps {
@@ -22,7 +22,7 @@ const tabs = [
   { id: "dashboard", labelKey: "nav.home" as TranslationKey, icon: LayoutDashboard },
   { id: "training", labelKey: "nav.training" as TranslationKey, icon: Dumbbell },
   { id: "meals", labelKey: "nav.meals" as TranslationKey, icon: UtensilsCrossed },
-  { id: "profile", labelKey: "nav.profile" as TranslationKey, icon: User },
+  { id: "settings", labelKey: "nav.settings" as TranslationKey, icon: Settings },
 ]
 
 const SHRINK_MAX = 0.06

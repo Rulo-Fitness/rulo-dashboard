@@ -103,7 +103,7 @@ export default function Home() {
           {activeTab === "meals" && (
             <MealsView onUpdate={triggerRefresh} onMealPanelChange={setMealsPanelOpen} />
           )}
-          {activeTab === "profile" && <ProfileView />}
+          {activeTab === "settings" && <ProfileView />}
         </div>
       </main>
       <BottomNav
