@@ -13,6 +13,7 @@ export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [trainingAddPanelOpen, setTrainingAddPanelOpen] = useState(false)
   const [mealsPanelOpen, setMealsPanelOpen] = useState(false)
+  const [dashboardModalOpen, setDashboardModalOpen] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -95,7 +96,7 @@ export default function Home() {
       <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8 overflow-visible touch-manipulation" style={{ touchAction: "pan-y" }}>
         <div className="overflow-visible" style={{ touchAction: "pan-y" }}>
           {activeTab === "dashboard" && (
-            <DashboardView refreshKey={refreshKey} onNavigate={handleTabChange} />
+            <DashboardView refreshKey={refreshKey} onNavigate={handleTabChange} onDashboardModalChange={setDashboardModalOpen} />
           )}
           {activeTab === "training" && (
             <TrainingView onUpdate={triggerRefresh} onAddPanelChange={setTrainingAddPanelOpen} />
@@ -109,7 +110,7 @@ export default function Home() {
       <BottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        hidden={trainingAddPanelOpen || mealsPanelOpen}
+        hidden={trainingAddPanelOpen || mealsPanelOpen || dashboardModalOpen}
       />
     </>
   )

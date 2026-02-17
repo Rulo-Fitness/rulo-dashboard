@@ -35,9 +35,11 @@ function getWeekDates(centerDate: string): string[] {
 interface DashboardViewProps {
   refreshKey: number
   onNavigate?: (tab: string) => void
+  /** Llamado cuando se abre o cierra el modal de instalar o el de resumen semanal (para esconder la nav) */
+  onDashboardModalChange?: (open: boolean) => void
 }
 
-export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
+export function DashboardView({ refreshKey, onNavigate, onDashboardModalChange }: DashboardViewProps) {
   const { t, locale } = useI18n()
   const [mounted, setMounted] = useState(false)
   const [todayMeals, setTodayMeals] = useState<ReturnType<typeof getTodayMeals>>([])
@@ -47,9 +49,17 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const [openPlan, setOpenPlan] = useState(false)
   const [openInstall, setOpenInstall] = useState(false)
   const [openReport, setOpenReport] = useState(false)
+  const [cardsCarouselIndex, setCardsCarouselIndex] = useState(0)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCardsCarouselIndex((i) => (i + 1) % 4)
+    }, 4000)
+    return () => clearInterval(id)
   }, [])
 
   useEffect(() => {
@@ -90,11 +100,10 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const isOverCal = todayCalories > calGoal
   const calDiff = isOverCal ? todayCalories - calGoal : calGoal - todayCalories
 
-
   const modalOverlayClass =
     "fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 transition-opacity duration-300 ease-out"
   const modalContentClass =
-    "w-full max-w-lg rounded-t-2xl sm:rounded-2xl bg-card border border-border shadow-xl max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-300 ease-out slide-in-from-bottom-4 sm:slide-in-from-none"
+    "w-full max-w-lg rounded-t-2xl sm:rounded-2xl shadow-xl max-h-[85vh] overflow-hidden flex flex-col animate-in fade-in-0 zoom-in-95 duration-300 ease-out slide-in-from-bottom-4 sm:slide-in-from-none"
 
   if (!mounted) {
     return (
@@ -130,26 +139,67 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
         <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
       </div>
 
-      {/* Dos cajitas: Descarga la app, Ver tu reporte */}
-      <div className="grid grid-cols-2 gap-2.5">
-        <button
-          type="button"
-          onClick={() => setOpenInstall(true)}
-          className="aspect-[4/3] flex flex-col items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br from-purple-500/90 to-pink-500/90 p-2.5 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
+      {/* Carrusel de cards: Descarga la app, Resumen, Tu plan, Habla con Rulo */}
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+          style={{ transform: `translateX(-${cardsCarouselIndex * 100}%)` }}
         >
-          <Smartphone className="h-5 w-5 text-white/95 shrink-0" />
-          <p className="font-semibold text-white text-[12px] leading-tight line-clamp-2">{t("dashboard.boxInstall")}</p>
-          <p className="text-[9px] text-white/80 line-clamp-2">{t("dashboard.boxInstallHint")}</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setOpenReport(true)}
-          className="aspect-[4/3] flex flex-col items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 p-2.5 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
-        >
-          <MessageCircle className="h-5 w-5 text-white/95 shrink-0" />
-          <p className="font-semibold text-white text-[12px] leading-tight line-clamp-2">{t("dashboard.boxReport")}</p>
-          <p className="text-[9px] text-white/80 line-clamp-2">{t("dashboard.boxReportHint")}</p>
-        </button>
+          {[
+            {
+              Icon: Smartphone,
+              titleKey: "dashboard.boxInstall",
+              hintKey: "dashboard.boxInstallHint",
+              className: "from-purple-500/90 to-pink-500/90 shadow-purple-500/20",
+              onClick: () => { setOpenInstall(true); onDashboardModalChange?.(true) },
+            },
+            {
+              Icon: BarChart3,
+              titleKey: "dashboard.boxReport",
+              hintKey: "dashboard.boxReportHint",
+              className: "from-purple-600 to-purple-700 shadow-purple-500/20",
+              onClick: () => { setOpenReport(true); onDashboardModalChange?.(true) },
+            },
+            {
+              Icon: Target,
+              titleKey: "dashboard.carouselYourPlan",
+              hintKey: "dashboard.carouselYourPlanHint",
+              className: "from-amber-500/90 to-orange-600 shadow-orange-500/20",
+              onClick: () => setOpenPlan(true),
+            },
+            {
+              Icon: MessageCircle,
+              titleKey: "dashboard.carouselTalkToRulo",
+              hintKey: "dashboard.carouselTalkToRuloHint",
+              className: "from-violet-600 to-purple-700 shadow-purple-500/20",
+              onClick: () => onNavigate?.("profile"),
+            },
+          ].map((card, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={card.onClick}
+              className={`aspect-[4/3] w-full min-w-full flex-shrink-0 flex flex-col items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br p-2.5 text-center transition-transform active:scale-[0.98] shadow-lg ${card.className}`}
+            >
+              <card.Icon className="h-5 w-5 text-white/95 shrink-0" />
+              <p className="font-semibold text-white text-[12px] leading-tight line-clamp-2">{t(card.titleKey as Parameters<typeof t>[0])}</p>
+              <p className="text-[9px] text-white/80 line-clamp-2">{t(card.hintKey as Parameters<typeof t>[0])}</p>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center justify-center gap-1.5 pt-2">
+          {[0, 1, 2, 3].map((i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setCardsCarouselIndex(i)}
+              className={`h-1.5 rounded-full transition-all duration-200 ${
+                i === cardsCarouselIndex ? "w-5 bg-primary" : "w-1.5 bg-muted-foreground/30"
+              }`}
+              aria-label={t((i === 0 ? "dashboard.boxInstall" : i === 1 ? "dashboard.boxReport" : i === 2 ? "dashboard.carouselYourPlan" : "dashboard.carouselTalkToRulo") as Parameters<typeof t>[0])}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Modal: Tu plan — estilo rulo (space-bg + 3 planes) */}
@@ -256,80 +306,117 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
         )
       })()}
 
-      {/* Modal: Descarga la app */}
-      {openInstall && (
-        <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => setOpenInstall(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.installTitle")}>
-          <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">{t("dashboard.installTitle")}</h2>
-                <p className="text-xs text-muted-foreground">{t("dashboard.installSubtitle")}</p>
+      {/* Panel: Descarga la app (mismo diseño/animación que trains y meals) */}
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: openInstall ? "auto" : "none",
+          visibility: openInstall ? "visible" : "hidden",
+        }}
+        aria-hidden={!openInstall}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          style={{ opacity: openInstall ? 1 : 0 }}
+          onClick={() => { setOpenInstall(false); onDashboardModalChange?.(false) }}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: openInstall ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
+            <h2 className="text-lg font-semibold text-foreground">{t("dashboard.installTitle")}</h2>
+            <button
+              type="button"
+              onClick={() => { setOpenInstall(false); onDashboardModalChange?.(false) }}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+            <div className="flex gap-3 mb-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                <Smartphone className="h-5 w-5 text-primary" />
               </div>
-              <button type="button" onClick={() => setOpenInstall(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("profile.cancel")}>
-                <X className="h-4 w-4" />
-              </button>
+              <p className="text-sm text-muted-foreground">{t("install.subtitle")}</p>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="flex gap-3 mb-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
-                  <Smartphone className="h-5 w-5 text-primary" />
-                </div>
-                <p className="text-sm text-muted-foreground">{t("install.subtitle")}</p>
-              </div>
-              <ol className="space-y-3 text-sm text-foreground">
-                {isIOS() ? (
-                  <>
-                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                      <span>{t("install.iosStep1")}</span>
-                      <Share className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </li>
-                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                      <span>{t("install.iosStep2")}</span>
-                    </li>
-                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
-                      <span>{t("install.iosStep3")}</span>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                      <span>{t("install.androidStep1")}</span>
-                    </li>
-                    <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                      <span>{t("install.androidStep2")}</span>
-                    </li>
-                  </>
-                )}
-              </ol>
-            </div>
+            <ol className="space-y-3 text-sm text-foreground">
+              {isIOS() ? (
+                <>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                    <span>{t("install.iosStep1")}</span>
+                    <Share className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </li>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                    <span>{t("install.iosStep2")}</span>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
+                    <span>{t("install.iosStep3")}</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                    <span>{t("install.androidStep1")}</span>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                    <span>{t("install.androidStep2")}</span>
+                  </li>
+                </>
+              )}
+            </ol>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Modal: Resumen de la semana */}
-      {openReport && (() => {
-        const weekSessions = getWeekSessions()
-        const weekMeals = getWeekMeals()
-        const totalExercises = weekSessions.reduce((sum, s) => sum + s.exercises.length, 0)
-        const totalCalories = weekMeals.reduce((sum, m) => sum + m.calories, 0)
-        return (
-          <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => setOpenReport(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.recapTitle")}>
-            <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">{t("dashboard.recapTitle")}</h2>
-                  <p className="text-xs text-muted-foreground">{t("dashboard.recapSubtitle")}</p>
-                </div>
-                <button type="button" onClick={() => setOpenReport(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("profile.cancel")}>
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4">
+      {/* Panel: Resumen de la semana (mismo diseño/animación que trains y meals) */}
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: openReport ? "auto" : "none",
+          visibility: openReport ? "visible" : "hidden",
+        }}
+        aria-hidden={!openReport}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          style={{ opacity: openReport ? 1 : 0 }}
+          onClick={() => { setOpenReport(false); onDashboardModalChange?.(false) }}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: openReport ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">{t("dashboard.recapTitle")}</h2>
+              <p className="text-xs text-muted-foreground">{t("dashboard.recapSubtitle")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setOpenReport(false); onDashboardModalChange?.(false) }}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+            {openReport && (() => {
+              const weekSessions = getWeekSessions()
+              const weekMeals = getWeekMeals()
+              const totalExercises = weekSessions.reduce((sum, s) => sum + s.exercises.length, 0)
+              const totalCalories = weekMeals.reduce((sum, m) => sum + m.calories, 0)
+              return (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-xl border border-border bg-card p-4">
                     <div className="mb-2 flex items-center gap-2">
@@ -360,11 +447,11 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
                     <p className="text-2xl font-bold text-foreground">{totalCalories.toLocaleString()}</p>
                   </div>
                 </div>
-              </div>
-            </div>
+              )
+            })()}
           </div>
-        )
-      })()}
+        </div>
+      </div>
 
       {/* Today's calories vs goal */}
       <section aria-label={t("dashboard.todayProgress")}>
