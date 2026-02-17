@@ -98,7 +98,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         <div
           className="absolute inset-0 bg-black/40 transition-opacity duration-300"
           style={{ opacity: showAddPanel ? 1 : 0 }}
-          onClick={() => setPanelOpen(false)}
+          onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
           aria-hidden
         />
         <div
@@ -107,11 +107,11 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         >
           <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
             <h2 className="text-lg font-semibold text-foreground">
-              {t("training.addExercise").replace(/^\+\s*/, "")}
+              {editingExercise ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
             </h2>
             <button
               type="button"
-              onClick={() => setPanelOpen(false)}
+              onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
               className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
               aria-label={t("profile.cancel")}
             >
@@ -120,13 +120,14 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           </header>
           <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
             <ExerciseForm
-              initial={null}
+              initial={editingExercise}
               selectedDate={selectedDate}
               onSave={() => {
                 setPanelOpen(false)
+                setEditingExercise(null)
                 refresh()
               }}
-              onCancel={() => setPanelOpen(false)}
+              onCancel={() => { setPanelOpen(false); setEditingExercise(null) }}
               hideHeader
             />
           </div>
@@ -174,7 +175,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       </div>
 
       {/* Empty state */}
-      {exercises.length === 0 && !showAddPanel && !editingExercise && (
+      {exercises.length === 0 && !showAddPanel && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
           <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">{t("training.noExercises")}</p>
@@ -182,22 +183,11 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
       )}
 
-      {/* Exercise list: edit form renders above the exercise being edited */}
+      {/* Exercise list */}
       {exercises.length > 0 && (
         <div className="flex flex-col gap-2">
           {exercises.map((ex) => (
             <div key={ex.id} className="flex flex-col gap-2">
-              {editingExercise?.id === ex.id && (
-                <ExerciseForm
-                  initial={editingExercise}
-                  selectedDate={selectedDate}
-                  onSave={() => {
-                    setEditingExercise(null)
-                    refresh()
-                  }}
-                  onCancel={() => setEditingExercise(null)}
-                />
-              )}
               <div
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
               >

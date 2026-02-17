@@ -7,6 +7,8 @@ import {
   getProfile,
   saveProfile,
   clearAllData,
+  getTrainingSessions,
+  getMeals,
   type UserProfile,
 } from "@/lib/storage"
 import {
@@ -18,6 +20,8 @@ import {
   Beef,
   Wheat,
   Droplets,
+  Dumbbell,
+  Flame,
   Trash2,
   Save,
   RotateCcw,
@@ -44,6 +48,8 @@ export function ProfileView() {
     carbsGoal: 250,
     fatGoal: 65,
   })
+  const [totalSessions, setTotalSessions] = useState(0)
+  const [totalMeals, setTotalMeals] = useState(0)
   const [saved, setSaved] = useState(false)
   const [loggedOut, setLoggedOut] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -51,6 +57,8 @@ export function ProfileView() {
   useEffect(() => {
     setMounted(true)
     setProfile(getProfile())
+    setTotalSessions(getTrainingSessions().length)
+    setTotalMeals(getMeals().length)
   }, [])
 
   function handleSave() {
@@ -71,6 +79,8 @@ export function ProfileView() {
       carbsGoal: 250,
       fatGoal: 65,
     })
+    setTotalSessions(0)
+    setTotalMeals(0)
     setLoggedOut(true)
     setTimeout(() => setLoggedOut(false), 2000)
   }
@@ -87,6 +97,8 @@ export function ProfileView() {
       carbsGoal: 250,
       fatGoal: 65,
     })
+    setTotalSessions(0)
+    setTotalMeals(0)
     setShowClearConfirm(false)
   }
 
