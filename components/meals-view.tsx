@@ -407,10 +407,9 @@ function MealForm({
   const [name, setName] = useState(initial?.name ?? "")
 
   useEffect(() => {
-    if (isEdit && formRef.current) {
-      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }, [isEdit])
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [])
+
   const [date, setDate] = useState(initial?.date ?? selectedDate)
   const [time, setTime] = useState(
     initial?.time ?? new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })

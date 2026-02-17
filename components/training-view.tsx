@@ -261,10 +261,8 @@ function ExerciseForm({
   const [weight, setWeight] = useState(initial?.weight?.toString() ?? "")
 
   useEffect(() => {
-    if (isEdit && formRef.current) {
-      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }, [isEdit])
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
