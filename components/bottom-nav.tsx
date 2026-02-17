@@ -23,17 +23,18 @@ const tabs = [
   { id: "profile", labelKey: "nav.profile" as TranslationKey, icon: User },
 ]
 
-const SHRINK_MAX = 0.22
+const SHRINK_MAX = 0.06
 const SCROLL_ICONS_ONLY_THRESHOLD = 0.2
 const EASE_BOUNCE = "cubic-bezier(0.34, 1.42, 0.64, 1)"
 const EASE_SMOOTH = "cubic-bezier(0.33, 1, 0.68, 1)"
-const DUR = "0.42s"
-const DUR_M = "0.28s"
+const DUR = "0.65s"
+const DUR_M = "0.42s"
 
 export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNavProps) {
   const { t } = useI18n()
   const activeIndex = tabs.findIndex((tab) => tab.id === activeTab)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isBouncing, setIsBouncing] = useState(false)
   const prevIndex = useRef(activeIndex)
   const scale = 1 - scrollShrink * SHRINK_MAX
   const iconsOnly = scrollShrink >= SCROLL_ICONS_ONLY_THRESHOLD
@@ -43,9 +44,14 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
   useEffect(() => {
     if (prevIndex.current !== activeIndex) {
       setIsAnimating(true)
+      setIsBouncing(true)
       prevIndex.current = activeIndex
-      const timer = setTimeout(() => setIsAnimating(false), 120)
-      return () => clearTimeout(timer)
+      const t1 = setTimeout(() => setIsAnimating(false), 120)
+      const t2 = setTimeout(() => setIsBouncing(false), 420)
+      return () => {
+        clearTimeout(t1)
+        clearTimeout(t2)
+      }
     }
   }, [activeIndex])
 
@@ -61,20 +67,18 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
       <nav
         role="tablist"
         aria-label="Main navigation"
-        className="pointer-events-auto relative flex items-stretch rounded-full p-[5px] liquid-glass"
+        className={`pointer-events-auto relative flex items-stretch rounded-full p-[5px] liquid-glass ${isBouncing ? "nav-container-bounce" : ""}`}
       >
-        {/* Sliding pill indicator */}
+        {/* Sliding pill indicator: sin tinte (nav-pill), icon/tag sí llevan primary */}
         <div
-          className="absolute rounded-full"
+          className="nav-pill absolute rounded-full"
           style={{
             width: isAnimating ? `${tabW + (iconsOnly ? 14 : 18)}px` : `${tabW}px`,
             marginLeft: isAnimating ? (iconsOnly ? "-7px" : "-9px") : "0px",
             height: isAnimating ? "calc(100% + 12px)" : "calc(100% - 10px)",
             top: isAnimating ? "-6px" : "5px",
             transform: `translateX(${activeIndex * tabW}px)`,
-            transition: `transform 380ms ${EASE_BOUNCE}, width ${DUR_M} ${EASE_SMOOTH}, margin-left ${DUR_M} ${EASE_SMOOTH}, height ${DUR_M} ${EASE_SMOOTH}, top ${DUR_M} ${EASE_SMOOTH}`,
-            background: "oklch(from var(--primary) l c h / 0.18)",
-            boxShadow: "inset 0 1.5px 0 oklch(1 0 0 / 0.25), inset 0 -0.5px 0 oklch(0 0 0 / 0.06), 0 1px 4px oklch(0 0 0 / 0.06)",
+            transition: `transform 520ms ${EASE_BOUNCE}, width ${DUR_M} ${EASE_SMOOTH}, margin-left ${DUR_M} ${EASE_SMOOTH}, height ${DUR_M} ${EASE_SMOOTH}, top ${DUR_M} ${EASE_SMOOTH}`,
           }}
         />
 
@@ -100,7 +104,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
                   width: iconsOnly ? "24px" : "23px",
                   height: iconsOnly ? "24px" : "23px",
                   flexShrink: 0,
-                  color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
+                  color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                   strokeWidth: isActive ? 2.2 : 1.6,
                   transition: `color ${DUR_M} ${EASE_SMOOTH}, stroke-width ${DUR_M} ${EASE_SMOOTH}`,
                 }}
@@ -109,7 +113,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
                 style={{
                   fontSize: "11px",
                   fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "var(--foreground)" : "var(--muted-foreground)",
+                  color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                   maxWidth: iconsOnly ? 0 : 64,
                   maxHeight: iconsOnly ? 0 : "none",
                   opacity: iconsOnly ? 0 : 1,

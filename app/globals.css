@@ -4,15 +4,15 @@
 @custom-variant dark (&:is(.dark, .dark *));
 
 :root {
-  /* Light fitness theme */
+  /* Light fitness theme – azul iOS */
   --background: oklch(0.98 0.002 260);
   --foreground: oklch(0.15 0.005 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.15 0.005 260);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.005 260);
-  --primary: #FF6B00;
-  --primary-deep: #CC5500;
+  --primary: #007AFF;
+  --primary-deep: #0051D5;
   --primary-foreground: #ffffff;
   --secondary: oklch(0.93 0.005 260);
   --secondary-foreground: oklch(0.25 0.005 260);
@@ -24,8 +24,8 @@
   --destructive-foreground: oklch(0.98 0.002 260);
   --border: oklch(0.88 0.005 260);
   --input: oklch(0.95 0.003 260);
-  --ring: #FF6B00;
-  --chart-1: #FF6B00;
+  --ring: #007AFF;
+  --chart-1: #007AFF;
   --chart-2: oklch(0.55 0.16 145);
   --chart-3: oklch(0.58 0.20 40);
   --chart-4: oklch(0.62 0.15 80);
@@ -33,12 +33,12 @@
   --radius: 0.75rem;
   --sidebar: oklch(0.96 0.003 260);
   --sidebar-foreground: oklch(0.15 0.005 260);
-  --sidebar-primary: #FF6B00;
+  --sidebar-primary: #007AFF;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.93 0.005 260);
   --sidebar-accent-foreground: oklch(0.15 0.005 260);
   --sidebar-border: oklch(0.88 0.005 260);
-  --sidebar-ring: #FF6B00;
+  --sidebar-ring: #007AFF;
 
   --success: oklch(0.55 0.16 145);
   --success-foreground: oklch(0.98 0.002 260);
@@ -63,8 +63,8 @@ html.dark, .dark {
   --card-foreground: oklch(0.96 0.005 260);
   --popover: oklch(0.17 0.005 260);
   --popover-foreground: oklch(0.96 0.005 260);
-  --primary: #FF6B00;
-  --primary-deep: #CC5500;
+  --primary: #007AFF;
+  --primary-deep: #0051D5;
   --primary-foreground: #ffffff;
   --secondary: oklch(0.22 0.005 260);
   --secondary-foreground: oklch(0.88 0.005 260);
@@ -76,20 +76,20 @@ html.dark, .dark {
   --destructive-foreground: oklch(0.96 0.005 260);
   --border: oklch(0.26 0.005 260);
   --input: oklch(0.22 0.005 260);
-  --ring: #FF6B00;
-  --chart-1: #FF6B00;
+  --ring: #007AFF;
+  --chart-1: #007AFF;
   --chart-2: oklch(0.7 0.14 145);
   --chart-3: oklch(0.65 0.18 40);
   --chart-4: oklch(0.72 0.13 80);
   --chart-5: oklch(0.6 0.15 300);
   --sidebar: oklch(0.15 0.005 260);
   --sidebar-foreground: oklch(0.96 0.005 260);
-  --sidebar-primary: #FF6B00;
+  --sidebar-primary: #007AFF;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.22 0.005 260);
   --sidebar-accent-foreground: oklch(0.96 0.005 260);
   --sidebar-border: oklch(0.26 0.005 260);
-  --sidebar-ring: #FF6B00;
+  --sidebar-ring: #007AFF;
 
   --success: oklch(0.7 0.14 145);
   --success-foreground: oklch(0.13 0.005 260);
@@ -108,11 +108,27 @@ html.dark, .dark {
 }
 
 /* Hide scrollbar in PWA (keep scroll behavior) */
-/* Disable text selection/copy in PWA */
-html,
+/* Scroll en viewport (html) para que funcione con el puntero en cualquier zona */
+html {
+  position: relative;
+  height: auto;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
 body {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: visible;
+  min-height: 100%;
+  height: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -214,7 +230,7 @@ label[for] {
   }
 }
 
-/* Primary gradient fade: #FF6B00 → #CC5500 */
+/* Primary gradient: azul iOS */
 .bg-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-deep) 100%) !important;
 }
@@ -278,6 +294,35 @@ input[type="date"]:not(.date-picker-input)::-webkit-date-and-time-value {
 }
 input[type="time"]::-webkit-date-and-time-value {
   text-align: left;
+}
+
+/* Nav pill: translúcido 100% neutro, sin tinte (solo blanco/gris) */
+.nav-pill {
+  background: oklch(1 0 0 / 0.5);
+  border: 1px solid oklch(0.98 0 0 / 0.6);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.6),
+    inset 0 -1px 0 oklch(0 0 0 / 0.04),
+    0 2px 6px oklch(0 0 0 / 0.08);
+}
+.dark .nav-pill {
+  background: oklch(1 0 0 / 0.14);
+  border: 1px solid oklch(1 0 0 / 0.18);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.2),
+    inset 0 -1px 0 oklch(0 0 0 / 0.15),
+    0 2px 6px oklch(0 0 0 / 0.2);
+}
+
+/* Rebote del container del nav al cambiar de sección (muy sutil) */
+@keyframes nav-container-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.006); }
+  80% { transform: scale(0.998); }
+  100% { transform: scale(1); }
+}
+.nav-container-bounce {
+  animation: nav-container-bounce 0.28s cubic-bezier(0.34, 1.42, 0.64, 1);
 }
 
 /* ── Liquid Glass (macOS / iOS 26 PBR-inspired) ── */

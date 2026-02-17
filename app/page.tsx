@@ -7,35 +7,60 @@ import { TrainingView } from "@/components/training-view"
 import { MealsView } from "@/components/meals-view"
 import { ProfileView } from "@/components/profile-view"
 
-const ZONE_HEIGHT = 180
-const SCROLL_SHRINK_PX = 120
-
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [refreshKey, setRefreshKey] = useState(0)
-  const [zoomUnderNav, setZoomUnderNav] = useState(false)
-  const [navShrink, setNavShrink] = useState(0)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  // #region agent log
   useEffect(() => {
-    const onScroll = () => {
-      const { scrollY, innerHeight } = window
-      const scrollHeight = document.documentElement.scrollHeight
-      setZoomUnderNav(scrollY + innerHeight >= scrollHeight - ZONE_HEIGHT)
-      const progress = Math.min(scrollY / SCROLL_SHRINK_PX, 1)
-      setNavShrink(progress)
+    if (!mounted) return
+    const log = (label: string, extra: Record<string, unknown> = {}) => {
+      const doc = document.documentElement
+      const body = document.body
+      const data = {
+        label,
+        scrollY: window.scrollY,
+        scrollHeight: doc.scrollHeight,
+        bodyScrollHeight: body.scrollHeight,
+        innerHeight: window.innerHeight,
+        canScroll: doc.scrollHeight > window.innerHeight,
+        bodyOverflowY: getComputedStyle(body).overflowY,
+        htmlOverflowY: getComputedStyle(doc).overflowY,
+        ...extra,
+      }
+      fetch("http://127.0.0.1:7242/ingest/3e36ce2e-2a69-43c9-9c65-a57f4cfc2cbc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ location: "page.tsx:scroll-debug", message: label, data, timestamp: Date.now() }),
+      }).catch(() => {})
     }
-    onScroll()
+    const t = setTimeout(() => log("onLoad"), 600)
+    let scrollCount = 0
+    const onScroll = () => {
+      scrollCount += 1
+      if (scrollCount === 1) log("firstScroll", { scrollCount: 1 })
+      if (scrollCount === 3) log("afterFewScrolls", { scrollCount: 3 })
+    }
     window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener("scroll", onScroll)
+    }
+  }, [mounted])
+  // #endregion
 
   const triggerRefresh = useCallback(() => {
     setRefreshKey((k) => k + 1)
+  }, [])
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
 
   if (!mounted) {
@@ -57,18 +82,18 @@ export default function Home() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col bg-background pb-20 pt-8">
-      <div
-        className={`content-zoom-under-nav flex min-h-0 flex-1 flex-col ${zoomUnderNav ? "zoom-active" : ""}`}
-      >
-        {activeTab === "dashboard" && (
-          <DashboardView refreshKey={refreshKey} onNavigate={setActiveTab} />
-        )}
-        {activeTab === "training" && <TrainingView onUpdate={triggerRefresh} />}
-        {activeTab === "meals" && <MealsView onUpdate={triggerRefresh} />}
-        {activeTab === "profile" && <ProfileView />}
-      </div>
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} scrollShrink={navShrink} />
-    </main>
+    <>
+      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8 overflow-visible touch-manipulation" style={{ touchAction: "pan-y" }}>
+        <div className="overflow-visible" style={{ touchAction: "pan-y" }}>
+          {activeTab === "dashboard" && (
+            <DashboardView refreshKey={refreshKey} onNavigate={handleTabChange} />
+          )}
+          {activeTab === "training" && <TrainingView onUpdate={triggerRefresh} />}
+          {activeTab === "meals" && <MealsView onUpdate={triggerRefresh} />}
+          {activeTab === "profile" && <ProfileView />}
+        </div>
+      </main>
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+    </>
   )
 }

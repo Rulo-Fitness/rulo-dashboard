@@ -116,6 +116,8 @@ const translations = {
     en: "This will delete all your training sessions, meals, and profile data. This cannot be undone.",
     es: "Esto eliminará todas tus sesiones, comidas y datos de perfil. No se puede deshacer.",
   },
+  "profile.logout": { en: "Log out", es: "Cerrar sesión" },
+  "profile.loggedOut": { en: "Logged out", es: "Sesión cerrada" },
   "profile.cancel": { en: "Cancel", es: "Cancelar" },
   "profile.confirmDelete": { en: "Confirm Delete", es: "Confirmar" },
 

@@ -29,6 +29,7 @@ import {
   Moon,
   Monitor,
   Languages,
+  LogOut,
 } from "lucide-react"
 
 export function ProfileView() {
@@ -48,6 +49,7 @@ export function ProfileView() {
   const [totalSessions, setTotalSessions] = useState(0)
   const [totalMeals, setTotalMeals] = useState(0)
   const [saved, setSaved] = useState(false)
+  const [loggedOut, setLoggedOut] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   useEffect(() => {
@@ -61,6 +63,24 @@ export function ProfileView() {
     saveProfile(profile)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  function handleLogout() {
+    clearAllData()
+    setProfile({
+      name: "",
+      age: 0,
+      weight: 0,
+      height: 0,
+      calorieGoal: 2000,
+      proteinGoal: 150,
+      carbsGoal: 250,
+      fatGoal: 65,
+    })
+    setTotalSessions(0)
+    setTotalMeals(0)
+    setLoggedOut(true)
+    setTimeout(() => setLoggedOut(false), 2000)
   }
 
   function handleClearData() {
@@ -112,78 +132,22 @@ export function ProfileView() {
         </div>
       </div>
 
-      {/* Settings */}
-      <section aria-label={t("settings.title")}>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("settings.title")}
-        </h2>
-        <div className="flex flex-col gap-3">
-          {/* Language */}
+      {/* Stats */}
+      <section aria-label={t("profile.allTimeStats")}>
+        <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Languages className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">{t("settings.language")}</span>
+            <div className="mb-2 flex items-center gap-2">
+              <Dumbbell className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{t("dashboard.sessions")}</span>
             </div>
-            <div className="flex gap-2">
-              {languageOptions.map((opt) => (
-                <button
-                  key={opt.id}
-                  onClick={() => setLocale(opt.id)}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all active:scale-[0.97]"
-                  style={
-                    locale === opt.id
-                      ? {
-                          background: "var(--primary)",
-                          color: "var(--primary-foreground)",
-                        }
-                      : {
-                          background: "var(--secondary)",
-                          color: "var(--secondary-foreground)",
-                        }
-                  }
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            <p className="text-2xl font-bold text-foreground">{totalSessions}</p>
           </div>
-
-          {/* Theme */}
           <div className="rounded-xl border border-border bg-card p-4">
-            <div className="mb-3 flex items-center gap-2">
-              {mounted && resolvedTheme === "dark" ? (
-                <Moon className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <Sun className="h-4 w-4 text-muted-foreground" />
-              )}
-              <span className="text-sm font-medium text-foreground">{t("settings.theme")}</span>
+            <div className="mb-2 flex items-center gap-2">
+              <Flame className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{t("nav.meals")}</span>
             </div>
-            <div className="flex gap-2">
-              {themeOptions.map((opt) => {
-                const isSelected = mounted && theme === opt.id
-                return (
-                  <button
-                    key={opt.id}
-                    onClick={() => setTheme(opt.id)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all active:scale-[0.97]"
-                    style={
-                      isSelected
-                        ? {
-                            background: "var(--primary)",
-                            color: "var(--primary-foreground)",
-                          }
-                        : {
-                            background: "var(--secondary)",
-                            color: "var(--secondary-foreground)",
-                          }
-                    }
-                  >
-                    <opt.icon className="h-3.5 w-3.5" />
-                    {opt.label}
-                  </button>
-                )
-              })}
-            </div>
+            <p className="text-2xl font-bold text-foreground">{totalMeals}</p>
           </div>
         </div>
       </section>
@@ -286,28 +250,87 @@ export function ProfileView() {
         {saved ? t("profile.saved") : t("profile.saveProfile")}
       </button>
 
-      {/* Stats */}
-      <section aria-label={t("profile.allTimeStats")}>
+      {/* Settings: Language + Theme in one card */}
+      <section aria-label={t("settings.title")}>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t("profile.allTimeStats")}
+          {t("settings.title")}
         </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl border border-border bg-card p-4 space-y-5">
+          <div>
             <div className="mb-2 flex items-center gap-2">
-              <Dumbbell className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{t("dashboard.sessions")}</span>
+              <Languages className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{t("settings.language")}</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{totalSessions}</p>
+            <div className="flex gap-2">
+              {languageOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setLocale(opt.id)}
+                  className="flex flex-1 items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all active:scale-[0.97]"
+                  style={
+                    locale === opt.id
+                      ? {
+                          background: "var(--primary)",
+                          color: "var(--primary-foreground)",
+                        }
+                      : {
+                          background: "var(--secondary)",
+                          color: "var(--secondary-foreground)",
+                        }
+                  }
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4">
+          <div>
             <div className="mb-2 flex items-center gap-2">
-              <Flame className="h-4 w-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">{t("nav.meals")}</span>
+              {mounted && resolvedTheme === "dark" ? (
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Sun className="h-4 w-4 text-muted-foreground" />
+              )}
+              <span className="text-sm font-medium text-foreground">{t("settings.theme")}</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">{totalMeals}</p>
+            <div className="flex gap-2">
+              {themeOptions.map((opt) => {
+                const isSelected = mounted && theme === opt.id
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setTheme(opt.id)}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all active:scale-[0.97]"
+                    style={
+                      isSelected
+                        ? {
+                            background: "var(--primary)",
+                            color: "var(--primary-foreground)",
+                          }
+                        : {
+                            background: "var(--secondary)",
+                            color: "var(--secondary-foreground)",
+                          }
+                    }
+                  >
+                    <opt.icon className="h-3.5 w-3.5" />
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Log out */}
+      <button
+        onClick={handleLogout}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground transition-all active:scale-[0.98]"
+      >
+        <LogOut className="h-4 w-4" />
+        {loggedOut ? t("profile.loggedOut") : t("profile.logout")}
+      </button>
 
       {/* Danger Zone */}
       <section aria-label={t("profile.dangerZone")}>
