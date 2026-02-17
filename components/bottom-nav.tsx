@@ -9,6 +9,8 @@ interface BottomNavProps {
   onTabChange: (tab: string) => void
   /** 0 = full size, 1 = max shrink (scroll down) */
   scrollShrink?: number
+  /** Si true, la nav se oculta con animación (slide down) */
+  hidden?: boolean
 }
 
 const TAB_W_FULL = 82
@@ -30,7 +32,10 @@ const EASE_SMOOTH = "cubic-bezier(0.33, 1, 0.68, 1)"
 const DUR = "0.65s"
 const DUR_M = "0.42s"
 
-export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNavProps) {
+const HIDE_DUR = "0.3s"
+const HIDE_EASE = "cubic-bezier(0.33, 1, 0.68, 1)"
+
+export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = false }: BottomNavProps) {
   const { t } = useI18n()
   const activeIndex = tabs.findIndex((tab) => tab.id === activeTab)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -60,8 +65,9 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
       className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none origin-bottom"
       style={{
         paddingBottom: "max(8px, env(safe-area-inset-bottom))",
-        transform: `scale(${scale})`,
-        transition: `transform ${DUR} ${EASE_BOUNCE}`,
+        transform: `scale(${scale}) translateY(${hidden ? "100%" : "0"})`,
+        opacity: hidden ? 0 : 1,
+        transition: `transform ${HIDE_DUR} ${HIDE_EASE}, opacity ${HIDE_DUR} ${HIDE_EASE}`,
       }}
     >
       <nav
@@ -104,7 +110,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
                   width: iconsOnly ? "24px" : "23px",
                   height: iconsOnly ? "24px" : "23px",
                   flexShrink: 0,
-                  color: isActive ? "var(--primary)" : "white",
+                  color: isActive ? "var(--primary)" : "var(--nav-inactive)",
                   strokeWidth: isActive ? 2.2 : 1.6,
                   transition: `color ${DUR_M} ${EASE_SMOOTH}, stroke-width ${DUR_M} ${EASE_SMOOTH}`,
                 }}
@@ -113,7 +119,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
                 style={{
                   fontSize: "11px",
                   fontWeight: isActive ? 600 : 700,
-                  color: isActive ? "var(--primary)" : "white",
+                  color: isActive ? "var(--primary)" : "var(--nav-inactive)",
                   maxWidth: iconsOnly ? 0 : 64,
                   maxHeight: iconsOnly ? 0 : "none",
                   opacity: iconsOnly ? 0 : 1,

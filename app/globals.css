@@ -18,18 +18,18 @@
   --secondary-foreground: oklch(0.25 0.005 260);
   --muted: oklch(0.93 0.005 260);
   --muted-foreground: oklch(0.48 0.01 260);
-  --accent: oklch(0.68 0.17 50);
-  --accent-foreground: oklch(0.98 0.002 260);
+  --accent: #007AFF;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.98 0.002 260);
   --border: oklch(0.88 0.005 260);
   --input: oklch(0.95 0.003 260);
   --ring: #007AFF;
   --chart-1: #007AFF;
-  --chart-2: oklch(0.55 0.16 145);
-  --chart-3: oklch(0.58 0.20 40);
-  --chart-4: oklch(0.62 0.15 80);
-  --chart-5: oklch(0.50 0.17 300);
+  --chart-2: #007AFF;
+  --chart-3: #007AFF;
+  --chart-4: #007AFF;
+  --chart-5: #007AFF;
   --radius: 0.75rem;
   --sidebar: oklch(0.96 0.003 260);
   --sidebar-foreground: oklch(0.15 0.005 260);
@@ -40,10 +40,10 @@
   --sidebar-border: oklch(0.88 0.005 260);
   --sidebar-ring: #007AFF;
 
-  --success: oklch(0.55 0.16 145);
-  --success-foreground: oklch(0.98 0.002 260);
-  --warning: oklch(0.62 0.15 80);
-  --warning-foreground: oklch(0.15 0.005 260);
+  --success: #007AFF;
+  --success-foreground: #ffffff;
+  --warning: #007AFF;
+  --warning-foreground: #ffffff;
 
   --glass-bg-from: oklch(0.92 0.005 260 / 0.55);
   --glass-bg-to: oklch(0.96 0.005 260 / 0.65);
@@ -54,6 +54,8 @@
   --glass-inset-bottom: inset 0 -0.5px 0 oklch(0 0 0 / 0.08);
   --glass-highlight: oklch(1 0 0 / 0.15);
   --glass-inactive-text: oklch(0.45 0.01 260);
+  /* Nav: iconos/tags no seleccionados — gris oscuro en light */
+  --nav-inactive: oklch(0.35 0.01 260);
 }
 
 html.dark, .dark {
@@ -70,18 +72,18 @@ html.dark, .dark {
   --secondary-foreground: oklch(0.88 0.005 260);
   --muted: oklch(0.22 0.005 260);
   --muted-foreground: oklch(0.60 0.01 260);
-  --accent: oklch(0.72 0.17 50);
-  --accent-foreground: oklch(0.13 0.005 260);
+  --accent: #007AFF;
+  --accent-foreground: #ffffff;
   --destructive: oklch(0.55 0.2 25);
   --destructive-foreground: oklch(0.96 0.005 260);
   --border: oklch(0.26 0.005 260);
   --input: oklch(0.22 0.005 260);
   --ring: #007AFF;
   --chart-1: #007AFF;
-  --chart-2: oklch(0.7 0.14 145);
-  --chart-3: oklch(0.65 0.18 40);
-  --chart-4: oklch(0.72 0.13 80);
-  --chart-5: oklch(0.6 0.15 300);
+  --chart-2: #007AFF;
+  --chart-3: #007AFF;
+  --chart-4: #007AFF;
+  --chart-5: #007AFF;
   --sidebar: oklch(0.15 0.005 260);
   --sidebar-foreground: oklch(0.96 0.005 260);
   --sidebar-primary: #007AFF;
@@ -91,10 +93,10 @@ html.dark, .dark {
   --sidebar-border: oklch(0.26 0.005 260);
   --sidebar-ring: #007AFF;
 
-  --success: oklch(0.7 0.14 145);
-  --success-foreground: oklch(0.13 0.005 260);
-  --warning: oklch(0.72 0.13 80);
-  --warning-foreground: oklch(0.13 0.005 260);
+  --success: #007AFF;
+  --success-foreground: #ffffff;
+  --warning: #007AFF;
+  --warning-foreground: #ffffff;
 
   --glass-bg-from: oklch(0.22 0.01 260 / 0.55);
   --glass-bg-to: oklch(0.12 0.01 260 / 0.65);
@@ -105,6 +107,8 @@ html.dark, .dark {
   --glass-inset-bottom: inset 0 -0.5px 0 oklch(0 0 0 / 0.15);
   --glass-highlight: oklch(1 0 0 / 0.08);
   --glass-inactive-text: oklch(0.50 0.01 260);
+  /* Nav: iconos/tags no seleccionados — gris claro en dark */
+  --nav-inactive: oklch(0.65 0.01 260);
 }
 
 /* Hide scrollbar in PWA (keep scroll behavior) */
@@ -121,16 +125,12 @@ html {
   -webkit-user-select: none;
   user-select: none;
 }
-/* Safe areas iOS: contenido no se mete bajo notch ni home indicator (viewport-fit=cover en layout) */
 body {
   position: relative;
   overflow-x: hidden;
   overflow-y: visible;
   min-height: 100dvh;
   height: auto;
-  box-sizing: border-box;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-user-select: none;
@@ -256,13 +256,15 @@ label[for] {
 }
 
 /* ── Date picker ── */
+/* Input encima del label para que el tap abra el calendario nativo en iOS */
 .date-picker-input {
   position: absolute;
   inset: 0;
   opacity: 0;
-  pointer-events: none;
   width: 100%;
   height: 100%;
+  cursor: pointer;
+  z-index: 1;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -310,12 +312,12 @@ input[type="time"]::-webkit-date-and-time-value {
     0 2px 6px oklch(0 0 0 / 0.08);
 }
 .dark .nav-pill {
-  background: oklch(1 0 0 / 0.14);
-  border: 1px solid oklch(1 0 0 / 0.18);
+  background: oklch(0.32 0.06 260 / 0.55);
+  border: 1px solid oklch(0.45 0.08 260 / 0.5);
   box-shadow:
-    inset 0 1px 0 oklch(1 0 0 / 0.2),
-    inset 0 -1px 0 oklch(0 0 0 / 0.15),
-    0 2px 6px oklch(0 0 0 / 0.2);
+    inset 0 1px 0 oklch(0.5 0.06 260 / 0.25),
+    inset 0 -1px 0 oklch(0 0 0 / 0.2),
+    0 2px 6px oklch(0 0 0 / 0.25);
 }
 
 /* Rebote del container del nav al cambiar de sección (muy sutil) */
@@ -399,33 +401,33 @@ input[type="time"]::-webkit-date-and-time-value {
   -webkit-mask-composite: xor;
 }
 
-/* ── Dark mode variant ── */
+/* ── Dark mode variant (mismo azul que light) ── */
 .dark .liquid-glass {
   background: linear-gradient(
     168deg,
-    oklch(0.22 0.008 260 / 0.85) 0%,
-    oklch(0.16 0.008 260 / 0.78) 50%,
-    oklch(0.20 0.008 260 / 0.82) 100%
+    oklch(0.28 0.04 260 / 0.88) 0%,
+    oklch(0.20 0.05 260 / 0.82) 50%,
+    oklch(0.25 0.045 260 / 0.85) 100%
   );
 
-  backdrop-filter: blur(120px) saturate(180%) brightness(0.85);
-  -webkit-backdrop-filter: blur(120px) saturate(180%) brightness(0.85);
+  backdrop-filter: blur(120px) saturate(200%) brightness(0.88);
+  -webkit-backdrop-filter: blur(120px) saturate(200%) brightness(0.88);
 
-  border: 0.5px solid oklch(1 0 0 / 0.14);
-  border-top-color: oklch(1 0 0 / 0.22);
+  border: 0.5px solid oklch(0.45 0.06 260 / 0.35);
+  border-top-color: oklch(0.55 0.08 260 / 0.4);
 
   box-shadow:
-    0 12px 48px oklch(0 0 0 / 0.40),
+    0 12px 48px oklch(0.2 0.04 260 / 0.35),
     0 4px 16px oklch(0 0 0 / 0.25),
-    inset 0 2px 1px oklch(1 0 0 / 0.12),
+    inset 0 2px 1px oklch(0.5 0.06 260 / 0.2),
     inset 0 -1px 1px oklch(0 0 0 / 0.18);
 }
 
 .dark .liquid-glass::before {
   background: linear-gradient(
     175deg,
-    oklch(1 0 0 / 0.10) 0%,
-    oklch(1 0.02 300 / 0.03) 25%,
+    oklch(0.5 0.06 260 / 0.12) 0%,
+    oklch(0.45 0.04 260 / 0.05) 25%,
     transparent 55%
   );
 }
@@ -433,8 +435,8 @@ input[type="time"]::-webkit-date-and-time-value {
 .dark .liquid-glass::after {
   background: linear-gradient(
     180deg,
-    oklch(1 0 0 / 0.10) 0%,
-    oklch(1 0 0 / 0.02) 40%,
-    oklch(1 0 0 / 0.05) 100%
+    oklch(0.4 0.04 260 / 0.08) 0%,
+    oklch(0.25 0.03 260 / 0.03) 40%,
+    oklch(0.3 0.03 260 / 0.05) 100%
   ) border-box;
 }

@@ -20,15 +20,21 @@ function shiftDate(dateStr: string, days: number): string {
 
 interface TrainingViewProps {
   onUpdate: () => void
+  onAddPanelChange?: (open: boolean) => void
 }
 
-export function TrainingView({ onUpdate }: TrainingViewProps) {
+export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) {
   const { t, locale } = useI18n()
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [exercises, setExercises] = useState<Exercise[]>([])
-  const [showForm, setShowForm] = useState(false)
+  const [showAddPanel, setShowAddPanel] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
+
+  const setPanelOpen = (open: boolean) => {
+    setShowAddPanel(open)
+    onAddPanelChange?.(open)
+  }
 
   const loadExercises = () => {
     setExercises(getExercisesForDate(selectedDate))
@@ -70,12 +76,60 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
           <p className="text-sm text-muted-foreground">{t("training.subtitle")}</p>
         </div>
         <button
-          onClick={() => { setShowForm(true); setEditingExercise(null) }}
+          onClick={() => { setPanelOpen(true); setEditingExercise(null) }}
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("training.addExercise")}
         >
           <Plus className="h-5 w-5" />
         </button>
+      </div>
+
+      {/* Panel deslizante desde abajo para agregar o editar ejercicio */}
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: showAddPanel ? "auto" : "none",
+          visibility: showAddPanel ? "visible" : "hidden",
+        }}
+        aria-hidden={!showAddPanel}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          style={{ opacity: showAddPanel ? 1 : 0 }}
+          onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: showAddPanel ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between px-4 py-3">
+            <h2 className="text-lg font-semibold text-foreground">
+              {editingExercise ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
+            </h2>
+            <button
+              type="button"
+              onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+            <ExerciseForm
+              initial={editingExercise ?? null}
+              selectedDate={selectedDate}
+              onSave={() => {
+                setPanelOpen(false)
+                setEditingExercise(null)
+                refresh()
+              }}
+              onCancel={() => { setPanelOpen(false); setEditingExercise(null) }}
+              hideHeader
+            />
+          </div>
+        </div>
       </div>
 
       {/* Selector de día */}
@@ -87,13 +141,14 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <div className="relative cursor-pointer" onClick={() => dateInputRef.current?.showPicker()}>
-            <span className={`block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
+          <div className="relative cursor-pointer">
+            <span className={`pointer-events-none block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
               {dateLabel}
             </span>
             <input
               ref={dateInputRef}
               type="date"
+              aria-label={dateLabel}
               value={selectedDate}
               max={getTodayString()}
               onChange={(e) => {
@@ -117,21 +172,8 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
         </div>
       </div>
 
-      {/* Add form (only when adding new, at top) */}
-      {showForm && !editingExercise && (
-        <ExerciseForm
-          initial={null}
-          selectedDate={selectedDate}
-          onSave={() => {
-            setShowForm(false)
-            refresh()
-          }}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
-
       {/* Empty state */}
-      {exercises.length === 0 && !showForm && !editingExercise && (
+      {exercises.length === 0 && !showAddPanel && !editingExercise && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
           <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">{t("training.noExercises")}</p>
@@ -139,22 +181,11 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
         </div>
       )}
 
-      {/* Exercise list: edit form renders above the exercise being edited */}
+      {/* Exercise list */}
       {exercises.length > 0 && (
         <div className="flex flex-col gap-2">
           {exercises.map((ex) => (
             <div key={ex.id} className="flex flex-col gap-2">
-              {editingExercise?.id === ex.id && (
-                <ExerciseForm
-                  initial={editingExercise}
-                  selectedDate={selectedDate}
-                  onSave={() => {
-                    setEditingExercise(null)
-                    refresh()
-                  }}
-                  onCancel={() => setEditingExercise(null)}
-                />
-              )}
               <div
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
               >
@@ -170,7 +201,7 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
                   </div>
                 </div>
                 <button
-                  onClick={() => { setEditingExercise(ex); setShowForm(false) }}
+                  onClick={() => { setPanelOpen(true); setEditingExercise(ex) }}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary"
                   aria-label={t("training.editExercise")}
                 >
@@ -197,11 +228,13 @@ function ExerciseForm({
   selectedDate,
   onSave,
   onCancel,
+  hideHeader = false,
 }: {
   initial?: Exercise | null
   selectedDate: string
   onSave: () => void
   onCancel: () => void
+  hideHeader?: boolean
 }) {
   const { t } = useI18n()
   const formRef = useRef<HTMLFormElement>(null)
@@ -242,8 +275,9 @@ function ExerciseForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="rounded-xl border border-primary/30 bg-card p-4"
+      className="rounded-xl bg-muted/30 p-4"
     >
+      {!hideHeader && (
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-foreground">
           {isEdit ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
@@ -257,6 +291,7 @@ function ExerciseForm({
           <X className="h-4 w-4" />
         </button>
       </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <input

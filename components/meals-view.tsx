@@ -21,15 +21,21 @@ function shiftDate(dateStr: string, days: number): string {
 
 interface MealsViewProps {
   onUpdate: () => void
+  onMealPanelChange?: (open: boolean) => void
 }
 
-export function MealsView({ onUpdate }: MealsViewProps) {
+export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const { t, locale } = useI18n()
   const [allMeals, setAllMeals] = useState<Meal[]>([])
   const [selectedDate, setSelectedDate] = useState(getTodayString())
-  const [showForm, setShowForm] = useState(false)
+  const [showPanel, setShowPanel] = useState(false)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
+
+  const setPanelOpen = (open: boolean) => {
+    setShowPanel(open)
+    onMealPanelChange?.(open)
+  }
 
   useEffect(() => {
     setAllMeals(getMeals())
@@ -79,12 +85,60 @@ export function MealsView({ onUpdate }: MealsViewProps) {
           <p className="text-sm text-muted-foreground">{t("meals.subtitle")}</p>
         </div>
         <button
-          onClick={() => { setShowForm(true); setEditingMeal(null) }}
+          onClick={() => { setPanelOpen(true); setEditingMeal(null) }}
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("meals.logMeal")}
         >
           <Plus className="h-5 w-5" />
         </button>
+      </div>
+
+      {/* Panel deslizante desde abajo para agregar o editar comida */}
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: showPanel ? "auto" : "none",
+          visibility: showPanel ? "visible" : "hidden",
+        }}
+        aria-hidden={!showPanel}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          style={{ opacity: showPanel ? 1 : 0 }}
+          onClick={() => { setPanelOpen(false); setEditingMeal(null) }}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: showPanel ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between px-4 py-3">
+            <h2 className="text-lg font-semibold text-foreground">
+              {editingMeal ? t("meals.editMeal") : t("meals.logMeal")}
+            </h2>
+            <button
+              type="button"
+              onClick={() => { setPanelOpen(false); setEditingMeal(null) }}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+            <MealForm
+              initial={editingMeal ?? null}
+              selectedDate={selectedDate}
+              onSave={() => {
+                setPanelOpen(false)
+                setEditingMeal(null)
+                refresh()
+              }}
+              onCancel={() => { setPanelOpen(false); setEditingMeal(null) }}
+              hideHeader
+            />
+          </div>
+        </div>
       </div>
 
       {/* Selector de día */}
@@ -96,13 +150,14 @@ export function MealsView({ onUpdate }: MealsViewProps) {
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <div className="relative cursor-pointer" onClick={() => dateInputRef.current?.showPicker()}>
-            <span className={`block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
+          <div className="relative cursor-pointer">
+            <span className={`pointer-events-none block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
               {dateLabel}
             </span>
             <input
               ref={dateInputRef}
               type="date"
+              aria-label={dateLabel}
               value={selectedDate}
               max={getTodayString()}
               onChange={(e) => {
@@ -129,20 +184,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
       {/* Nutrition Summary Card */}
       <NutritionSummary totals={totals} />
 
-      {/* Add form (only when adding new, at top) */}
-      {showForm && !editingMeal && (
-        <MealForm
-          initial={null}
-          selectedDate={selectedDate}
-          onSave={() => {
-            setShowForm(false)
-            refresh()
-          }}
-          onCancel={() => setShowForm(false)}
-        />
-      )}
-
-      {filteredMeals.length === 0 && !showForm && !editingMeal && (
+      {filteredMeals.length === 0 && !showPanel && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
           <UtensilsCrossed className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">{t("meals.noMeals")}</p>
@@ -150,21 +192,10 @@ export function MealsView({ onUpdate }: MealsViewProps) {
         </div>
       )}
 
-      {/* Meal list: edit form renders above the meal being edited */}
+      {/* Meal list */}
       <div className="flex flex-col gap-2">
         {filteredMeals.map((meal) => (
           <div key={meal.id} className="flex flex-col gap-2">
-            {editingMeal?.id === meal.id && (
-              <MealForm
-                initial={editingMeal}
-                selectedDate={selectedDate}
-                onSave={() => {
-                  setEditingMeal(null)
-                  refresh()
-                }}
-                onCancel={() => setEditingMeal(null)}
-              />
-            )}
             <div
               className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
             >
@@ -192,7 +223,7 @@ export function MealsView({ onUpdate }: MealsViewProps) {
                 </div>
               </div>
               <button
-                onClick={() => { setEditingMeal(meal); setShowForm(false) }}
+                onClick={() => { setPanelOpen(true); setEditingMeal(meal) }}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/15 hover:text-primary"
                 aria-label={t("meals.editMeal")}
               >
@@ -248,8 +279,9 @@ function NutritionSummary({ totals }: { totals: { calories: number; protein: num
         <svg viewBox={`0 0 ${size} ${size * 0.75}`} className="w-full h-full" style={{ overflow: "visible" }}>
           <defs>
             <linearGradient id="arc-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#007AFF" />
-              <stop offset="100%" stopColor="#0051D5" />
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#c084fc" />
+              <stop offset="100%" stopColor="#f472b6" />
             </linearGradient>
           </defs>
           {/* Background arc */}
@@ -264,7 +296,7 @@ function NutritionSummary({ totals }: { totals: { calories: number; protein: num
           <path
             d={`M ${startX} ${startY} A ${arcR} ${arcR} 0 1 1 ${endX} ${endY}`}
             fill="none"
-            stroke={isOver ? "var(--destructive)" : "url(#arc-gradient)"}
+            stroke="url(#arc-gradient)"
             strokeWidth={arcStroke}
             strokeLinecap="round"
             strokeDasharray={arcLen}
@@ -292,19 +324,16 @@ function NutritionSummary({ totals }: { totals: { calories: number; protein: num
           label={t("macro.protein")}
           current={totals.protein}
           goal={protGoal}
-          color="var(--primary)"
         />
         <MacroProgressBar
           label={t("macro.carbs")}
           current={totals.carbs}
           goal={carbsGoal}
-          color="#22c55e"
         />
         <MacroProgressBar
           label={t("macro.fat")}
           current={totals.fat}
           goal={fatGoal}
-          color="#eab308"
         />
       </div>
     </div>
@@ -315,12 +344,10 @@ function MacroProgressBar({
   label,
   current,
   goal,
-  color,
 }: {
   label: string
   current: number
   goal: number
-  color: string
 }) {
   const percent = Math.min((current / goal) * 100, 100)
 
@@ -333,8 +360,8 @@ function MacroProgressBar({
       </p>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
         <div
-          className="h-full rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${percent}%`, backgroundColor: color }}
+          className="h-full rounded-full bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 transition-all duration-500 ease-out"
+          style={{ width: `${percent}%` }}
         />
       </div>
     </div>
@@ -346,11 +373,13 @@ function MealForm({
   selectedDate,
   onSave,
   onCancel,
+  hideHeader = false,
 }: {
   initial?: Meal | null
   selectedDate: string
   onSave: () => void
   onCancel: () => void
+  hideHeader?: boolean
 }) {
   const { t } = useI18n()
   const formRef = useRef<HTMLFormElement>(null)
@@ -403,8 +432,9 @@ function MealForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="rounded-xl border border-primary/30 bg-card p-4"
+      className="rounded-xl bg-muted/30 p-4"
     >
+      {!hideHeader && (
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">
           {isEdit ? t("meals.editMeal") : t("meals.logMeal")}
@@ -418,6 +448,7 @@ function MealForm({
           <X className="h-4 w-4" />
         </button>
       </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <input
