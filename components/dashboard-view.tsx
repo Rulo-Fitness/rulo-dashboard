@@ -113,9 +113,9 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   return (
     <div className="flex flex-col gap-5 px-4 pb-6">
       <div ref={headerAnchorRef} className="h-0" aria-hidden />
-      {headerFixed && <div className="h-14" aria-hidden />}
+      {headerFixed && <div className="h-20" aria-hidden />}
       <div
-        className={`flex flex-col gap-0.5 ${headerFixed ? "fixed left-0 right-0 top-0 z-20 mx-auto max-w-lg border-b border-border bg-background px-4 py-3" : ""}`}
+        className={`flex flex-col gap-0.5 ${headerFixed ? "fixed left-0 right-0 top-0 z-20 mx-auto max-w-lg border-b border-border bg-background px-4 pt-8 pb-3" : ""}`}
       >
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{greeting}</h1>
         <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>

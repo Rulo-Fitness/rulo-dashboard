@@ -105,9 +105,9 @@ export function MealsView({ onUpdate }: MealsViewProps) {
       <div ref={daysAnchorRef} className="h-0" aria-hidden />
 
       {/* Día: en flujo normal; al scrollear se pasa a fixed para que siga visible */}
-      {daysFixed && <div className="h-14" aria-hidden />}
+      {daysFixed && <div className="h-20" aria-hidden />}
       <div
-        className={`z-20 -mx-4 border-b border-border bg-background px-4 py-2 ${daysFixed ? "fixed left-0 right-0 top-0 mx-auto max-w-lg" : ""}`}
+        className={`z-20 -mx-4 bg-background px-4 py-2 ${daysFixed ? "fixed left-0 right-0 top-0 mx-auto max-w-lg border-b border-border pt-8" : ""}`}
       >
         <div className="flex items-center justify-between rounded-xl border border-border bg-card px-2 py-1.5">
           <button
