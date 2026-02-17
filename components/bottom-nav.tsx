@@ -15,8 +15,8 @@ interface BottomNavProps {
 
 const TAB_W_FULL = 82
 const TAB_H_FULL = 66
-const TAB_W_COMPACT = 56
-const TAB_H_COMPACT = 52
+const TAB_W_COMPACT = 62
+const TAB_H_COMPACT = 58
 
 const tabs = [
   { id: "dashboard", labelKey: "nav.home" as TranslationKey, icon: LayoutDashboard },
@@ -25,15 +25,21 @@ const tabs = [
   { id: "settings", labelKey: "nav.settings" as TranslationKey, icon: Settings },
 ]
 
-const SHRINK_MAX = 0.06
+const SHRINK_MAX = 0.03
 const SCROLL_ICONS_ONLY_THRESHOLD = 0.2
 const EASE_BOUNCE = "cubic-bezier(0.34, 1.42, 0.64, 1)"
 const EASE_SMOOTH = "cubic-bezier(0.33, 1, 0.68, 1)"
+const EASE_SHRINK = "cubic-bezier(0.32, 0.72, 0, 1)"
 const DUR = "0.65s"
 const DUR_M = "0.42s"
+const DUR_SHRINK = "0.5s"
 
 const HIDE_DUR = "0.3s"
 const HIDE_EASE = "cubic-bezier(0.33, 1, 0.68, 1)"
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t
+}
 
 export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = false }: BottomNavProps) {
   const { t } = useI18n()
@@ -43,8 +49,9 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
   const prevIndex = useRef(activeIndex)
   const scale = 1 - scrollShrink * SHRINK_MAX
   const iconsOnly = scrollShrink >= SCROLL_ICONS_ONLY_THRESHOLD
-  const tabW = iconsOnly ? TAB_W_COMPACT : TAB_W_FULL
-  const tabH = iconsOnly ? TAB_H_COMPACT : TAB_H_FULL
+  const tabW = lerp(TAB_W_FULL, TAB_W_COMPACT, scrollShrink)
+  const tabH = lerp(TAB_H_FULL, TAB_H_COMPACT, scrollShrink)
+  const labelOpacity = scrollShrink <= 0.15 ? 1 : scrollShrink >= 0.35 ? 0 : (0.35 - scrollShrink) / 0.2
 
   useEffect(() => {
     if (prevIndex.current !== activeIndex) {
@@ -67,7 +74,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
         paddingBottom: "max(8px, env(safe-area-inset-bottom))",
         transform: `scale(${scale}) translateY(${hidden ? "100%" : "0"})`,
         opacity: hidden ? 0 : 1,
-        transition: `transform ${HIDE_DUR} ${HIDE_EASE}, opacity ${HIDE_DUR} ${HIDE_EASE}`,
+        transition: `transform ${DUR_SHRINK} ${EASE_SHRINK}, opacity ${HIDE_DUR} ${HIDE_EASE}`,
       }}
     >
       <nav
@@ -84,7 +91,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
             height: isAnimating ? "calc(100% + 12px)" : "calc(100% - 10px)",
             top: isAnimating ? "-6px" : "5px",
             transform: `translateX(${activeIndex * tabW}px)`,
-            transition: `transform 520ms ${EASE_BOUNCE}, width ${DUR_M} ${EASE_SMOOTH}, margin-left ${DUR_M} ${EASE_SMOOTH}, height ${DUR_M} ${EASE_SMOOTH}, top ${DUR_M} ${EASE_SMOOTH}`,
+            transition: `transform ${DUR_SHRINK} ${EASE_SHRINK}, width ${DUR_M} ${EASE_SMOOTH}, margin-left ${DUR_M} ${EASE_SMOOTH}, height ${DUR_M} ${EASE_SMOOTH}, top ${DUR_M} ${EASE_SMOOTH}`,
           }}
         />
 
@@ -102,7 +109,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
               style={{
                 width: `${tabW}px`,
                 height: `${tabH}px`,
-                transition: `width ${DUR} ${EASE_BOUNCE}, height ${DUR} ${EASE_BOUNCE}`,
+                transition: `width ${DUR_SHRINK} ${EASE_SHRINK}, height ${DUR_SHRINK} ${EASE_SHRINK}`,
               }}
             >
               <tab.icon
@@ -116,17 +123,21 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
                 }}
               />
               <span
+                aria-hidden
                 style={{
+                  position: "absolute",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  bottom: 6,
+                  width: 64,
+                  textAlign: "center",
                   fontSize: "11px",
                   fontWeight: isActive ? 600 : 700,
                   color: isActive ? "var(--primary)" : "var(--nav-inactive)",
-                  maxWidth: iconsOnly ? 0 : 64,
-                  maxHeight: iconsOnly ? 0 : "none",
-                  opacity: iconsOnly ? 0 : 1,
-                  overflow: "hidden",
+                  opacity: labelOpacity,
                   whiteSpace: "nowrap",
-                  lineHeight: iconsOnly ? 0 : undefined,
-                  transition: `max-width ${DUR} ${EASE_BOUNCE}, max-height ${DUR_M} ${EASE_SMOOTH}, opacity ${DUR_M} ${EASE_SMOOTH}`,
+                  pointerEvents: "none",
+                  transition: `opacity ${DUR_SHRINK} ${EASE_SHRINK}`,
                 }}
               >
                 {label}

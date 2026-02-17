@@ -142,7 +142,7 @@ export function DashboardView({ refreshKey, onNavigate, onDashboardModalChange }
       {/* Carrusel de cards: Descarga la app, Resumen, Tu plan, Habla con Rulo */}
       <div className="overflow-hidden">
         <div
-          className="flex transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]"
+          className="flex transition-transform duration-500 ease-in-out"
           style={{ transform: `translateX(-${cardsCarouselIndex * 100}%)` }}
         >
           {[
