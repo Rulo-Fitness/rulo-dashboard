@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { BottomNav } from "@/components/bottom-nav"
 import { DashboardView } from "@/components/dashboard-view"
 import { TrainingView } from "@/components/training-view"
@@ -11,10 +11,30 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [refreshKey, setRefreshKey] = useState(0)
+  const scrollMinTopRef = useRef(0)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  /* Tope de scroll desde env(safe-area-inset-top): contenido no sube más que la safe area */
+  useEffect(() => {
+    const pt = getComputedStyle(document.body).paddingTop
+    const px = typeof pt === "string" && pt.endsWith("px") ? parseInt(pt, 10) : 0
+    scrollMinTopRef.current = Number.isNaN(px) ? 0 : px
+  }, [mounted])
+
+  useEffect(() => {
+    const clamp = () => {
+      const min = scrollMinTopRef.current
+      if (min > 0 && window.scrollY < min) {
+        window.scrollTo(0, min)
+      }
+    }
+    clamp()
+    window.addEventListener("scroll", clamp, { passive: false })
+    return () => window.removeEventListener("scroll", clamp)
+  }, [mounted])
 
   // #region agent log
   useEffect(() => {
@@ -60,12 +80,15 @@ export default function Home() {
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab)
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    window.scrollTo({ top: scrollMinTopRef.current, behavior: "smooth" })
   }, [])
 
   if (!mounted) {
     return (
-      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8">
+      <main
+        className="mx-auto min-h-dvh max-w-lg bg-background pb-20"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
         <div className="flex flex-col gap-6 px-4 pb-6 animate-pulse">
           <div className="flex flex-col gap-1">
             <div className="h-8 w-48 rounded-md bg-secondary" />
@@ -83,7 +106,13 @@ export default function Home() {
 
   return (
     <>
-      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8 overflow-visible touch-manipulation" style={{ touchAction: "pan-y" }}>
+      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 overflow-visible touch-manipulation" style={{ touchAction: "pan-y" }}>
+        {/* Zona safe area superior: altura = env(safe-area-inset-top); el contenido no sobrepasa al scrollear */}
+        <div
+          className="sticky top-0 z-10 shrink-0 bg-background"
+          style={{ minHeight: "env(safe-area-inset-top, 0px)" }}
+          aria-hidden
+        />
         <div className="overflow-visible" style={{ touchAction: "pan-y" }}>
           {activeTab === "dashboard" && (
             <DashboardView refreshKey={refreshKey} onNavigate={handleTabChange} />

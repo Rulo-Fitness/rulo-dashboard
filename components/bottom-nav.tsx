@@ -104,7 +104,7 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
                   width: iconsOnly ? "24px" : "23px",
                   height: iconsOnly ? "24px" : "23px",
                   flexShrink: 0,
-                  color: isActive ? "var(--primary)" : "var(--muted-foreground)",
+                  color: isActive ? "var(--primary)" : "white",
                   strokeWidth: isActive ? 2.2 : 1.6,
                   transition: `color ${DUR_M} ${EASE_SMOOTH}, stroke-width ${DUR_M} ${EASE_SMOOTH}`,
                 }}
@@ -112,8 +112,8 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0 }: BottomNa
               <span
                 style={{
                   fontSize: "11px",
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "var(--primary)" : "var(--muted-foreground)",
+                  fontWeight: isActive ? 600 : 700,
+                  color: isActive ? "var(--primary)" : "white",
                   maxWidth: iconsOnly ? 0 : 64,
                   maxHeight: iconsOnly ? 0 : "none",
                   opacity: iconsOnly ? 0 : 1,

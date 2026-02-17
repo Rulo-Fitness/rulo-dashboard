@@ -30,23 +30,9 @@ export function MealsView({ onUpdate }: MealsViewProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
-  const daysAnchorRef = useRef<HTMLDivElement>(null)
-  const [daysFixed, setDaysFixed] = useState(false)
 
   useEffect(() => {
     setAllMeals(getMeals())
-  }, [])
-
-  useEffect(() => {
-    const anchor = daysAnchorRef.current
-    if (!anchor) return
-    const check = () => {
-      const top = anchor.getBoundingClientRect().top
-      setDaysFixed(top <= 0)
-    }
-    check()
-    window.addEventListener("scroll", check, { passive: true })
-    return () => window.removeEventListener("scroll", check)
   }, [])
 
   const filteredMeals = useMemo(
@@ -101,14 +87,8 @@ export function MealsView({ onUpdate }: MealsViewProps) {
         </button>
       </div>
 
-      {/* Punto de referencia para saber cuándo el bloque de días ya salió por arriba */}
-      <div ref={daysAnchorRef} className="h-0" aria-hidden />
-
-      {/* Día: en flujo normal; al scrollear se pasa a fixed para que siga visible */}
-      {daysFixed && <div className="h-20" aria-hidden />}
-      <div
-        className={`z-20 -mx-4 bg-background px-4 py-2 ${daysFixed ? "fixed left-0 right-0 top-0 mx-auto max-w-lg border-b border-border pt-8" : ""}`}
-      >
+      {/* Selector de día */}
+      <div className="-mx-4 px-4 py-2">
         <div className="flex items-center justify-between rounded-xl border border-border bg-card px-2 py-1.5">
           <button
             onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}

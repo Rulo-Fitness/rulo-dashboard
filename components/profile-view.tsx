@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
 import { useI18n } from "@/lib/i18n"
 import {
@@ -51,25 +51,12 @@ export function ProfileView() {
   const [saved, setSaved] = useState(false)
   const [loggedOut, setLoggedOut] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const headerAnchorRef = useRef<HTMLDivElement>(null)
-  const [headerFixed, setHeaderFixed] = useState(false)
 
   useEffect(() => {
     setMounted(true)
     setProfile(getProfile())
     setTotalSessions(getTrainingSessions().length)
     setTotalMeals(getMeals().length)
-  }, [])
-
-  useEffect(() => {
-    const anchor = headerAnchorRef.current
-    if (!anchor) return
-    const check = () => {
-      setHeaderFixed(anchor.getBoundingClientRect().top <= 0)
-    }
-    check()
-    window.addEventListener("scroll", check, { passive: true })
-    return () => window.removeEventListener("scroll", check)
   }, [])
 
   function handleSave() {
@@ -130,11 +117,7 @@ export function ProfileView() {
 
   return (
     <div className="flex flex-col gap-6 px-4 pb-6">
-      <div ref={headerAnchorRef} className="h-0" aria-hidden />
-      {headerFixed && <div className="h-24" aria-hidden />}
-      <div
-        className={`flex items-center gap-4 ${headerFixed ? "fixed left-0 right-0 top-0 z-20 mx-auto max-w-lg border-b border-border bg-background px-4 pt-8 pb-3" : ""}`}
-      >
+      <div className="flex items-center gap-4">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-secondary">
           <User className="h-8 w-8 text-muted-foreground" />
         </div>

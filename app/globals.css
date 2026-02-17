@@ -112,7 +112,7 @@ html.dark, .dark {
 html {
   position: relative;
   height: auto;
-  min-height: 100%;
+  min-height: 100dvh;
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -121,12 +121,16 @@ html {
   -webkit-user-select: none;
   user-select: none;
 }
+/* Safe areas iOS: contenido no se mete bajo notch ni home indicator (viewport-fit=cover en layout) */
 body {
   position: relative;
   overflow-x: hidden;
   overflow-y: visible;
-  min-height: 100%;
+  min-height: 100dvh;
   height: auto;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   scrollbar-width: none;
   -ms-overflow-style: none;
   -webkit-user-select: none;

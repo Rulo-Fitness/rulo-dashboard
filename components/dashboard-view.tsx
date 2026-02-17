@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import {
   getTodayMeals,
   getTodayString,
@@ -37,22 +37,9 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const [allMeals, setAllMeals] = useState<ReturnType<typeof getMeals>>([])
   const [greeting, setGreeting] = useState("")
   const [dateStr, setDateStr] = useState("")
-  const headerAnchorRef = useRef<HTMLDivElement>(null)
-  const [headerFixed, setHeaderFixed] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    const anchor = headerAnchorRef.current
-    if (!anchor) return
-    const check = () => {
-      setHeaderFixed(anchor.getBoundingClientRect().top <= 0)
-    }
-    check()
-    window.addEventListener("scroll", check, { passive: true })
-    return () => window.removeEventListener("scroll", check)
   }, [])
 
   useEffect(() => {
@@ -112,11 +99,7 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
 
   return (
     <div className="flex flex-col gap-5 px-4 pb-6">
-      <div ref={headerAnchorRef} className="h-0" aria-hidden />
-      {headerFixed && <div className="h-20" aria-hidden />}
-      <div
-        className={`flex flex-col gap-0.5 ${headerFixed ? "fixed left-0 right-0 top-0 z-20 mx-auto max-w-lg border-b border-border bg-background px-4 pt-8 pb-3" : ""}`}
-      >
+      <div className="flex flex-col gap-0.5">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">{greeting}</h1>
         <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
       </div>
