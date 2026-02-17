@@ -6,13 +6,32 @@ import { DashboardView } from "@/components/dashboard-view"
 import { TrainingView } from "@/components/training-view"
 import { MealsView } from "@/components/meals-view"
 import { ProfileView } from "@/components/profile-view"
+
+const ZONE_HEIGHT = 180
+const SCROLL_SHRINK_PX = 120
+
 export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [refreshKey, setRefreshKey] = useState(0)
+  const [zoomUnderNav, setZoomUnderNav] = useState(false)
+  const [navShrink, setNavShrink] = useState(0)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const onScroll = () => {
+      const { scrollY, innerHeight } = window
+      const scrollHeight = document.documentElement.scrollHeight
+      setZoomUnderNav(scrollY + innerHeight >= scrollHeight - ZONE_HEIGHT)
+      const progress = Math.min(scrollY / SCROLL_SHRINK_PX, 1)
+      setNavShrink(progress)
+    }
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
   const triggerRefresh = useCallback(() => {
@@ -39,7 +58,9 @@ export default function Home() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col bg-background pb-20 pt-8">
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div
+        className={`content-zoom-under-nav flex min-h-0 flex-1 flex-col ${zoomUnderNav ? "zoom-active" : ""}`}
+      >
         {activeTab === "dashboard" && (
           <DashboardView refreshKey={refreshKey} onNavigate={setActiveTab} />
         )}
@@ -47,7 +68,7 @@ export default function Home() {
         {activeTab === "meals" && <MealsView onUpdate={triggerRefresh} />}
         {activeTab === "profile" && <ProfileView />}
       </div>
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} scrollShrink={navShrink} />
     </main>
   )
 }
