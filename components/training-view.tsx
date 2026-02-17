@@ -10,27 +10,12 @@ import {
   type Exercise,
 } from "@/lib/storage"
 import { useI18n } from "@/lib/i18n"
-import { Plus, Trash2, Dumbbell, X, ChevronLeft, ChevronRight, Pencil, Check, Circle } from "lucide-react"
+import { Plus, Trash2, Dumbbell, X, ChevronLeft, ChevronRight, Pencil } from "lucide-react"
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
   d.setDate(d.getDate() + days)
   return d.toISOString().split("T")[0]
-}
-
-/** Lun–Sáb de la semana que contiene la fecha */
-function getWeekDates(centerDate: string): string[] {
-  const d = new Date(centerDate + "T12:00:00")
-  const daysFromMonday = (d.getDay() + 6) % 7
-  const monday = new Date(d)
-  monday.setDate(d.getDate() - daysFromMonday)
-  const out: string[] = []
-  for (let i = 0; i < 6; i++) {
-    const day = new Date(monday)
-    day.setDate(monday.getDate() + i)
-    out.push(day.toISOString().split("T")[0])
-  }
-  return out
 }
 
 interface TrainingViewProps {
@@ -44,6 +29,8 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
+  const daysAnchorRef = useRef<HTMLDivElement>(null)
+  const [daysFixed, setDaysFixed] = useState(false)
 
   const loadExercises = () => {
     setExercises(getExercisesForDate(selectedDate))
@@ -52,6 +39,18 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
   useEffect(() => {
     loadExercises()
   }, [selectedDate])
+
+  useEffect(() => {
+    const anchor = daysAnchorRef.current
+    if (!anchor) return
+    const check = () => {
+      const top = anchor.getBoundingClientRect().top
+      setDaysFixed(top <= 0)
+    }
+    check()
+    window.addEventListener("scroll", check, { passive: true })
+    return () => window.removeEventListener("scroll", check)
+  }, [])
 
   const refresh = () => {
     loadExercises()
@@ -93,77 +92,49 @@ export function TrainingView({ onUpdate }: TrainingViewProps) {
         </button>
       </div>
 
-      {/* Week strip: Lun–Sáb con check si entrenaste */}
-      {(() => {
-        const weekDates = getWeekDates(selectedDate)
-        const loc = locale === "es" ? "es-ES" : "en-US"
-        return (
-          <div className="flex rounded-xl border border-border bg-card px-2 py-1.5">
-            <div className="flex w-full items-center justify-between gap-1">
-              {weekDates.map((dateStr) => {
-                const hasData = getExercisesForDate(dateStr).length > 0
-                const isSelected = dateStr === selectedDate
-                const isFuture = dateStr > getTodayString()
-                return (
-                  <button
-                    key={dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(dateStr)}
-                    className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1 transition-colors ${isSelected ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"} ${isFuture ? "opacity-60" : ""}`}
-                  >
-                    <span className="text-[11px] font-medium uppercase tracking-tight">
-                      {new Date(dateStr + "T12:00:00").toLocaleDateString(loc, { weekday: "short" }).charAt(0)}
-                    </span>
-                    {hasData ? (
-                      <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-primary">
-                        <Check className="h-2 w-2 text-primary-foreground" strokeWidth={2.5} />
-                      </span>
-                    ) : (
-                      <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" strokeWidth={2} />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )
-      })()}
+      {/* Punto de referencia para saber cuándo el bloque de días ya salió por arriba */}
+      <div ref={daysAnchorRef} className="h-0" aria-hidden />
 
-      {/* Date selector */}
-      <div className="flex items-center justify-between rounded-xl border border-border bg-card px-2 py-1.5">
-        <button
-          onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
-        <div className="relative cursor-pointer" onClick={() => dateInputRef.current?.showPicker()}>
-          <span className={`block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
-            {dateLabel}
-          </span>
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={selectedDate}
-            max={getTodayString()}
-            onChange={(e) => {
-              const v = e.target.value
-              if (v && v <= getTodayString()) setSelectedDate(v)
+      {/* Día: en flujo normal; al scrollear se pasa a fixed para que siga visible */}
+      {daysFixed && <div className="h-14" aria-hidden />}
+      <div
+        className={`z-20 -mx-4 border-b border-border bg-background px-4 py-2 ${daysFixed ? "fixed left-0 right-0 top-0 mx-auto max-w-lg" : ""}`}
+      >
+        <div className="flex items-center justify-between rounded-xl border border-border bg-card px-2 py-1.5">
+          <button
+            onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="relative cursor-pointer" onClick={() => dateInputRef.current?.showPicker()}>
+            <span className={`block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
+              {dateLabel}
+            </span>
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={selectedDate}
+              max={getTodayString()}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v && v <= getTodayString()) setSelectedDate(v)
+              }}
+              className="date-picker-input"
+              tabIndex={-1}
+            />
+          </div>
+          <button
+            onClick={() => {
+              const next = shiftDate(selectedDate, 1)
+              if (next <= getTodayString()) setSelectedDate(next)
             }}
-            className="date-picker-input"
-            tabIndex={-1}
-          />
+            disabled={selectedDate >= getTodayString()}
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
-        <button
-          onClick={() => {
-            const next = shiftDate(selectedDate, 1)
-            if (next <= getTodayString()) setSelectedDate(next)
-          }}
-          disabled={selectedDate >= getTodayString()}
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
       </div>
 
       {/* Add form (only when adding new, at top) */}
