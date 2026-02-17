@@ -11,7 +11,7 @@ import {
   type Meal,
 } from "@/lib/storage"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
-import { Plus, Trash2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Pencil, Check } from "lucide-react"
+import { Plus, Trash2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Pencil } from "lucide-react"
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
@@ -30,7 +30,6 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [showPanel, setShowPanel] = useState(false)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
-  const [deletingMealId, setDeletingMealId] = useState<string | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
   const setPanelOpen = (open: boolean) => {
@@ -52,9 +51,8 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
     onUpdate()
   }
 
-  const handleDeleteConfirm = (id: string) => {
+  const handleDelete = (id: string) => {
     deleteMeal(id)
-    setDeletingMealId(null)
     refresh()
   }
 
@@ -224,41 +222,20 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
                   </span>
                 </div>
               </div>
-              {deletingMealId === meal.id ? (
-                <>
-                  <button
-                    onClick={() => handleDeleteConfirm(meal.id)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:bg-green-500/15 dark:text-green-400"
-                    aria-label={t("profile.confirmDelete")}
-                  >
-                    <Check className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setDeletingMealId(null)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary"
-                    aria-label={t("profile.cancel")}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => { setPanelOpen(true); setEditingMeal(meal) }}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/15 hover:text-primary"
-                    aria-label={t("meals.editMeal")}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setDeletingMealId(meal.id)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    aria-label={`${t("training.deleteTraining")} ${meal.name}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </>
-              )}
+              <button
+                onClick={() => { setPanelOpen(true); setEditingMeal(meal) }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-primary/15 hover:text-primary"
+                aria-label={t("meals.editMeal")}
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => handleDelete(meal.id)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                aria-label={`${t("training.deleteTraining")} ${meal.name}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </div>
           </div>
         ))}

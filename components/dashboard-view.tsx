@@ -9,7 +9,7 @@ import {
   getProfile,
 } from "@/lib/storage"
 import { useI18n } from "@/lib/i18n"
-import { Dumbbell, Flame, UtensilsCrossed, Plus, Check, Circle, X, Target, Smartphone, MessageCircle, Share } from "lucide-react"
+import { Dumbbell, Flame, UtensilsCrossed, Plus, Check, Circle, X, Target, Smartphone, MessageCircle, Share, Mic, Camera, BarChart3, TrendingUp, Bell, Activity, Calendar, Zap, Lock } from "lucide-react"
 
 function isIOS(): boolean {
   if (typeof navigator === "undefined") return false
@@ -125,78 +125,145 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   return (
     <div className="flex flex-col gap-5 px-4 pb-6">
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">{greeting}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{greeting}</h1>
+          <button
+            type="button"
+            onClick={() => setOpenPlan(true)}
+            className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#CC5500] px-3 py-2 text-left transition-transform active:scale-[0.98] shadow-md shadow-orange-500/20"
+          >
+            <Target className="h-5 w-5 text-white/95 shrink-0" />
+            <span className="font-semibold text-white text-[13px] leading-tight whitespace-nowrap">{t("dashboard.boxPlan")}</span>
+          </button>
+        </div>
         <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
       </div>
 
-      {/* Tres cajitas cuadradas con fade: plan (purple-pink), install (naranja), reporte (azul) */}
-      <div className="grid grid-cols-3 gap-3">
-        <button
-          type="button"
-          onClick={() => setOpenPlan(true)}
-          className="aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#CC5500] p-3 text-center transition-transform active:scale-[0.98] shadow-lg shadow-orange-500/20"
-        >
-          <Target className="h-7 w-7 text-white/95 shrink-0" />
-          <p className="font-semibold text-white text-[13px] leading-tight line-clamp-2">{t("dashboard.boxPlan")}</p>
-          <p className="text-[10px] text-white/80 line-clamp-2">{t("dashboard.boxPlanHint")}</p>
-        </button>
+      {/* Dos cajitas: Descarga la app, Ver tu reporte */}
+      <div className="grid grid-cols-2 gap-2.5">
         <button
           type="button"
           onClick={() => setOpenInstall(true)}
-          className="aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-purple-500/90 to-pink-500/90 p-3 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
+          className="aspect-[4/3] flex flex-col items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br from-purple-500/90 to-pink-500/90 p-2.5 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
         >
-          <Smartphone className="h-7 w-7 text-white/95 shrink-0" />
-          <p className="font-semibold text-white text-[13px] leading-tight line-clamp-2">{t("dashboard.boxInstall")}</p>
-          <p className="text-[10px] text-white/80 line-clamp-2">{t("dashboard.boxInstallHint")}</p>
+          <Smartphone className="h-5 w-5 text-white/95 shrink-0" />
+          <p className="font-semibold text-white text-[12px] leading-tight line-clamp-2">{t("dashboard.boxInstall")}</p>
+          <p className="text-[9px] text-white/80 line-clamp-2">{t("dashboard.boxInstallHint")}</p>
         </button>
         <button
           type="button"
           onClick={() => setOpenReport(true)}
-          className="aspect-square flex flex-col items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 p-3 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
+          className="aspect-[4/3] flex flex-col items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br from-purple-600 to-purple-700 p-2.5 text-center transition-transform active:scale-[0.98] shadow-lg shadow-purple-500/20"
         >
-          <MessageCircle className="h-7 w-7 text-white/95 shrink-0" />
-          <p className="font-semibold text-white text-[13px] leading-tight line-clamp-2">{t("dashboard.boxReport")}</p>
-          <p className="text-[10px] text-white/80 line-clamp-2">{t("dashboard.boxReportHint")}</p>
+          <MessageCircle className="h-5 w-5 text-white/95 shrink-0" />
+          <p className="font-semibold text-white text-[12px] leading-tight line-clamp-2">{t("dashboard.boxReport")}</p>
+          <p className="text-[9px] text-white/80 line-clamp-2">{t("dashboard.boxReportHint")}</p>
         </button>
       </div>
 
-      {/* Modal: Tu plan */}
-      {openPlan && (
-        <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => setOpenPlan(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.planTitle")}>
-          <div className={modalContentClass} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">{t("dashboard.planTitle")}</h2>
-                <p className="text-xs text-muted-foreground">{t("dashboard.planSubtitle")}</p>
-              </div>
-              <button type="button" onClick={() => setOpenPlan(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary" aria-label={t("profile.cancel")}>
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="rounded-xl bg-primary/10 p-4">
-                <p className="text-sm font-medium text-foreground">{t("macro.calories")}</p>
-                <p className="text-2xl font-bold text-primary">{calGoal.toLocaleString()} {t("unit.kcal")}</p>
-                <p className="text-xs text-muted-foreground">{t("dashboard.perDay")}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{t("macro.protein")}</p>
-                  <p className="text-lg font-bold text-foreground">{protGoal} {t("unit.g")}</p>
+      {/* Modal: Tu plan — estilo rulo (space-bg + 3 planes) */}
+      {openPlan && (() => {
+        const allFeaturesList = [
+          { icon: Mic, key: "plan.featureVoice" },
+          { icon: Camera, key: "plan.featureSnapshot" },
+          { icon: BarChart3, key: "plan.featureDashboard" },
+          { icon: TrendingUp, key: "plan.featureProgression" },
+          { icon: Bell, key: "plan.featureNudging" },
+          { icon: Target, key: "plan.featureHeatmap" },
+          { icon: Activity, key: "plan.featureVolume" },
+          { icon: Calendar, key: "plan.featureHistory" },
+          { icon: Zap, key: "plan.featureVoiceFix" },
+          { icon: Smartphone, key: "plan.featureApp" },
+          { icon: Lock, key: "plan.featureExport" },
+        ] as const
+        const plansList = [
+          { nameKey: "plan.maquina.name", subtitleKey: "plan.maquina.subtitle", featureIndices: [0, 6, 8, 9], image: "/images/rulo-happy.png", popular: false },
+          { nameKey: "plan.fiera.name", subtitleKey: "plan.fiera.subtitle", featureIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], image: "/images/rulo-lifting.png", popular: true },
+          { nameKey: "plan.bestia.name", subtitleKey: "plan.bestia.subtitle", featureIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], image: "/images/rulo-celebration.png", popular: false },
+        ]
+        return (
+          <div className={modalOverlayClass} style={{ backgroundColor: "rgba(0,0,0,0.45)" }} onClick={() => setOpenPlan(false)} role="dialog" aria-modal="true" aria-label={t("dashboard.planTitle")}>
+            <div className={`${modalContentClass} relative overflow-hidden bg-slate-900 border-slate-700`} onClick={(e) => e.stopPropagation()}>
+              {/* Misma imagen de fondo que rulo precios */}
+              <div className="absolute inset-0 bg-cover bg-center rounded-t-2xl sm:rounded-2xl" style={{ backgroundImage: "url(/images/space-bg.jpg)" }} />
+              <div className="absolute inset-0 bg-slate-900/85 rounded-t-2xl sm:rounded-2xl" />
+              <div className="relative z-10 flex flex-col max-h-[85vh] overflow-hidden">
+                <div className="flex items-center justify-between border-b border-slate-700/80 px-4 py-3 shrink-0">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white">{t("dashboard.planTitle")}</h2>
+                    <p className="text-xs text-slate-400">{t("dashboard.planSubtitle")}</p>
+                  </div>
+                  <button type="button" onClick={() => setOpenPlan(false)} className="flex h-9 w-9 items-center justify-center rounded-lg text-white/70 hover:bg-white/10" aria-label={t("profile.cancel")}>
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
-                <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{t("macro.carbs")}</p>
-                  <p className="text-lg font-bold text-foreground">{carbsGoal} {t("unit.g")}</p>
-                </div>
-                <div className="rounded-xl border border-border bg-card p-3 text-center">
-                  <p className="text-xs text-muted-foreground">{t("macro.fat")}</p>
-                  <p className="text-lg font-bold text-foreground">{fatGoal} {t("unit.g")}</p>
+                <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                  <p className="text-sm text-slate-300">{t("dashboard.plansIntro")}</p>
+                  {/* Features — cards tipo rulo */}
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("dashboard.plansFeaturesTitle")}</h3>
+                    <ul className="space-y-2">
+                      {allFeaturesList.map((f, i) => (
+                        <li key={i} className="flex items-center gap-2 rounded-xl bg-slate-800/80 backdrop-blur-sm border border-slate-700 px-3 py-2.5 text-sm text-white">
+                          <f.icon className="h-4 w-4 shrink-0 text-purple-400" />
+                          <span>{t(f.key as Parameters<typeof t>[0])}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {/* Los 3 planes — estilo cards rulo */}
+                  <div className="space-y-3">
+                    {plansList.map((plan, idx) => (
+                      <div
+                        key={idx}
+                        className={`relative rounded-2xl overflow-hidden p-4 ${
+                          plan.popular
+                            ? "bg-gradient-to-br from-purple-500/90 to-pink-500/90 border border-purple-400/30"
+                            : "bg-slate-800/80 backdrop-blur-sm border border-slate-700"
+                        }`}
+                      >
+                        {plan.popular && (
+                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 text-white text-center py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-b-lg">
+                            Más popular
+                          </div>
+                        )}
+                        <div className={`flex items-center justify-between gap-3 ${plan.popular ? "pt-5" : ""}`}>
+                          <div>
+                            <p className={`text-[10px] uppercase tracking-wider ${plan.popular ? "text-white/70" : "text-slate-400"}`}>{t(plan.subtitleKey as Parameters<typeof t>[0])}</p>
+                            <h4 className="text-lg font-bold text-white">{t(plan.nameKey as Parameters<typeof t>[0])}</h4>
+                          </div>
+                          <img src={plan.image} alt="" className="w-14 h-14 object-contain shrink-0" />
+                        </div>
+                        <ul className="mt-3 space-y-1">
+                          {plan.featureIndices.map((fi) => (
+                            <li key={fi} className="flex items-center gap-2 text-xs text-white/80">
+                              <Check className="h-3.5 w-3.5 shrink-0 text-white" />
+                              {t(allFeaturesList[fi].key as Parameters<typeof t>[0])}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Tus metas diarias */}
+                  <div className="rounded-xl bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">{t("dashboard.planSubtitle")}</p>
+                    <div className="flex items-baseline gap-2 flex-wrap text-sm text-white">
+                      <span className="font-medium">{calGoal.toLocaleString()} {t("unit.kcal")}</span>
+                      <span className="text-slate-500">·</span>
+                      <span>{protGoal}g {t("macro.protein")}</span>
+                      <span className="text-slate-500">·</span>
+                      <span>{carbsGoal}g {t("macro.carbs")}</span>
+                      <span className="text-slate-500">·</span>
+                      <span>{fatGoal}g {t("macro.fat")}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Modal: Descarga la app */}
       {openInstall && (
