@@ -12,7 +12,7 @@ import {
 /** Clave en localStorage. Persiste en web y en PWA (mismo origen, mismo storage). */
 const STORAGE_KEY = "rulo-auth"
 
-const API_URL = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_API_URL ?? "" : ""
+const API_URL = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_URL ?? "" : ""
 
 export type AuthUser = {
   id: string
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!API_URL) {
         return {
           ok: false,
-          error: "API no configurada. Añade NEXT_PUBLIC_API_URL en .env.local (ej. https://rulo-api.kommo-test.workers.dev)",
+          error: "API no configurada. Añade NEXT_PUBLIC_RULO_API_URL en .env.local (ej. https://rulo-api.kommo-test.workers.dev)",
         }
       }
 
@@ -95,14 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         try {
           data = text ? (JSON.parse(text) as typeof data) : {}
-        } catch {
+        } catch (parseErr) {
+          console.error("[Rulo Auth] login parse error:", parseErr, "raw:", text)
           return {
             ok: false,
-            error: "La API devolvió una respuesta no válida. Comprueba que NEXT_PUBLIC_API_URL sea la URL correcta de la API (ej. https://rulo-api.kommo-test.workers.dev).",
+            error: "La API devolvió una respuesta no válida. Comprueba que NEXT_PUBLIC_RULO_API_URL sea la URL correcta de la API (ej. https://rulo-api.kommo-test.workers.dev).",
           }
         }
         if (!res.ok || !data.success || !data.result) {
           const message = data.errors?.[0]?.message ?? "Teléfono o contraseña incorrectos"
+          console.error("[Rulo Auth] login failed:", res.status, res.statusText, data)
           return { ok: false, error: message }
         }
         const r = data.result
@@ -116,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         saveUser(newUser)
         return { ok: true }
       } catch (err) {
+        console.error("[Rulo Auth] login error:", err)
         return {
           ok: false,
           error: err instanceof Error ? err.message : "Error de conexión. Revisa la URL de la API.",

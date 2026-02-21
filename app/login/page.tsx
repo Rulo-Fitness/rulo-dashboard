@@ -77,10 +77,10 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Left: form card. En PWA no se puede seleccionar/copiar el texto estático; en web sí. Los inputs siempre seleccionables. */}
-      <div className="flex flex-1 flex-col justify-center px-4 py-10 md:min-h-dvh md:px-12 lg:px-20">
+      {/* Left: form card. En mobile ocupa toda la altura (min-h-dvh); en desktop igual. */}
+      <div className="flex min-h-dvh flex-1 flex-col justify-center px-4 py-10 md:min-h-dvh md:px-12 md:py-10 lg:px-20">
         <div className={cn("mx-auto w-full max-w-[400px]", isPwa && "select-none")}>
-          <div className="mb-8 md:mb-10">
+          <div className="mb-6 md:mb-10">
             <img src="/logo.png" alt="Rulo" className="h-12 w-12 rounded-xl md:h-14 md:w-14 md:rounded-2xl" />
           </div>
 
