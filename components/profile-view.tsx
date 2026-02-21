@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useI18n } from "@/lib/i18n"
+import { useAuth } from "@/lib/auth-context"
 import {
   getProfile,
   saveProfile,
@@ -35,6 +37,8 @@ import {
 } from "lucide-react"
 
 export function ProfileView() {
+  const router = useRouter()
+  const { user, logout } = useAuth()
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -51,7 +55,6 @@ export function ProfileView() {
   const [totalSessions, setTotalSessions] = useState(0)
   const [totalMeals, setTotalMeals] = useState(0)
   const [saved, setSaved] = useState(false)
-  const [loggedOut, setLoggedOut] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   useEffect(() => {
@@ -68,21 +71,8 @@ export function ProfileView() {
   }
 
   function handleLogout() {
-    clearAllData()
-    setProfile({
-      name: "",
-      age: 0,
-      weight: 0,
-      height: 0,
-      calorieGoal: 2000,
-      proteinGoal: 150,
-      carbsGoal: 250,
-      fatGoal: 65,
-    })
-    setTotalSessions(0)
-    setTotalMeals(0)
-    setLoggedOut(true)
-    setTimeout(() => setLoggedOut(false), 2000)
+    logout()
+    router.replace("/login")
   }
 
   function handleClearData() {
@@ -137,8 +127,11 @@ export function ProfileView() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-foreground truncate">
-                {profile.name || t("profile.yourProfile")}
+                {profile.name || user?.name || t("profile.yourProfile")}
               </p>
+              {user?.phone && (
+                <p className="text-xs text-muted-foreground truncate">{user.phone}</p>
+              )}
             </div>
           </div>
         </div>
@@ -336,7 +329,7 @@ export function ProfileView() {
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground transition-all active:scale-[0.98]"
       >
         <LogOut className="h-4 w-4" />
-        {loggedOut ? t("profile.loggedOut") : t("profile.logout")}
+        {t("profile.logout")}
       </button>
 
       {/* 6. Zona peligrosa */}

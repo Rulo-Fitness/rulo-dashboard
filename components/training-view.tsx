@@ -9,6 +9,8 @@ import {
   getTodayString,
   type Exercise,
 } from "@/lib/storage"
+import { useAuth } from "@/lib/auth-context"
+import { fetchWorkoutLogsForDate, createWorkoutLog, updateWorkoutLog, deleteWorkoutLog } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { Plus, Trash2, Dumbbell, X, ChevronLeft, ChevronRight, Pencil, Check } from "lucide-react"
 
@@ -25,8 +27,10 @@ interface TrainingViewProps {
 
 export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) {
   const { t, locale } = useI18n()
+  const { user } = useAuth()
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [exercises, setExercises] = useState<Exercise[]>([])
+  const [apiLoading, setApiLoading] = useState(false)
   const [showAddPanel, setShowAddPanel] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null)
@@ -37,23 +41,58 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
     onAddPanelChange?.(open)
   }
 
-  const loadExercises = () => {
-    setExercises(getExercisesForDate(selectedDate))
-  }
-
+  // Cargar con esta fecha: traer de la API los workout logs del usuario y del día seleccionado
   useEffect(() => {
-    loadExercises()
-  }, [selectedDate])
+    if (!user?.id) {
+      setExercises(getExercisesForDate(selectedDate))
+      return
+    }
+    let cancelled = false
+    setApiLoading(true)
+    fetchWorkoutLogsForDate(user.id, selectedDate)
+      .then((list) => {
+        if (!cancelled) {
+          setExercises(list)
+          setApiLoading(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setExercises(getExercisesForDate(selectedDate))
+          setApiLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, selectedDate])
 
   const refresh = () => {
-    loadExercises()
-    onUpdate()
+    if (user?.id) {
+      setApiLoading(true)
+      fetchWorkoutLogsForDate(user.id, selectedDate)
+        .then((list) => {
+          setExercises(list)
+          onUpdate()
+        })
+        .catch(() => setExercises(getExercisesForDate(selectedDate)))
+        .finally(() => setApiLoading(false))
+    } else {
+      setExercises(getExercisesForDate(selectedDate))
+      onUpdate()
+    }
   }
 
-  const handleDeleteConfirm = (exId: string) => {
-    deleteExercise(exId)
-    setDeletingExerciseId(null)
-    refresh()
+  const handleDeleteConfirm = async (exId: string) => {
+    if (user?.id) {
+      const ok = await deleteWorkoutLog(exId)
+      setDeletingExerciseId(null)
+      if (ok) refresh()
+    } else {
+      deleteExercise(exId)
+      setDeletingExerciseId(null)
+      refresh()
+    }
   }
 
   const todayStr = getTodayString()
@@ -122,10 +161,36 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
             <ExerciseForm
               initial={editingExercise}
               selectedDate={selectedDate}
-              onSave={() => {
+              onSave={async (data) => {
+                if (user?.id) {
+                  if (data.id) {
+                    await updateWorkoutLog(data.id, {
+                      name: data.name,
+                      sets: data.sets,
+                      reps: data.reps,
+                      weight: data.weight,
+                    })
+                  } else {
+                    const dateIso = new Date(selectedDate + "T12:00:00").toISOString()
+                    await createWorkoutLog(user.id, {
+                      date: dateIso,
+                      name: data.name,
+                      sets: data.sets,
+                      reps: data.reps,
+                      weight: data.weight,
+                    })
+                  }
+                  refresh()
+                } else {
+                  if (data.id) {
+                    updateExercise(selectedDate, { ...data, id: data.id })
+                  } else {
+                    addExerciseToDate(selectedDate, data)
+                  }
+                  refresh()
+                }
                 setPanelOpen(false)
                 setEditingExercise(null)
-                refresh()
               }}
               onCancel={() => { setPanelOpen(false); setEditingExercise(null) }}
               hideHeader
@@ -174,8 +239,15 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
       </div>
 
+      {/* Cargando desde la API */}
+      {user?.id && apiLoading && (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-12">
+          <p className="text-sm text-muted-foreground">Cargando entrenos…</p>
+        </div>
+      )}
+
       {/* Empty state */}
-      {exercises.length === 0 && !showAddPanel && (
+      {!apiLoading && exercises.length === 0 && !showAddPanel && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
           <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">{t("training.noExercises")}</p>
@@ -184,7 +256,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       )}
 
       {/* Exercise list */}
-      {exercises.length > 0 && (
+      {!apiLoading && exercises.length > 0 && (
         <div className="flex flex-col gap-2">
           {exercises.map((ex) => (
             <div key={ex.id} className="flex flex-col gap-2">
@@ -246,6 +318,14 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   )
 }
 
+export type ExercisePayload = {
+  id?: string
+  name: string
+  sets: number
+  reps: number
+  weight: number
+}
+
 function ExerciseForm({
   initial,
   selectedDate,
@@ -255,7 +335,7 @@ function ExerciseForm({
 }: {
   initial?: Exercise | null
   selectedDate: string
-  onSave: () => void
+  onSave: (data: ExercisePayload) => void | Promise<void>
   onCancel: () => void
   hideHeader?: boolean
 }) {
@@ -274,24 +354,14 @@ function ExerciseForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
-
-    if (isEdit && initial) {
-      updateExercise(selectedDate, {
-        id: initial.id,
-        name: name.trim(),
-        sets: Number(sets) || 0,
-        reps: Number(reps) || 0,
-        weight: Number(weight) || 0,
-      })
-    } else {
-      addExerciseToDate(selectedDate, {
-        name: name.trim(),
-        sets: Number(sets) || 0,
-        reps: Number(reps) || 0,
-        weight: Number(weight) || 0,
-      })
+    const payload: ExercisePayload = {
+      ...(isEdit && initial ? { id: initial.id } : {}),
+      name: name.trim(),
+      sets: Number(sets) || 0,
+      reps: Number(reps) || 0,
+      weight: Number(weight) || 0,
     }
-    onSave()
+    onSave(payload)
   }
 
   return (

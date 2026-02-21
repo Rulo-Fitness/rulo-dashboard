@@ -56,6 +56,12 @@ export function deleteTrainingSession(id: string): void {
   localStorage.setItem('fittrack-training', JSON.stringify(sessions));
 }
 
+/** Reemplaza todas las sesiones (p. ej. tras sincronizar desde la API). */
+export function setTrainingSessions(sessions: TrainingSession[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("fittrack-training", JSON.stringify(sessions));
+}
+
 // Individual exercise helpers
 export function addExerciseToDate(date: string, exercise: Omit<Exercise, 'id'>): void {
   const sessions = getTrainingSessions();

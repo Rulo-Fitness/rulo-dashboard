@@ -6,6 +6,7 @@ import { DashboardView } from "@/components/dashboard-view"
 import { TrainingView } from "@/components/training-view"
 import { MealsView } from "@/components/meals-view"
 import { ProfileView } from "@/components/profile-view"
+import { TrainingSync } from "@/components/training-sync"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -91,6 +92,11 @@ export default function Home() {
     setRefreshKey((k) => k + 1)
   }, [])
 
+  // Sincroniza entrenos desde la API al cargar (usuario logueado)
+  const handleTrainingSynced = useCallback(() => {
+    setRefreshKey((k) => k + 1)
+  }, [])
+
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab)
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -116,6 +122,7 @@ export default function Home() {
 
   return (
     <>
+      <TrainingSync onSynced={handleTrainingSynced} />
       <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8 overflow-visible touch-manipulation" style={{ touchAction: "pan-y" }}>
         <div className="overflow-visible" style={{ touchAction: "pan-y" }}>
           {activeTab === "dashboard" && (
