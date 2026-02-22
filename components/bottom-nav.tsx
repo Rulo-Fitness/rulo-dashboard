@@ -105,32 +105,28 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
               aria-selected={isActive}
               aria-label={label}
               onClick={() => onTabChange(tab.id)}
-              className={`relative z-10 flex rounded-full overflow-hidden ${iconsOnly ? "items-center justify-center" : "flex-col items-center justify-center gap-1"}`}
+              className={`relative z-10 flex rounded-full overflow-hidden ${iconsOnly ? "items-center justify-center" : "flex-col items-center justify-center gap-0.5"}`}
               style={{
                 width: `${tabW}px`,
                 height: `${tabH}px`,
                 transition: `width ${DUR_SHRINK} ${EASE_SHRINK}, height ${DUR_SHRINK} ${EASE_SHRINK}`,
               }}
             >
-              <tab.icon
-                style={{
-                  width: iconsOnly ? "24px" : "23px",
-                  height: iconsOnly ? "24px" : "23px",
-                  flexShrink: 0,
-                  color: isActive ? "var(--primary)" : "var(--nav-inactive)",
-                  strokeWidth: isActive ? 2.2 : 1.6,
-                  transition: `color ${DUR_M} ${EASE_SMOOTH}, stroke-width ${DUR_M} ${EASE_SMOOTH}`,
-                }}
-              />
+              <span className="flex shrink-0 items-center justify-center">
+                <tab.icon
+                  style={{
+                    width: iconsOnly ? "24px" : "23px",
+                    height: iconsOnly ? "24px" : "23px",
+                    color: isActive ? "var(--primary)" : "var(--nav-inactive)",
+                    strokeWidth: isActive ? 2.2 : 1.6,
+                    transition: `color ${DUR_M} ${EASE_SMOOTH}, stroke-width ${DUR_M} ${EASE_SMOOTH}`,
+                  }}
+                />
+              </span>
               <span
                 aria-hidden
+                className="block w-full text-center"
                 style={{
-                  position: "absolute",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  bottom: 6,
-                  width: 64,
-                  textAlign: "center",
                   fontSize: "11px",
                   fontWeight: isActive ? 600 : 700,
                   color: isActive ? "var(--primary)" : "var(--nav-inactive)",

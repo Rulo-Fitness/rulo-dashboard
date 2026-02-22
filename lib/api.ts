@@ -18,21 +18,19 @@ type WorkoutLogFromApi = {
 }
 
 /**
- * Agrupa logs de la API por fecha y los convierte al formato TrainingSession del dashboard.
- * En la API date viene como ISO datetime (ej. 2026-02-21T23:03:17.606Z); usamos .slice(0, 10) para el día.
+ * Agrupa logs de la API por fecha. date en la API es solo día (YYYY-MM-DD).
  */
 function mapWorkoutLogsToSessions(logs: WorkoutLogFromApi[]): TrainingSession[] {
   const byDate = new Map<string, WorkoutLogFromApi[]>()
   for (const log of logs) {
-    const dateStr = log.date ? log.date.slice(0, 10) : new Date().toISOString().slice(0, 10)
+    const dateStr = log.date ? log.date.slice(0, 10) : ""
+    if (!dateStr) continue
     if (!byDate.has(dateStr)) byDate.set(dateStr, [])
     byDate.get(dateStr)!.push(log)
   }
   const sessions: TrainingSession[] = []
   for (const [dateStr, group] of byDate.entries()) {
-    const sorted = [...group].sort(
-      (a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime()
-    )
+    const sorted = [...group].sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""))
     const first = sorted[0]
     sessions.push({
       id: first.id,
@@ -55,7 +53,7 @@ function mapWorkoutLogsToSessions(logs: WorkoutLogFromApi[]): TrainingSession[] 
 export async function fetchWorkoutLogs(userId: string): Promise<TrainingSession[]> {
   const base = getApiUrl()
   if (!base) return []
-  const url = `${base}/workout-logs?search=${encodeURIComponent(userId)}&per_page=500`
+  const url = `${base}/workout-logs?search=${encodeURIComponent(userId)}&per_page=100`
   try {
     const res = await fetch(url)
     if (!res.ok) {
@@ -108,7 +106,7 @@ export async function fetchWorkoutLogsForDate(
   }
 }
 
-/** Crea un workout log en la API. date en ISO (ej. 2026-02-21T23:03:17.606Z); si no se pasa, la API usa "now". */
+/** Crea un workout log en la API. date solo día (YYYY-MM-DD); si no se pasa, la API usa hoy en Argentina. */
 export async function createWorkoutLog(
   userId: string,
   body: { date?: string; name?: string; sets?: number; reps?: number; weight?: number }
@@ -121,7 +119,7 @@ export async function createWorkoutLog(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user_id: userId,
-        date: body.date ?? new Date().toISOString(),
+        ...(body.date != null && body.date !== "" && { date: body.date }),
         name: body.name ?? "",
         sets: body.sets ?? 0,
         reps: body.reps ?? 0,

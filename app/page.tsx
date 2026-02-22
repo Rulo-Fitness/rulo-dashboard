@@ -15,33 +15,10 @@ export default function Home() {
   const [trainingAddPanelOpen, setTrainingAddPanelOpen] = useState(false)
   const [mealsPanelOpen, setMealsPanelOpen] = useState(false)
   const [dashboardModalOpen, setDashboardModalOpen] = useState(false)
-  const [scrollShrink, setScrollShrink] = useState(0)
 
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-    const SCROLL_START = 40
-    const SCROLL_END = 140
-    let rafId = 0
-    const onScroll = () => {
-      if (rafId) return
-      rafId = requestAnimationFrame(() => {
-        rafId = 0
-        const y = window.scrollY
-        const shrink = y <= SCROLL_START ? 0 : y >= SCROLL_END ? 1 : (y - SCROLL_START) / (SCROLL_END - SCROLL_START)
-        setScrollShrink(shrink)
-      })
-    }
-    onScroll()
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => {
-      window.removeEventListener("scroll", onScroll)
-      if (rafId) cancelAnimationFrame(rafId)
-    }
-  }, [mounted])
 
   useEffect(() => {
     if (activeTab !== "training") setTrainingAddPanelOpen(false)
@@ -140,7 +117,6 @@ export default function Home() {
       <BottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        scrollShrink={scrollShrink}
         hidden={trainingAddPanelOpen || mealsPanelOpen || dashboardModalOpen}
       />
     </>

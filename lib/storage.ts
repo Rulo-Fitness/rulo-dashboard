@@ -138,9 +138,17 @@ export function deleteMeal(id: string): void {
   localStorage.setItem('fittrack-meals', JSON.stringify(meals));
 }
 
-// Stats helpers
+// Fecha en hora local (YYYY-MM-DD) para que "hoy" coincida con Argentina / zona del usuario
+function toLocalDateString(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// Stats helpers — usan hora local, no UTC
 export function getTodayString(): string {
-  return new Date().toISOString().split('T')[0];
+  return toLocalDateString(new Date());
 }
 
 export function getTodayMeals(): Meal[] {
@@ -155,15 +163,17 @@ export function getTodaySessions(): TrainingSession[] {
 
 export function getWeekSessions(): TrainingSession[] {
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const weekAgoStr = weekAgo.toISOString().split('T')[0];
+  const weekAgo = new Date(now);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekAgoStr = toLocalDateString(weekAgo);
   return getTrainingSessions().filter((s) => s.date >= weekAgoStr);
 }
 
 export function getWeekMeals(): Meal[] {
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const weekAgoStr = weekAgo.toISOString().split('T')[0];
+  const weekAgo = new Date(now);
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekAgoStr = toLocalDateString(weekAgo);
   return getMeals().filter((m) => m.date >= weekAgoStr);
 }
 

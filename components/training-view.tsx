@@ -163,24 +163,29 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
               selectedDate={selectedDate}
               onSave={async (data) => {
                 if (user?.id) {
+                  let ok = false
                   if (data.id) {
-                    await updateWorkoutLog(data.id, {
+                    ok = await updateWorkoutLog(data.id, {
                       name: data.name,
                       sets: data.sets,
                       reps: data.reps,
                       weight: data.weight,
                     })
                   } else {
-                    const dateIso = new Date(selectedDate + "T12:00:00").toISOString()
-                    await createWorkoutLog(user.id, {
-                      date: dateIso,
+                    const created = await createWorkoutLog(user.id, {
+                      date: selectedDate,
                       name: data.name,
                       sets: data.sets,
                       reps: data.reps,
                       weight: data.weight,
                     })
+                    ok = created != null
                   }
-                  refresh()
+                  if (ok) {
+                    refresh()
+                    setPanelOpen(false)
+                    setEditingExercise(null)
+                  }
                 } else {
                   if (data.id) {
                     updateExercise(selectedDate, { ...data, id: data.id })
@@ -188,9 +193,9 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                     addExerciseToDate(selectedDate, data)
                   }
                   refresh()
+                  setPanelOpen(false)
+                  setEditingExercise(null)
                 }
-                setPanelOpen(false)
-                setEditingExercise(null)
               }}
               onCancel={() => { setPanelOpen(false); setEditingExercise(null) }}
               hideHeader
@@ -346,6 +351,21 @@ function ExerciseForm({
   const [sets, setSets] = useState(initial?.sets?.toString() ?? "")
   const [reps, setReps] = useState(initial?.reps?.toString() ?? "")
   const [weight, setWeight] = useState(initial?.weight?.toString() ?? "")
+
+  // Al abrir en modo edición, rellenar los inputs con los datos del ejercicio
+  useEffect(() => {
+    if (initial) {
+      setName(initial.name ?? "")
+      setSets(initial.sets?.toString() ?? "")
+      setReps(initial.reps?.toString() ?? "")
+      setWeight(initial.weight?.toString() ?? "")
+    } else {
+      setName("")
+      setSets("")
+      setReps("")
+      setWeight("")
+    }
+  }, [initial?.id, initial?.name, initial?.sets, initial?.reps, initial?.weight])
 
   useEffect(() => {
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
