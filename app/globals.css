@@ -155,7 +155,7 @@ label[for] {
 }
 
 @theme inline {
-  --font-sans: var(--font-geist), 'Geist', system-ui, sans-serif;
+  --font-sans: var(--font-figtree), 'Figtree', system-ui, sans-serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);

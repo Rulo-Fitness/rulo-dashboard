@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist } from 'next/font/google'
+import { Figtree } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from '@/components/providers'
 import './globals.css'
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist' })
+const figtree = Figtree({ subsets: ['latin'], variable: '--font-figtree', weight: ['300', '400', '500', '600', '700'] })
 
 export const metadata: Metadata = {
   title: 'Dashboard | Rulo Fitness',
@@ -43,7 +43,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
-      <body className={`${geist.className} antialiased`}>
+      <body className={`${figtree.className} antialiased`}>
         <Providers>
           {children}
         </Providers>
