@@ -187,6 +187,12 @@ const translations = {
 
   // Register (onboarding)
   "register.title": { en: "Create your profile", es: "Creá tu perfil" },
+  "register.mascotMessage": { en: "Let's go! Tell me a bit about you and I'll set up your plan.", es: "¡Vamos! Contáme un poco de vos y armo tu plan." },
+  "register.mascotStep1": { en: "Age, sex, weight and height — I use these to calculate your daily needs.", es: "Edad, sexo, peso y altura — los uso para calcular tu gasto diario." },
+  "register.mascotStep2": { en: "How active you are during the week — from sedentary to very active.", es: "Qué tan activo sos en la semana — de sedentario a muy activo." },
+  "register.mascotStep3": { en: "Your goal: lose fat, maintain, or gain mass. I'll adjust your plan.", es: "Tu objetivo: bajar grasa, mantener o subir masa. Ajusto tu plan." },
+  "register.mascotStep4": { en: "How many kilos per week you want to change — e.g. 0.25 or 0.5.", es: "Cuántos kilos por semana querés cambiar — ej. 0,25 o 0,5." },
+  "register.mascotCreateAccount": { en: "Almost there! Phone and password to create your account.", es: "Casi listo. Teléfono y contraseña para crear tu cuenta." },
   "register.step1": { en: "Basic data", es: "Datos básicos" },
   "register.step2": { en: "Activity", es: "Actividad" },
   "register.step3": { en: "Goal", es: "Objetivo" },

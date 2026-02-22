@@ -76,7 +76,7 @@ export function ProfileView() {
 
   function handleLogout() {
     logout()
-    router.replace("/login")
+    router.replace("/sign-in")
   }
 
   function handleClearData() {

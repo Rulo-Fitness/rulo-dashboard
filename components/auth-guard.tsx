@@ -5,10 +5,10 @@ import { useEffect, type ReactNode } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Spinner } from "@/components/ui/spinner"
 
-const LOGIN_PATH = "/login"
+const SIGN_IN_PATH = "/sign-in"
 
-function isLoginRoute(pathname: string) {
-  return pathname === LOGIN_PATH || pathname.startsWith(`${LOGIN_PATH}/`)
+function isAuthRoute(pathname: string) {
+  return pathname === SIGN_IN_PATH || pathname.startsWith(`${SIGN_IN_PATH}/`) || pathname === "/sign-up"
 }
 
 export function AuthGuard({ children }: { children: ReactNode }) {
@@ -19,14 +19,14 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return
 
-    const onLoginRoute = isLoginRoute(pathname)
+    const onAuthRoute = isAuthRoute(pathname)
 
-    if (!user && !onLoginRoute) {
-      router.replace(LOGIN_PATH)
+    if (!user && !onAuthRoute) {
+      router.replace(SIGN_IN_PATH)
       return
     }
 
-    if (user && onLoginRoute) {
+    if (user && onAuthRoute) {
       router.replace("/")
       return
     }
@@ -41,7 +41,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!user && !isLoginRoute(pathname)) {
+  if (!user && !isAuthRoute(pathname)) {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background" aria-live="polite" aria-busy="true">
         <Spinner className="h-10 w-10 text-primary" />
