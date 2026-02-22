@@ -109,6 +109,7 @@ export default function RegisterPage() {
   const [openField, setOpenField] = useState<OpenField>(null)
   const [isClosing, setIsClosing] = useState(false)
   const [triedNext, setTriedNext] = useState(false)
+  const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward")
   const [modalError, setModalError] = useState<string | null>(null)
   const [errorShake, setErrorShake] = useState(false)
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -155,6 +156,7 @@ export default function RegisterPage() {
       return
     }
     setTriedNext(false)
+    setSlideDirection("forward")
     if (step < STEPS) setStep((s) => s + 1)
     else {
       saveProfile({
@@ -170,6 +172,7 @@ export default function RegisterPage() {
   function handleBack() {
     if (step > 1) {
       setTriedNext(false)
+      setSlideDirection("backward")
       setStep((s) => s - 1)
     }
   }
@@ -226,7 +229,7 @@ export default function RegisterPage() {
   ] as const
 
   return (
-    <main className="mx-auto flex h-dvh max-w-md flex-col items-center justify-between px-4 pt-6 pb-8">
+    <main className="mx-auto flex h-dvh max-h-dvh max-w-md flex-col items-center overflow-y-auto px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
       {done ? (
         <div className="flex w-full flex-1 flex-col items-center justify-center">
           <div className="w-full rounded-xl border border-border bg-card p-6 text-center">
@@ -238,7 +241,7 @@ export default function RegisterPage() {
         </div>
       ) : (
         <>
-        <div className="flex h-full w-full max-w-md flex-1 flex-col items-center justify-between">
+        <div className="flex min-h-0 w-full max-w-md flex-1 flex-col items-center justify-between">
           {/* Header: flecha atrás + barra de progreso */}
           <header className="-mx-2 w-full shrink-0 self-stretch">
             <div className="flex w-full items-center justify-center gap-3 rounded-xl px-3 py-3">
@@ -276,8 +279,14 @@ export default function RegisterPage() {
             </p>
           </header>
 
-          <div className="flex w-full max-w-md min-h-0 flex-1 flex-col items-center justify-center">
-            <div className="flex w-full flex-col items-center space-y-10">
+          <div className="flex w-full max-w-md min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto overflow-x-hidden">
+            <div
+              key={step}
+              className={cn(
+                "flex w-full flex-col items-center space-y-10",
+                slideDirection === "forward" ? "animate-register-slide-right" : "animate-register-slide-left"
+              )}
+            >
           {/* Step 1: Datos físicos */}
           {step === 1 && (
             <>
@@ -360,7 +369,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Nav buttons */}
-          <div className="flex w-full max-w-md shrink-0 justify-center pb-2">
+          <div className="flex w-full max-w-md shrink-0 justify-center pt-4">
             <Button
               type="button"
               onClick={handleNext}
@@ -519,7 +528,7 @@ export default function RegisterPage() {
                     </div>
                   )}
                   {openField === "goal" && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       {GOAL_OPTIONS.map((opt) => (
                         <button
                           key={opt.id}
@@ -529,7 +538,7 @@ export default function RegisterPage() {
                             closeModal()
                           }}
                           className={cn(
-                            "flex flex-1 items-center justify-center rounded-xl px-4 py-4 text-sm font-medium transition-colors",
+                            "flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-medium transition-colors",
                             profile.goal === opt.id
                               ? "bg-primary text-primary-foreground"
                               : "bg-card"
