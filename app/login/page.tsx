@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, ArrowRight } from "lucide-react"
+import { Eye, EyeOff, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Spinner } from "@/components/ui/spinner"
 
@@ -24,15 +24,15 @@ function useIsPwa() {
 }
 
 const COUNTRY_CODES = [
-  { code: "+34", label: "ES", country: "España" },
-  { code: "+52", label: "MX", country: "México" },
-  { code: "+54", label: "AR", country: "Argentina" },
-  { code: "+57", label: "CO", country: "Colombia" },
-  { code: "+51", label: "PE", country: "Perú" },
-  { code: "+56", label: "CL", country: "Chile" },
-  { code: "+58", label: "VE", country: "Venezuela" },
-  { code: "+593", label: "EC", country: "Ecuador" },
-  { code: "+1", label: "US", country: "EE.UU." },
+  { code: "+34", label: "ES", country: "España", flag: "🇪🇸" },
+  { code: "+52", label: "MX", country: "México", flag: "🇲🇽" },
+  { code: "+54", label: "AR", country: "Argentina", flag: "🇦🇷" },
+  { code: "+57", label: "CO", country: "Colombia", flag: "🇨🇴" },
+  { code: "+51", label: "PE", country: "Perú", flag: "🇵🇪" },
+  { code: "+56", label: "CL", country: "Chile", flag: "🇨🇱" },
+  { code: "+58", label: "VE", country: "Venezuela", flag: "🇻🇪" },
+  { code: "+593", label: "EC", country: "Ecuador", flag: "🇪🇨" },
+  { code: "+1", label: "US", country: "EE.UU.", flag: "🇺🇸" },
 ]
 
 export default function LoginPage() {
@@ -64,7 +64,14 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-dvh flex-col md:flex-row">
+    <main className="relative flex min-h-dvh flex-col text-foreground md:flex-row">
+      {/* Background: foto del gym */}
+      <div
+        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url(/login-bg.png)" }}
+        aria-hidden
+      />
+
       {/* Pantalla de carga: entre login y dashboard */}
       {isSubmitting && (
         <div
@@ -77,39 +84,66 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* Left: form card. En mobile ocupa toda la altura (min-h-dvh); en desktop igual. */}
-      <div className="flex min-h-dvh flex-1 flex-col justify-center px-4 py-10 md:min-h-dvh md:px-12 md:py-10 lg:px-20">
-        <div className={cn("mx-auto w-full max-w-[400px]", isPwa && "select-none")}>
-          <div className="mb-6 md:mb-10">
-            <img src="/logo.png" alt="Rulo" className="h-12 w-12 rounded-xl md:h-14 md:w-14 md:rounded-2xl" />
+      {/* Móvil: ilustración arriba (mascota a la izq, burbuja saliendo a la derecha) */}
+      <div
+        className={cn(
+          "relative z-10 flex min-h-0 flex-shrink-0 items-end justify-start pb-0 pt-16 md:hidden",
+          isPwa && "select-none",
+        )}
+      >
+        <div className="-mt-4 flex items-end gap-0 pl-2 pr-4">
+          <div className="flex shrink-0 animate-float">
+            <img src="/rulo-mascot.png" alt="Rulo" className="h-28 w-auto object-contain" />
           </div>
+          <div className="relative -ml-1 rounded-3xl rounded-bl-lg border border-border bg-card px-4 py-3 shadow-sm">
+            <p className="max-w-[200px] text-left text-sm font-medium text-foreground">
+              ¡Hola otra vez! Sigue tus entrenamientos y comidas. ¿Listo para retomarlo?
+            </p>
+            {/* Cola de la burbuja apuntando a la izquierda (hacia la mascota) */}
+            <div
+              className="absolute left-0 top-1/2 h-0 w-0 -translate-y-1/2 -translate-x-full border-t-[10px] border-b-[10px] border-r-[12px] border-t-transparent border-b-transparent"
+              style={{ borderRightColor: "var(--card)" }}
+              aria-hidden
+            />
+          </div>
+        </div>
+      </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+      {/* Form card — en móvil debajo de la ilustración, se superpone un poco; en desktop 50% */}
+      <div className="relative z-10 mt-2 flex min-h-0 flex-1 flex-col px-0 pt-2 md:mt-0 md:min-h-dvh md:w-[50%] md:flex-none md:px-3 md:pt-3 md:pb-3 md:pr-0 lg:px-4 lg:pt-4 lg:pb-4 lg:pr-0">
+        <div
+          className={cn(
+            "flex min-h-0 flex-1 flex-col justify-center rounded-t-[2rem] rounded-b-none border border-border bg-card px-4 py-6 shadow-xl md:rounded-3xl md:px-8 md:py-9",
+            isPwa && "select-none",
+          )}
+        >
+          <div className="mx-auto w-full max-w-[340px] md:max-w-[400px]">
+          <h1 className="text-center text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             Bienvenido de nuevo
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground md:text-base">
+          <p className="mt-10 text-center text-sm text-muted-foreground md:text-base">
             Ingresa tus datos para acceder a tu cuenta
           </p>
 
-          <form onSubmit={handleSubmit} className={cn("mt-8 space-y-5", isPwa && "select-text")}>
+          <form onSubmit={handleSubmit} className={cn("mt-20 space-y-[3.25rem]", isPwa && "select-text")}>
             {error && (
               <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">
                 {error}
               </p>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-5">
               <Label htmlFor="phone">Número de teléfono</Label>
-              <div className="flex overflow-hidden rounded-lg border border-input bg-background shadow-xs focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+              <div className="flex h-12 overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:rounded-xl md:border-input md:shadow-xs">
                 <select
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
-                  className="flex h-9 items-center border-0 bg-muted/50 px-3 text-sm font-medium text-foreground outline-none [&>option]:bg-card"
+                  className="flex h-12 items-center border-0 bg-muted/50 px-4 text-sm font-medium text-foreground outline-none [&>option]:bg-card"
                   aria-label="Código de país"
                 >
-                  {COUNTRY_CODES.map(({ code, label }) => (
+                  {COUNTRY_CODES.map(({ code, label, flag }) => (
                     <option key={code} value={code}>
-                      {code} {label}
+                      {flag} {code} {label}
                     </option>
                   ))}
                 </select>
@@ -122,12 +156,12 @@ export default function LoginPage() {
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 15))}
                   autoComplete="tel"
                   disabled={isSubmitting}
-                  className="min-w-0 flex-1 rounded-none border-0 border-l bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="h-12 min-w-0 flex-1 rounded-none border-0 border-l bg-transparent px-4 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Contraseña</Label>
                 <Link
@@ -146,7 +180,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   disabled={isSubmitting}
-                  className="pr-10"
+                  className="h-12 rounded-2xl border-border/60 text-base md:rounded-xl md:border-input"
                 />
                 <button
                   type="button"
@@ -162,44 +196,50 @@ export default function LoginPage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className={cn(
-                "h-11 w-full bg-gradient-to-r from-[#2563eb] to-[#a855f7] text-base font-semibold text-white shadow-md",
-                "hover:from-[#1d4ed8] hover:to-[#9333ea] hover:opacity-95",
-              )}
+              className="h-12 w-full max-w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 md:h-14 md:rounded-3xl"
             >
               {isSubmitting ? "Entrando…" : "Iniciar sesión"}
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           </form>
 
-          <p className={cn("mt-6 text-center text-sm text-muted-foreground", isPwa && "select-none")}>
+          <p className={cn("mt-20 text-center text-sm text-muted-foreground", isPwa && "select-none")}>
             ¿No tienes una cuenta?{" "}
             <Link href="/login/register" className="font-medium text-primary hover:underline">
               Regístrate
             </Link>
           </p>
+          </div>
         </div>
       </div>
 
-      {/* Right: illustration / mascot panel (hidden on small screens). En PWA no seleccionable. */}
+      {/* Right: illustration (hidden on small screens) — 50% del ancho en desktop */}
       <div
         className={cn(
-          "relative hidden min-h-[280px] flex-1 overflow-hidden bg-gradient-to-br from-violet-200 via-fuchsia-100 to-amber-100 md:flex md:flex-col md:justify-center md:px-12 lg:px-20 dark:from-violet-950/40 dark:via-fuchsia-950/30 dark:to-amber-950/20",
+          "relative z-10 hidden min-h-[280px] flex-1 md:flex md:min-w-0 md:flex-col md:justify-center md:px-12 lg:px-20",
           isPwa && "select-none",
         )}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,80,200,0.25),transparent)]" />
-        <div className="relative flex flex-col items-center justify-center gap-6 py-12">
-          <div className="flex h-40 w-40 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 shadow-xl md:h-52 md:w-52">
-            <img src="/logo.png" alt="" className="h-20 w-20 rounded-xl md:h-24 md:w-24" />
-          </div>
-          <div className="rounded-2xl border border-white/60 bg-white/80 px-5 py-4 shadow-lg backdrop-blur dark:border-white/20 dark:bg-white/10">
-            <p className="max-w-[260px] text-center text-sm font-medium text-slate-700 dark:text-slate-200">
+        <div className="relative flex flex-col items-center justify-center gap-4 py-12">
+          {/* Burbuja de texto arriba — fondo sólido según tema */}
+          <div className="relative rounded-3xl rounded-b-lg border border-border bg-card px-5 py-4 shadow-lg md:px-6 md:py-5">
+            <p className="max-w-[260px] text-center text-sm font-medium text-foreground md:max-w-[280px] md:text-base">
               ¡Hola otra vez! Sigue tus entrenamientos y comidas. ¿Listo para retomarlo?
             </p>
-            <span className="mt-2 block text-center text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-300">
-              Rulo Fitness
-            </span>
+            {/* Cola de la burbuja apuntando abajo — mismo color que la card (blanco/negro según tema) */}
+            <div
+              className="absolute -bottom-3 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[12px] border-r-[12px] border-t-[14px] border-l-transparent border-r-transparent"
+              style={{ borderTopColor: "var(--card)" }}
+              aria-hidden
+            />
+          </div>
+          {/* Mascota centrada y más grande */}
+          <div className="flex w-full flex-1 items-center justify-center animate-float">
+            <img
+              src="/rulo-mascot.png"
+              alt="Rulo"
+              className="h-52 w-auto object-contain md:h-64 lg:h-72"
+            />
           </div>
         </div>
       </div>

@@ -25,6 +25,7 @@ type AuthContextValue = {
   user: AuthUser | null
   isLoading: boolean
   login: (phone: string, password: string) => Promise<{ ok: boolean; error?: string }>
+  register: (phone: string, password: string, name?: string) => Promise<{ ok: boolean; error?: string }>
   logout: () => void
 }
 
@@ -128,6 +129,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const register = useCallback(
+    async (phone: string, password: string, name?: string): Promise<{ ok: boolean; error?: string }> => {
+      const normalized = phone.replace(/\s/g, "").replace(/^\+/, "")
+      if (!normalized || normalized.length < 9) {
+        return { ok: false, error: "Introduce un número de teléfono válido" }
+      }
+      if (!password || password.length < 4) {
+        return { ok: false, error: "La contraseña debe tener al menos 4 caracteres" }
+      }
+      if (!API_URL) {
+        return {
+          ok: false,
+          error: "API no configurada. Añade NEXT_PUBLIC_RULO_API_URL en .env.local",
+        }
+      }
+      const body = {
+        phone: phone.trim().startsWith("+") ? phone.trim() : `+${normalized}`,
+        password,
+        ...(name?.trim() ? { name: name.trim() } : {}),
+      }
+      try {
+        const url = `${API_URL.replace(/\/$/, "")}/users`
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        })
+        const text = await res.text()
+        let data: { success?: boolean; errors?: { message: string }[] } = {}
+        try {
+          data = text ? JSON.parse(text) : {}
+        } catch {
+          // ignore
+        }
+        if (!res.ok) {
+          const message = data.errors?.[0]?.message ?? "No se pudo crear la cuenta. ¿El teléfono ya está registrado?"
+          return { ok: false, error: message }
+        }
+        return { ok: true }
+      } catch (err) {
+        console.error("[Rulo Auth] register error:", err)
+        return {
+          ok: false,
+          error: err instanceof Error ? err.message : "Error de conexión.",
+        }
+      }
+    },
+    [],
+  )
+
   const logout = useCallback(() => {
     setUser(null)
     saveUser(null)
@@ -137,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     login,
+    register,
     logout,
   }
 

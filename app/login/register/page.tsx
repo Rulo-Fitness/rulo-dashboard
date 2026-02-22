@@ -5,8 +5,10 @@ import Link from "next/link"
 import { useI18n } from "@/lib/i18n"
 import { saveProfile } from "@/lib/storage"
 import type { UserProfile, Sex, ActivityLevel, Goal } from "@/lib/storage"
+import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,8 +19,22 @@ import {
   Activity,
   Target,
   TrendingUp,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+const COUNTRY_CODES = [
+  { code: "+34", label: "ES", country: "España", flag: "🇪🇸" },
+  { code: "+52", label: "MX", country: "México", flag: "🇲🇽" },
+  { code: "+54", label: "AR", country: "Argentina", flag: "🇦🇷" },
+  { code: "+57", label: "CO", country: "Colombia", flag: "🇨🇴" },
+  { code: "+51", label: "PE", country: "Perú", flag: "🇵🇪" },
+  { code: "+56", label: "CL", country: "Chile", flag: "🇨🇱" },
+  { code: "+58", label: "VE", country: "Venezuela", flag: "🇻🇪" },
+  { code: "+593", label: "EC", country: "Ecuador", flag: "🇪🇨" },
+  { code: "+1", label: "US", country: "EE.UU.", flag: "🇺🇸" },
+]
 
 type OpenField =
   | "age"
@@ -87,7 +103,7 @@ function FieldRow({
     <button
       type="button"
       onClick={onClick}
-      className="register-field-row flex w-full items-center gap-4 rounded-xl bg-card px-5 py-5 text-left transition-colors active:scale-[0.99]"
+      className="flex w-full items-center gap-4 rounded-xl bg-card px-5 py-5 text-left transition-colors active:scale-[0.99]"
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center">
         <Icon className="h-5 w-5 text-primary" />
@@ -103,15 +119,24 @@ function FieldRow({
 
 export default function RegisterPage() {
   const { t } = useI18n()
+  const { register: registerApi } = useAuth()
   const [step, setStep] = useState(1)
   const [profile, setProfile] = useState<RegisterProfile>({ ...defaultForm })
   const [done, setDone] = useState(false)
+  const [showCreateAccount, setShowCreateAccount] = useState(false)
   const [openField, setOpenField] = useState<OpenField>(null)
   const [isClosing, setIsClosing] = useState(false)
   const [triedNext, setTriedNext] = useState(false)
   const [slideDirection, setSlideDirection] = useState<"forward" | "backward">("forward")
   const [modalError, setModalError] = useState<string | null>(null)
   const [errorShake, setErrorShake] = useState(false)
+  const [countryCode, setCountryCode] = useState("+34")
+  const [phoneNumber, setPhoneNumber] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [registerError, setRegisterError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -159,22 +184,51 @@ export default function RegisterPage() {
     setSlideDirection("forward")
     if (step < STEPS) setStep((s) => s + 1)
     else {
-      saveProfile({
-        ...profile,
-        sex: profile.sex as Sex,
-        activityLevel: profile.activityLevel as ActivityLevel,
-        goal: profile.goal as Goal,
-      })
-      setDone(true)
+      setShowCreateAccount(true)
     }
   }
 
   function handleBack() {
-    if (step > 1) {
+    if (showCreateAccount) {
+      setShowCreateAccount(false)
+      setRegisterError("")
+    } else if (step > 1) {
       setTriedNext(false)
       setSlideDirection("backward")
       setStep((s) => s - 1)
     }
+  }
+
+  async function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault()
+    setRegisterError("")
+    const fullPhone = `${countryCode}${phoneNumber.replace(/\s/g, "").replace(/\D/g, "")}`
+    if (fullPhone.replace(/\D/g, "").length < 9) {
+      setRegisterError(t("register.createAccountInvalidPhone"))
+      return
+    }
+    if (password.length < 4) {
+      setRegisterError(t("register.createAccountPasswordShort"))
+      return
+    }
+    if (password !== confirmPassword) {
+      setRegisterError(t("register.createAccountPasswordMismatch"))
+      return
+    }
+    setIsSubmitting(true)
+    const result = await registerApi(fullPhone, password, profile.name || undefined)
+    setIsSubmitting(false)
+    if (!result.ok) {
+      setRegisterError(result.error ?? t("register.createAccountError"))
+      return
+    }
+    saveProfile({
+      ...profile,
+      sex: profile.sex as Sex,
+      activityLevel: profile.activityLevel as ActivityLevel,
+      goal: profile.goal as Goal,
+    })
+    setDone(true)
   }
 
   const canNextStep1 =
@@ -229,14 +283,110 @@ export default function RegisterPage() {
   ] as const
 
   return (
-    <main className="register-page mx-auto flex h-dvh max-h-dvh max-w-md flex-col items-center overflow-y-auto px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
+    <main className="mx-auto flex h-dvh max-h-dvh max-w-md flex-col items-center overflow-y-auto bg-background px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
       {done ? (
         <div className="flex w-full flex-1 flex-col items-center justify-center">
           <div className="w-full rounded-xl border border-border bg-card p-6 text-center">
           <p className="text-sm text-muted-foreground">{t("register.done")}</p>
-          <Button asChild className="mt-10 w-full" size="lg">
-            <Link href="/login">Ir a iniciar sesión</Link>
+          <Button asChild className="mt-10 h-12 w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 md:h-14 md:rounded-3xl" size="lg">
+            <Link href="/login" className="inline-flex items-center justify-center gap-2">
+              Ir a iniciar sesión
+              <ChevronRight className="h-4 w-4" />
+            </Link>
           </Button>
+          </div>
+        </div>
+      ) : showCreateAccount ? (
+        <div className="flex w-full max-w-md flex-1 flex-col">
+          <header className="flex w-full shrink-0 items-center gap-3 rounded-xl px-3 py-3">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors"
+              aria-label={t("register.back")}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-lg font-semibold text-foreground">{t("register.createAccountTitle")}</h1>
+          </header>
+          <div className="flex min-h-0 flex-1 flex-col justify-center py-6">
+            <form onSubmit={handleCreateAccount} className="mx-auto w-full max-w-sm space-y-5">
+              {registerError && (
+                <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">{registerError}</p>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="register-phone">{t("register.createAccountPhone")}</Label>
+                <div className="flex h-12 overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:rounded-xl md:border-input">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="flex h-12 items-center border-0 bg-muted/50 px-4 text-sm font-medium text-foreground outline-none [&>option]:bg-card"
+                    aria-label="Código de país"
+                  >
+                    {COUNTRY_CODES.map(({ code, label, flag }) => (
+                      <option key={code} value={code}>
+                        {flag} {code} {label}
+                      </option>
+                    ))}
+                  </select>
+                  <Input
+                    id="register-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="600 000 000"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 15))}
+                    autoComplete="tel"
+                    disabled={isSubmitting}
+                    className="h-12 min-w-0 flex-1 rounded-none border-0 border-l bg-transparent px-4 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="register-password">{t("register.createAccountPassword")}</Label>
+                <div className="relative">
+                  <Input
+                    id="register-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={t("register.createAccountPasswordPlaceholder")}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                    disabled={isSubmitting}
+                    className="h-12 rounded-2xl border-border/60 pr-10 md:rounded-xl md:border-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="register-confirm">{t("register.createAccountConfirmPassword")}</Label>
+                <Input
+                  id="register-confirm"
+                  type={showPassword ? "text" : "password"}
+                  placeholder={t("register.createAccountConfirmPlaceholder")}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  disabled={isSubmitting}
+                  className="h-12 rounded-2xl border-border/60 md:rounded-xl md:border-input"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="h-12 w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 md:h-14 md:rounded-3xl"
+              >
+                {isSubmitting ? t("register.createAccountSubmitting") : t("register.createAccountSubmit")}
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </form>
           </div>
         </div>
       ) : (
@@ -244,7 +394,7 @@ export default function RegisterPage() {
         <div className="flex min-h-0 w-full max-w-md flex-1 flex-col items-center justify-between">
           {/* Header: flecha atrás + barra de progreso */}
           <header className="-mx-2 w-full shrink-0 self-stretch">
-            <div className="register-header-bar flex w-full items-center justify-center gap-3 rounded-xl px-3 py-3">
+            <div className="flex w-full items-center justify-center gap-3 rounded-xl px-3 py-3">
               {step === 1 ? (
                 <Link
                   href="/login"
@@ -271,10 +421,10 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-            <h1 className="register-title mt-8 text-center text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="mt-8 text-center text-2xl font-bold tracking-tight text-foreground">
               {stepTitles[step - 1]}
             </h1>
-            <p className="register-hint mt-2 text-center text-sm text-muted-foreground">
+            <p className="mt-2 text-center text-sm text-muted-foreground">
               {stepHints[step - 1]}
             </p>
           </header>
@@ -283,7 +433,7 @@ export default function RegisterPage() {
             <div
               key={step}
               className={cn(
-                "register-step-content flex w-full flex-col items-center space-y-10",
+                "flex w-full flex-col items-center space-y-10",
                 slideDirection === "forward" ? "animate-register-slide-right" : "animate-register-slide-left"
               )}
             >
@@ -369,14 +519,15 @@ export default function RegisterPage() {
           </div>
 
           {/* Nav buttons */}
-          <div className="register-nav flex w-full max-w-md shrink-0 justify-center pt-4">
+          <div className="flex w-full max-w-md shrink-0 justify-center pt-4">
             <Button
               type="button"
               onClick={handleNext}
               disabled={!canNext}
-              className="register-next-btn flex min-h-[5rem] w-full items-center justify-center rounded-xl p-5 text-xl font-medium"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 md:h-14 md:rounded-3xl"
             >
               {step === STEPS ? t("register.finish") : t("register.next")}
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>

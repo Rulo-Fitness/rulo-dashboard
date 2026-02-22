@@ -222,6 +222,18 @@ const translations = {
   "register.validationWeight": { en: "Weight between 1 and 300 kg", es: "Peso entre 1 y 300 kg" },
   "register.validationHeight": { en: "Height between 50 and 250 cm", es: "Altura entre 50 y 250 cm" },
   "register.validationWeeklyRate": { en: "Weekly rate between 0.25 and 2 kg/week", es: "Ritmo entre 0,25 y 2 kg/semana" },
+  "register.createAccountTitle": { en: "Create your account", es: "Crear tu cuenta" },
+  "register.createAccountPhone": { en: "Phone number", es: "Número de teléfono" },
+  "register.createAccountPassword": { en: "Password", es: "Contraseña" },
+  "register.createAccountPasswordPlaceholder": { en: "At least 4 characters", es: "Mínimo 4 caracteres" },
+  "register.createAccountConfirmPassword": { en: "Confirm password", es: "Confirmar contraseña" },
+  "register.createAccountConfirmPlaceholder": { en: "Repeat your password", es: "Repetí tu contraseña" },
+  "register.createAccountSubmit": { en: "Create account", es: "Crear cuenta" },
+  "register.createAccountSubmitting": { en: "Creating…", es: "Creando…" },
+  "register.createAccountInvalidPhone": { en: "Enter a valid phone number", es: "Introduce un número de teléfono válido" },
+  "register.createAccountPasswordShort": { en: "Password must be at least 4 characters", es: "La contraseña debe tener al menos 4 caracteres" },
+  "register.createAccountPasswordMismatch": { en: "Passwords do not match", es: "Las contraseñas no coinciden" },
+  "register.createAccountError": { en: "Could not create account. Try again.", es: "No se pudo crear la cuenta. Intentá de nuevo." },
 
   // Date navigation
   "date.today": { en: "Today", es: "Hoy" },
