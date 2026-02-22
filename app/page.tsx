@@ -100,8 +100,8 @@ export default function Home() {
   return (
     <>
       <TrainingSync onSynced={handleTrainingSynced} />
-      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8 overflow-visible touch-manipulation" style={{ touchAction: "pan-y" }}>
-        <div className="overflow-visible" style={{ touchAction: "pan-y" }}>
+      <main className="mx-auto flex min-h-dvh max-w-lg flex-col bg-background pb-20 pt-8 overflow-visible touch-manipulation" style={{ touchAction: "pan-y" }}>
+        <div className="flex min-h-0 flex-1 flex-col overflow-visible" style={{ touchAction: "pan-y" }}>
           {activeTab === "dashboard" && (
             <DashboardView refreshKey={refreshKey} onNavigate={handleTabChange} onDashboardModalChange={setDashboardModalOpen} />
           )}

@@ -178,11 +178,19 @@ export function getWeekMeals(): Meal[] {
 }
 
 // Profile
+export type Sex = "male" | "female";
+export type ActivityLevel = "sedentary" | "light" | "moderate" | "high" | "very_high";
+export type Goal = "lose_fat" | "maintain" | "gain_mass";
+
 export interface UserProfile {
   name: string;
   age: number;
+  sex: Sex;
   weight: number; // kg
   height: number; // cm
+  activityLevel: ActivityLevel;
+  goal: Goal;
+  weeklyRateKg: number; // kg por semana (ej. 0.25, 0.5, 1)
   calorieGoal: number;
   proteinGoal: number;
   carbsGoal: number;
@@ -192,8 +200,12 @@ export interface UserProfile {
 const defaultProfile: UserProfile = {
   name: '',
   age: 0,
+  sex: "male",
   weight: 0,
   height: 0,
+  activityLevel: "moderate",
+  goal: "maintain",
+  weeklyRateKg: 0.25,
   calorieGoal: 2000,
   proteinGoal: 150,
   carbsGoal: 250,

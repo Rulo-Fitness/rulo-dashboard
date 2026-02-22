@@ -45,8 +45,12 @@ export function ProfileView() {
   const [profile, setProfile] = useState<UserProfile>({
     name: "",
     age: 0,
+    sex: "male",
     weight: 0,
     height: 0,
+    activityLevel: "moderate",
+    goal: "maintain",
+    weeklyRateKg: 0.25,
     calorieGoal: 2000,
     proteinGoal: 150,
     carbsGoal: 250,
@@ -80,8 +84,12 @@ export function ProfileView() {
     setProfile({
       name: "",
       age: 0,
+      sex: "male",
       weight: 0,
       height: 0,
+      activityLevel: "moderate",
+      goal: "maintain",
+      weeklyRateKg: 0.25,
       calorieGoal: 2000,
       proteinGoal: 150,
       carbsGoal: 250,
@@ -122,8 +130,8 @@ export function ProfileView() {
         </h2>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-secondary">
-              <User className="h-7 w-7 text-muted-foreground" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15">
+              <User className="h-7 w-7 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-foreground truncate">
@@ -145,7 +153,7 @@ export function ProfileView() {
         <div className="rounded-xl border border-border bg-card p-4 space-y-5">
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <Languages className="h-4 w-4 text-muted-foreground" />
+              <Languages className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-foreground">{t("settings.language")}</span>
             </div>
             <div className="flex gap-2">
@@ -174,9 +182,9 @@ export function ProfileView() {
           <div>
             <div className="mb-2 flex items-center gap-2">
               {mounted && resolvedTheme === "dark" ? (
-                <Moon className="h-4 w-4 text-muted-foreground" />
+                <Moon className="h-4 w-4 text-primary" />
               ) : (
-                <Sun className="h-4 w-4 text-muted-foreground" />
+                <Sun className="h-4 w-4 text-primary" />
               )}
               <span className="text-sm font-medium text-foreground">{t("settings.theme")}</span>
             </div>
@@ -302,7 +310,7 @@ export function ProfileView() {
         onClick={handleSave}
         className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-all active:scale-[0.98]"
       >
-        <Save className="h-4 w-4" />
+        <Save className="h-4 w-4 text-primary-foreground" />
         {saved ? t("profile.saved") : t("profile.saveProfile")}
       </button>
 
@@ -319,7 +327,7 @@ export function ProfileView() {
             <p className="font-medium text-foreground">{t("settings.contactSupport")}</p>
             <p className="text-xs text-muted-foreground">{t("settings.contactSupportHint")}</p>
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronRight className="h-4 w-4 shrink-0 text-primary" />
         </a>
       </section>
 
@@ -328,7 +336,7 @@ export function ProfileView() {
         onClick={handleLogout}
         className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground transition-all active:scale-[0.98]"
       >
-        <LogOut className="h-4 w-4" />
+        <LogOut className="h-4 w-4 text-primary" />
         {t("profile.logout")}
       </button>
 
@@ -342,7 +350,7 @@ export function ProfileView() {
             onClick={() => setShowClearConfirm(true)}
             className="flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-semibold text-destructive transition-all active:scale-[0.98]"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4 text-primary" />
             {t("profile.clearAllData")}
           </button>
         ) : (
@@ -355,14 +363,14 @@ export function ProfileView() {
                 onClick={() => setShowClearConfirm(false)}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-secondary px-3 py-2.5 text-sm font-medium text-secondary-foreground transition-all active:scale-[0.98]"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
+                <RotateCcw className="h-3.5 w-3.5 text-primary" />
                 {t("profile.cancel")}
               </button>
               <button
                 onClick={handleClearData}
                 className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-destructive px-3 py-2.5 text-sm font-semibold text-destructive-foreground transition-all active:scale-[0.98]"
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3.5 w-3.5 text-primary" />
                 {t("profile.confirmDelete")}
               </button>
             </div>
@@ -392,7 +400,7 @@ function InputRow({
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <Icon className="h-4 w-4 shrink-0 text-primary" />
       <span className="w-16 shrink-0 text-xs font-medium text-muted-foreground">{label}</span>
       <input
         type={type}

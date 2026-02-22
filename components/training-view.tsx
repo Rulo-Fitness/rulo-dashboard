@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import {
   getExercisesForDate,
   addExerciseToDate,
@@ -32,14 +32,28 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [apiLoading, setApiLoading] = useState(false)
   const [showAddPanel, setShowAddPanel] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null)
+  const [addFormKey, setAddFormKey] = useState(0)
   const dateInputRef = useRef<HTMLInputElement>(null)
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const setPanelOpen = (open: boolean) => {
     setShowAddPanel(open)
     onAddPanelChange?.(open)
   }
+
+  const closePanel = useCallback(() => {
+    setIsClosing(true)
+    closeTimeoutRef.current = setTimeout(() => {
+      setShowAddPanel(false)
+      setEditingExercise(null)
+      setIsClosing(false)
+      onAddPanelChange?.(false)
+      closeTimeoutRef.current = null
+    }, 300)
+  }, [onAddPanelChange])
 
   // Cargar con esta fecha: traer de la API los workout logs del usuario y del día seleccionado
   useEffect(() => {
@@ -67,30 +81,39 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
     }
   }, [user?.id, selectedDate])
 
-  const refresh = () => {
+  useEffect(() => () => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+  }, [])
+
+  const refresh = (): Promise<void> => {
     if (user?.id) {
       setApiLoading(true)
-      fetchWorkoutLogsForDate(user.id, selectedDate)
+      return fetchWorkoutLogsForDate(user.id, selectedDate)
         .then((list) => {
           setExercises(list)
           onUpdate()
         })
         .catch(() => setExercises(getExercisesForDate(selectedDate)))
         .finally(() => setApiLoading(false))
-    } else {
-      setExercises(getExercisesForDate(selectedDate))
-      onUpdate()
     }
+    setExercises(getExercisesForDate(selectedDate))
+    onUpdate()
+    return Promise.resolve()
   }
 
   const handleDeleteConfirm = async (exId: string) => {
+    setDeletingExerciseId(null)
     if (user?.id) {
+      // Optimista: quitar de la lista al instante; si la API falla, restauramos con refresh
+      const previous = exercises.filter((e) => e.id !== exId)
+      setExercises(previous)
+      onUpdate()
       const ok = await deleteWorkoutLog(exId)
-      setDeletingExerciseId(null)
-      if (ok) refresh()
+      if (!ok) {
+        await refresh()
+      }
     } else {
       deleteExercise(exId)
-      setDeletingExerciseId(null)
       refresh()
     }
   }
@@ -110,14 +133,18 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         })
 
   return (
-    <div className="flex flex-col gap-4 px-4 pb-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("training.title")}</h1>
           <p className="text-sm text-muted-foreground">{t("training.subtitle")}</p>
         </div>
         <button
-          onClick={() => { setPanelOpen(true); setEditingExercise(null) }}
+          onClick={() => {
+            setAddFormKey((k) => k + 1)
+            setPanelOpen(true)
+            setEditingExercise(null)
+          }}
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("training.addExercise")}
         >
@@ -129,36 +156,33 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       <div
         className="fixed inset-0 z-50 flex flex-col justify-end"
         style={{
-          pointerEvents: showAddPanel ? "auto" : "none",
-          visibility: showAddPanel ? "visible" : "hidden",
+          pointerEvents: showAddPanel || isClosing ? "auto" : "none",
+          visibility: showAddPanel || isClosing ? "visible" : "hidden",
         }}
-        aria-hidden={!showAddPanel}
+        aria-hidden={!showAddPanel && !isClosing}
       >
         <div
           className="absolute inset-0 bg-black/40 transition-opacity duration-300"
-          style={{ opacity: showAddPanel ? 1 : 0 }}
-          onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
+          style={{ opacity: showAddPanel && !isClosing ? 1 : 0 }}
+          onClick={closePanel}
           aria-hidden
         />
         <div
-          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
-          style={{ transform: showAddPanel ? "translateY(0)" : "translateY(100%)" }}
+          className="relative mx-auto flex w-full max-w-lg flex-col rounded-t-3xl bg-card shadow-xl transition-transform duration-300 ease-out max-h-[85dvh]"
+          style={{ transform: showAddPanel && !isClosing ? "translateY(0)" : "translateY(100%)" }}
         >
-          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="text-lg font-semibold text-foreground">
+          <div className="flex shrink-0 justify-center pt-3 pb-1">
+            <div className="h-1.5 w-10 rounded-full bg-input" aria-hidden />
+          </div>
+          <header className="flex shrink-0 justify-center px-4 py-3">
+            <h2 className="text-center text-lg font-semibold text-foreground">
               {editingExercise ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
             </h2>
-            <button
-              type="button"
-              onClick={() => { setPanelOpen(false); setEditingExercise(null) }}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
-              aria-label={t("profile.cancel")}
-            >
-              <X className="h-5 w-5" />
-            </button>
           </header>
-          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+          <div className="flex flex-1 flex-col overflow-y-auto overflow-x-visible px-4 py-4 pb-8">
+            <div className="w-full flex-1">
             <ExerciseForm
+              key={editingExercise ? editingExercise.id : `new-${addFormKey}`}
               initial={editingExercise}
               selectedDate={selectedDate}
               onSave={async (data) => {
@@ -171,6 +195,16 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                       reps: data.reps,
                       weight: data.weight,
                     })
+                    if (ok) {
+                      setExercises((prev) =>
+                        prev.map((ex) =>
+                          ex.id === data.id
+                            ? { id: data.id!, name: data.name, sets: data.sets, reps: data.reps, weight: data.weight }
+                            : ex
+                        )
+                      )
+                      onUpdate()
+                    }
                   } else {
                     const created = await createWorkoutLog(user.id, {
                       date: selectedDate,
@@ -179,13 +213,22 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                       reps: data.reps,
                       weight: data.weight,
                     })
-                    ok = created != null
+                    if (created) {
+                      setExercises((prev) => [
+                        ...prev,
+                        {
+                          id: created.id,
+                          name: created.name ?? "",
+                          sets: created.sets ?? 0,
+                          reps: created.reps ?? 0,
+                          weight: created.weight ?? 0,
+                        },
+                      ])
+                      onUpdate()
+                      ok = true
+                    }
                   }
-                  if (ok) {
-                    refresh()
-                    setPanelOpen(false)
-                    setEditingExercise(null)
-                  }
+                  if (ok) closePanel()
                 } else {
                   if (data.id) {
                     updateExercise(selectedDate, { ...data, id: data.id })
@@ -193,20 +236,20 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                     addExerciseToDate(selectedDate, data)
                   }
                   refresh()
-                  setPanelOpen(false)
-                  setEditingExercise(null)
+                  closePanel()
                 }
               }}
-              onCancel={() => { setPanelOpen(false); setEditingExercise(null) }}
+              onCancel={closePanel}
               hideHeader
             />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Selector de día */}
       <div className="-mx-4 px-4 py-2">
-        <div className="flex items-center justify-between rounded-xl border border-border bg-card px-2 py-1.5">
+        <div className="flex items-center justify-between rounded-xl bg-card px-2 py-1.5">
           <button
             onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95"
@@ -244,24 +287,23 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
       </div>
 
-      {/* Cargando desde la API */}
-      {user?.id && apiLoading && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-12">
-          <p className="text-sm text-muted-foreground">Cargando entrenos…</p>
-        </div>
-      )}
+      {/* Área de contenido: carga, vacío o lista */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        {user?.id && apiLoading && (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card py-12">
+            <p className="text-sm text-muted-foreground">Cargando entrenos…</p>
+          </div>
+        )}
 
-      {/* Empty state */}
-      {!apiLoading && exercises.length === 0 && !showAddPanel && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16">
-          <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/50" />
-          <p className="text-sm font-medium text-muted-foreground">{t("training.noExercises")}</p>
-          <p className="text-xs text-muted-foreground/70">{t("training.tapToAdd")}</p>
-        </div>
-      )}
+        {!apiLoading && exercises.length === 0 && !showAddPanel && (
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/50" />
+            <p className="text-sm font-medium text-muted-foreground">{t("training.noExercises")}</p>
+            <p className="text-xs text-muted-foreground/70">{t("training.tapToAdd")}</p>
+          </div>
+        )}
 
-      {/* Exercise list */}
-      {!apiLoading && exercises.length > 0 && (
+        {!apiLoading && exercises.length > 0 && (
         <div className="flex flex-col gap-2">
           {exercises.map((ex) => (
             <div key={ex.id} className="flex flex-col gap-2">
@@ -318,7 +360,8 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
             </div>
           ))}
         </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
@@ -388,7 +431,7 @@ function ExerciseForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="rounded-xl border border-primary/30 bg-card p-4"
+      className="flex flex-col gap-3"
     >
       {!hideHeader && (
       <div className="flex items-center justify-between mb-4">
@@ -406,13 +449,12 @@ function ExerciseForm({
       </div>
       )}
 
-      <div className="flex flex-col gap-3">
         <input
           type="text"
           placeholder={t("training.exerciseName")}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="h-11 w-full rounded-lg border border-border bg-input px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="h-11 w-full rounded-lg bg-input px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           required
           autoFocus
         />
@@ -427,7 +469,7 @@ function ExerciseForm({
               value={sets}
               onChange={(e) => setSets(e.target.value)}
               min="0"
-              className="h-10 w-full rounded-md border border-border bg-input px-2 text-center text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-10 w-full rounded-md bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <div>
@@ -439,7 +481,7 @@ function ExerciseForm({
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               min="0"
-              className="h-10 w-full rounded-md border border-border bg-input px-2 text-center text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-10 w-full rounded-md bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <div>
@@ -452,18 +494,17 @@ function ExerciseForm({
               onChange={(e) => setWeight(e.target.value)}
               min="0"
               step="0.5"
-              className="h-10 w-full rounded-md border border-border bg-input px-2 text-center text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-10 w-full rounded-md bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="mt-1 h-11 w-full rounded-lg bg-primary font-medium text-primary-foreground transition-transform active:scale-[0.98]"
+          className="mt-1 flex h-14 w-full items-center justify-center rounded-xl bg-primary px-5 py-5 text-base font-semibold text-primary-foreground transition-colors active:scale-[0.99]"
         >
-          {isEdit ? t("training.saveChanges") : t("training.saveExercise")}
+          {t("register.save")}
         </button>
-      </div>
     </form>
   )
 }

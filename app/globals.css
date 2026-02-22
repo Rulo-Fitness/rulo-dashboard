@@ -440,3 +440,15 @@ input[type="time"]::-webkit-date-and-time-value {
     oklch(0.3 0.03 260 / 0.05) 100%
   ) border-box;
 }
+
+@keyframes modal-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.animate-modal-error-shake {
+  animation: modal-error-shake 0.4s ease-in-out;
+}

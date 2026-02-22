@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo, useRef } from "react"
+import { useEffect, useState, useMemo, useRef, useCallback } from "react"
 import {
   getMeals,
   saveMeal,
@@ -29,13 +29,30 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const [allMeals, setAllMeals] = useState<Meal[]>([])
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [showPanel, setShowPanel] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const setPanelOpen = (open: boolean) => {
     setShowPanel(open)
     onMealPanelChange?.(open)
   }
+
+  const closePanel = useCallback(() => {
+    setIsClosing(true)
+    closeTimeoutRef.current = setTimeout(() => {
+      setShowPanel(false)
+      setEditingMeal(null)
+      setIsClosing(false)
+      onMealPanelChange?.(false)
+      closeTimeoutRef.current = null
+    }, 300)
+  }, [onMealPanelChange])
+
+  useEffect(() => () => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+  }, [])
 
   useEffect(() => {
     setAllMeals(getMeals())
@@ -97,46 +114,42 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
       <div
         className="fixed inset-0 z-50 flex flex-col justify-end"
         style={{
-          pointerEvents: showPanel ? "auto" : "none",
-          visibility: showPanel ? "visible" : "hidden",
+          pointerEvents: showPanel || isClosing ? "auto" : "none",
+          visibility: showPanel || isClosing ? "visible" : "hidden",
         }}
-        aria-hidden={!showPanel}
+        aria-hidden={!showPanel && !isClosing}
       >
         <div
           className="absolute inset-0 bg-black/40 transition-opacity duration-300"
-          style={{ opacity: showPanel ? 1 : 0 }}
-          onClick={() => { setPanelOpen(false); setEditingMeal(null) }}
+          style={{ opacity: showPanel && !isClosing ? 1 : 0 }}
+          onClick={closePanel}
           aria-hidden
         />
         <div
-          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
-          style={{ transform: showPanel ? "translateY(0)" : "translateY(100%)" }}
+          className="relative mx-auto flex w-full max-w-lg flex-col rounded-t-3xl bg-card shadow-xl transition-transform duration-300 ease-out max-h-[85dvh]"
+          style={{ transform: showPanel && !isClosing ? "translateY(0)" : "translateY(100%)" }}
         >
-          <header className="flex shrink-0 items-center justify-between px-4 py-3">
-            <h2 className="text-lg font-semibold text-foreground">
+          <div className="flex shrink-0 justify-center pt-3 pb-1">
+            <div className="h-1.5 w-10 rounded-full bg-input" aria-hidden />
+          </div>
+          <header className="flex shrink-0 justify-center px-4 py-3">
+            <h2 className="text-center text-lg font-semibold text-foreground">
               {editingMeal ? t("meals.editMeal") : t("meals.logMeal")}
             </h2>
-            <button
-              type="button"
-              onClick={() => { setPanelOpen(false); setEditingMeal(null) }}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
-              aria-label={t("profile.cancel")}
-            >
-              <X className="h-5 w-5" />
-            </button>
           </header>
-          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+          <div className="flex flex-1 flex-col overflow-y-auto overflow-x-visible px-4 py-4 pb-8">
+            <div className="w-full flex-1">
             <MealForm
               initial={editingMeal ?? null}
               selectedDate={selectedDate}
               onSave={() => {
-                setPanelOpen(false)
-                setEditingMeal(null)
+                closePanel()
                 refresh()
               }}
-              onCancel={() => { setPanelOpen(false); setEditingMeal(null) }}
+              onCancel={closePanel}
               hideHeader
             />
+            </div>
           </div>
         </div>
       </div>
@@ -390,10 +403,6 @@ function MealForm({
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }, [])
 
-  const [date, setDate] = useState(initial?.date ?? selectedDate)
-  const [time, setTime] = useState(
-    initial?.time ?? new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
-  )
   const [calories, setCalories] = useState(initial?.calories?.toString() ?? "")
   const [protein, setProtein] = useState(initial?.protein?.toString() ?? "")
   const [carbs, setCarbs] = useState(initial?.carbs?.toString() ?? "")
@@ -403,11 +412,12 @@ function MealForm({
     e.preventDefault()
     if (!name.trim() || !calories) return
 
+    const time = initial?.time ?? new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
     if (isEdit && initial) {
       updateMeal({
         id: initial.id,
         name: name.trim(),
-        date,
+        date: selectedDate,
         time,
         calories: Number(calories),
         protein: Number(protein) || 0,
@@ -417,7 +427,7 @@ function MealForm({
     } else {
       saveMeal({
         name: name.trim(),
-        date,
+        date: selectedDate,
         time,
         calories: Number(calories),
         protein: Number(protein) || 0,
@@ -432,7 +442,7 @@ function MealForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="rounded-xl bg-muted/30 p-4"
+      className="flex flex-col gap-3"
     >
       {!hideHeader && (
       <div className="mb-4 flex items-center justify-between">
@@ -450,34 +460,14 @@ function MealForm({
       </div>
       )}
 
-      <div className="flex flex-col gap-3">
         <input
           type="text"
-          placeholder={t("meals.mealName")}
+          placeholder="Meal Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="h-11 w-full rounded-lg border border-border bg-input px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+          className="h-11 w-full rounded-lg bg-input px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           required
         />
-
-        <div className="grid grid-cols-2 gap-3">
-          <input
-            type="date"
-            value={date}
-            max={getTodayString()}
-            onChange={(e) => {
-              const v = e.target.value
-              setDate(v && v <= getTodayString() ? v : getTodayString())
-            }}
-            className="h-11 w-full rounded-lg border border-border bg-input px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="h-11 w-full rounded-lg border border-border bg-input px-3 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
 
         <div>
           <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("macro.calories")}</label>
@@ -488,16 +478,15 @@ function MealForm({
             value={calories}
             onChange={(e) => setCalories(e.target.value)}
             min="0"
-            className="h-11 w-full rounded-lg border border-border bg-input px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            className="h-11 w-full rounded-lg bg-input px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             required
           />
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("meals.macrosGrams")}</label>
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="mb-1 block text-[10px] text-chart-1">{t("macro.protein")}</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("macro.protein")}</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -505,11 +494,11 @@ function MealForm({
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
                 min="0"
-                className="h-9 w-full rounded-md border border-border bg-input px-2 text-center text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-md bg-input px-2 text-center text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] text-chart-4">{t("macro.carbs")}</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("macro.carbs")}</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -517,11 +506,11 @@ function MealForm({
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value)}
                 min="0"
-                className="h-9 w-full rounded-md border border-border bg-input px-2 text-center text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-md bg-input px-2 text-center text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="mb-1 block text-[10px] text-chart-3">{t("macro.fat")}</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("macro.fat")}</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -529,7 +518,7 @@ function MealForm({
                 value={fat}
                 onChange={(e) => setFat(e.target.value)}
                 min="0"
-                className="h-9 w-full rounded-md border border-border bg-input px-2 text-center text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-md bg-input px-2 text-center text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
@@ -537,11 +526,10 @@ function MealForm({
 
         <button
           type="submit"
-          className="mt-1 h-11 w-full rounded-lg bg-primary font-medium text-primary-foreground transition-transform active:scale-[0.98]"
+          className="mt-1 flex h-14 w-full items-center justify-center rounded-xl bg-primary px-5 py-5 text-base font-semibold text-primary-foreground transition-colors active:scale-[0.99]"
         >
-          {t("meals.saveMeal")}
+          {t("register.save")}
         </button>
-      </div>
     </form>
   )
 }
