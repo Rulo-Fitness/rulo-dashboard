@@ -87,10 +87,10 @@ function FieldRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl bg-card px-4 py-3 text-left transition-colors active:scale-[0.99]"
+      className="register-field-row flex w-full items-center gap-4 rounded-xl bg-card px-5 py-5 text-left transition-colors active:scale-[0.99]"
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-        <Icon className="h-4 w-4 text-primary" />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center">
+        <Icon className="h-5 w-5 text-primary" />
       </div>
       <span className="min-w-0 flex-1 text-sm font-medium text-foreground">{label}</span>
       <span className={cn("text-sm", isEmpty ? "text-muted-foreground" : "text-foreground")}>
@@ -229,7 +229,7 @@ export default function RegisterPage() {
   ] as const
 
   return (
-    <main className="mx-auto flex h-dvh max-h-dvh max-w-md flex-col items-center overflow-y-auto px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <main className="register-page mx-auto flex h-dvh max-h-dvh max-w-md flex-col items-center overflow-y-auto px-4 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))]">
       {done ? (
         <div className="flex w-full flex-1 flex-col items-center justify-center">
           <div className="w-full rounded-xl border border-border bg-card p-6 text-center">
@@ -244,7 +244,7 @@ export default function RegisterPage() {
         <div className="flex min-h-0 w-full max-w-md flex-1 flex-col items-center justify-between">
           {/* Header: flecha atrás + barra de progreso */}
           <header className="-mx-2 w-full shrink-0 self-stretch">
-            <div className="flex w-full items-center justify-center gap-3 rounded-xl px-2 py-2">
+            <div className="register-header-bar flex w-full items-center justify-center gap-3 rounded-xl px-3 py-3">
               {step === 1 ? (
                 <Link
                   href="/login"
@@ -271,10 +271,10 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-            <h1 className="mt-4 text-center text-xl font-bold tracking-tight text-foreground">
+            <h1 className="register-title mt-8 text-center text-2xl font-bold tracking-tight text-foreground">
               {stepTitles[step - 1]}
             </h1>
-            <p className="mt-1 text-center text-sm text-muted-foreground">
+            <p className="register-hint mt-2 text-center text-sm text-muted-foreground">
               {stepHints[step - 1]}
             </p>
           </header>
@@ -283,14 +283,14 @@ export default function RegisterPage() {
             <div
               key={step}
               className={cn(
-                "flex w-full flex-col items-center space-y-5",
+                "register-step-content flex w-full flex-col items-center space-y-10",
                 slideDirection === "forward" ? "animate-register-slide-right" : "animate-register-slide-left"
               )}
             >
           {/* Step 1: Datos físicos */}
           {step === 1 && (
             <>
-              <div className="w-full space-y-2">
+              <div className="w-full space-y-4">
                 <FieldRow
                   icon={Calendar}
                   label={t("register.age")}
@@ -369,12 +369,12 @@ export default function RegisterPage() {
           </div>
 
           {/* Nav buttons */}
-          <div className="flex w-full max-w-md shrink-0 justify-center pt-2">
+          <div className="register-nav flex w-full max-w-md shrink-0 justify-center pt-4">
             <Button
               type="button"
               onClick={handleNext}
               disabled={!canNext}
-              className="flex min-h-12 w-full items-center justify-center rounded-xl px-4 py-3 text-base font-medium"
+              className="register-next-btn flex min-h-[5rem] w-full items-center justify-center rounded-xl p-5 text-xl font-medium"
             >
               {step === STEPS ? t("register.finish") : t("register.next")}
             </Button>

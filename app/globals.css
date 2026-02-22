@@ -482,3 +482,40 @@ input[type="time"]::-webkit-date-and-time-value {
 .animate-register-slide-left {
   animation: register-slide-in-left 0.3s ease-out forwards;
 }
+
+/* PWA only: reduce form height so Next button fits */
+@media (display-mode: standalone) {
+  .register-page {
+    padding-top: 0.75rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  .register-header-bar {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .register-title {
+    margin-top: 1rem;
+    font-size: 1.25rem;
+  }
+  .register-hint {
+    margin-top: 0.25rem;
+  }
+  .register-step-content > * + * {
+    margin-top: 0.5rem !important;
+  }
+  .register-step-content [class*="space-y-4"] > * + * {
+    margin-top: 0.25rem !important;
+  }
+  .register-field-row {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  .register-nav {
+    padding-top: 0.5rem;
+  }
+  .register-next-btn {
+    min-height: 3.25rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+  }
+}
