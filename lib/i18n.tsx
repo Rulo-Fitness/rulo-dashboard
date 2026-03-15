@@ -247,6 +247,12 @@ const translations = {
   "register.createAccountPasswordMismatch": { en: "Passwords do not match", es: "Las contraseñas no coinciden" },
   "register.createAccountError": { en: "Could not create account. Try again.", es: "No se pudo crear la cuenta. Intentá de nuevo." },
 
+  // Update prompt
+  "update.title": { en: "New version available", es: "Nueva versión disponible" },
+  "update.description": { en: "Update to get the latest improvements.", es: "Actualizá para obtener las últimas mejoras." },
+  "update.later": { en: "Later", es: "Después" },
+  "update.now": { en: "Update", es: "Actualizar" },
+
   // Date navigation
   "date.today": { en: "Today", es: "Hoy" },
   "date.yesterday": { en: "Yesterday", es: "Ayer" },

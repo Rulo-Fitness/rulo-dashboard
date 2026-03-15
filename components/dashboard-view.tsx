@@ -10,6 +10,7 @@ import {
 } from "@/lib/storage"
 import { useI18n } from "@/lib/i18n"
 import { Dumbbell, Flame, UtensilsCrossed, Plus } from "lucide-react"
+import Image from "next/image"
 import { CalorieRing } from "@/components/ui/calorie-ring"
 import { MacroRingCard } from "@/components/ui/macro-ring-card"
 import { WeekStrip } from "@/components/ui/week-strip"
@@ -39,9 +40,6 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   const [mounted, setMounted] = useState(false)
   const [todayMeals, setTodayMeals] = useState<ReturnType<typeof getTodayMeals>>([])
   const [allMeals, setAllMeals] = useState<ReturnType<typeof getMeals>>([])
-  const [greeting, setGreeting] = useState("")
-  const [dateStr, setDateStr] = useState("")
-
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -50,19 +48,7 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
     if (!mounted) return
     setTodayMeals(getTodayMeals())
     setAllMeals(getMeals())
-    const now = new Date()
-    const hour = now.getHours()
-    setGreeting(
-      hour < 12 ? t("greeting.morning") : hour < 18 ? t("greeting.afternoon") : t("greeting.evening")
-    )
-    setDateStr(
-      now.toLocaleDateString(locale === "es" ? "es-ES" : "en-US", {
-        weekday: "long",
-        month: "short",
-        day: "numeric",
-      })
-    )
-  }, [mounted, refreshKey, t, locale])
+  }, [mounted, refreshKey])
 
   const today = getTodayString()
   const profile = getProfile()
@@ -112,9 +98,9 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
   return (
     <div className="relative flex flex-col gap-0 pb-6">
       {/* ── Header ── */}
-      <div className="flex flex-col gap-1 px-4 pb-3 animate-slide-up">
-        <p className="text-[13px] font-medium text-muted-foreground capitalize tracking-wide" style={{ textWrap: "balance" }}>{dateStr}</p>
-        <h1 className="text-[32px] font-extrabold tracking-tight text-foreground leading-[1.1]" style={{ textWrap: "balance" }}>{greeting}</h1>
+      <div className="flex items-center gap-2.5 px-4 pb-3 animate-slide-up">
+        <Image src="/rulo-isotipo.png" alt="Rulo" width={32} height={32} className="rounded-lg" />
+        <span className="text-[22px] font-extrabold tracking-tight text-foreground">Rulo</span>
       </div>
 
       {/* ── Large CalorieRing ── */}
