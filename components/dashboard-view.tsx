@@ -123,83 +123,67 @@ export function DashboardView({ refreshKey, onNavigate, onDashboardModalChange }
   }
 
   return (
-    <div className="flex flex-col gap-5 px-4 pb-6">
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{greeting}</h1>
+    <div className="relative flex flex-col gap-0 pb-6">
+      {/* ── Header — warm, bold, distinctive ── */}
+      <div className="flex flex-col gap-1 px-4 pb-5 animate-slide-up">
+        <p className="text-[13px] font-medium text-muted-foreground capitalize tracking-wide" style={{ textWrap: "balance" }}>{dateStr}</p>
+        <div className="flex items-end justify-between gap-3">
+          <h1 className="text-[32px] font-extrabold tracking-tight text-foreground leading-[1.1]" style={{ textWrap: "balance" }}>{greeting}</h1>
           <button
             type="button"
             onClick={() => setOpenPlan(true)}
-            className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-br from-[#FF6B00] to-[#CC5500] px-3 py-2 text-left transition-transform active:scale-[0.98] shadow-md shadow-orange-500/20"
+            className="flex shrink-0 items-center gap-2 rounded-[12px] bg-gradient-to-br from-primary to-primary-deep px-3.5 py-2.5 text-left transition-all active:scale-[0.96] shadow-lg grain-overlay"
+            style={{ boxShadow: "0 4px 20px oklch(0.55 0.2 30 / 0.25), 0 1px 4px oklch(0.55 0.2 30 / 0.15)" }}
           >
-            <Target className="h-5 w-5 text-white/95 shrink-0" />
-            <span className="font-semibold text-white text-[13px] leading-tight whitespace-nowrap">{t("dashboard.boxPlan")}</span>
+            <Target className="h-4 w-4 text-white/95 shrink-0" />
+            <span className="font-bold text-white text-[13px] leading-tight whitespace-nowrap">{t("dashboard.boxPlan")}</span>
           </button>
         </div>
-        <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
       </div>
 
-      {/* Carrusel de cards: Descarga la app, Resumen, Tu plan, Habla con Rulo */}
-      <div className="overflow-hidden">
-        <div
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${cardsCarouselIndex * 100}%)` }}
-        >
-          {[
-            {
-              Icon: Smartphone,
-              titleKey: "dashboard.boxInstall",
-              hintKey: "dashboard.boxInstallHint",
-              className: "from-purple-500/90 to-pink-500/90 shadow-purple-500/20",
-              onClick: () => { setOpenInstall(true); onDashboardModalChange?.(true) },
-            },
-            {
-              Icon: BarChart3,
-              titleKey: "dashboard.boxReport",
-              hintKey: "dashboard.boxReportHint",
-              className: "from-purple-600 to-purple-700 shadow-purple-500/20",
-              onClick: () => { setOpenReport(true); onDashboardModalChange?.(true) },
-            },
-            {
-              Icon: Target,
-              titleKey: "dashboard.carouselYourPlan",
-              hintKey: "dashboard.carouselYourPlanHint",
-              className: "from-amber-500/90 to-orange-600 shadow-orange-500/20",
-              onClick: () => setOpenPlan(true),
-            },
-            {
-              Icon: MessageCircle,
-              titleKey: "dashboard.carouselTalkToRulo",
-              hintKey: "dashboard.carouselTalkToRuloHint",
-              className: "from-violet-600 to-purple-700 shadow-purple-500/20",
-              onClick: () => onNavigate?.("profile"),
-            },
-          ].map((card, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={card.onClick}
-              className={`aspect-[4/3] w-full min-w-full flex-shrink-0 flex flex-col items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br p-2.5 text-center transition-transform active:scale-[0.98] shadow-lg ${card.className}`}
-            >
-              <card.Icon className="h-5 w-5 text-white/95 shrink-0" />
-              <p className="font-semibold text-white text-[12px] leading-tight line-clamp-2">{t(card.titleKey as Parameters<typeof t>[0])}</p>
-              <p className="text-[9px] text-white/80 line-clamp-2">{t(card.hintKey as Parameters<typeof t>[0])}</p>
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center justify-center gap-1.5 pt-2">
-          {[0, 1, 2, 3].map((i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => setCardsCarouselIndex(i)}
-              className={`h-1.5 rounded-full transition-all duration-200 ${
-                i === cardsCarouselIndex ? "w-5 bg-primary" : "w-1.5 bg-muted-foreground/30"
-              }`}
-              aria-label={t((i === 0 ? "dashboard.boxInstall" : i === 1 ? "dashboard.boxReport" : i === 2 ? "dashboard.carouselYourPlan" : "dashboard.carouselTalkToRulo") as Parameters<typeof t>[0])}
-            />
-          ))}
-        </div>
+      {/* Quick action pills — horizontal scroll, not a generic carousel */}
+      <div className="flex gap-2.5 px-4 overflow-x-auto pb-1 scrollbar-none animate-slide-up" style={{ animationDelay: "0.05s", scrollbarWidth: "none" }}>
+        {[
+          {
+            Icon: Smartphone,
+            titleKey: "dashboard.boxInstall",
+            bg: "from-[#7C3AED] to-[#6D28D9]",
+            shadow: "oklch(0.45 0.2 290 / 0.25)",
+            onClick: () => { setOpenInstall(true); onDashboardModalChange?.(true) },
+          },
+          {
+            Icon: BarChart3,
+            titleKey: "dashboard.boxReport",
+            bg: "from-[#0EA5E9] to-[#0284C7]",
+            shadow: "oklch(0.55 0.15 230 / 0.25)",
+            onClick: () => { setOpenReport(true); onDashboardModalChange?.(true) },
+          },
+          {
+            Icon: Target,
+            titleKey: "dashboard.carouselYourPlan",
+            bg: "from-primary to-primary-deep",
+            shadow: "oklch(0.55 0.2 30 / 0.25)",
+            onClick: () => setOpenPlan(true),
+          },
+          {
+            Icon: MessageCircle,
+            titleKey: "dashboard.carouselTalkToRulo",
+            bg: "from-[#10B981] to-[#059669]",
+            shadow: "oklch(0.55 0.15 160 / 0.25)",
+            onClick: () => onNavigate?.("profile"),
+          },
+        ].map((card, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={card.onClick}
+            className={`flex shrink-0 items-center gap-2.5 rounded-[14px] bg-gradient-to-br ${card.bg} px-4 py-3 transition-all active:scale-[0.96] grain-overlay`}
+            style={{ boxShadow: `0 4px 16px ${card.shadow}, 0 1px 3px ${card.shadow}` }}
+          >
+            <card.Icon className="h-4.5 w-4.5 text-white/95 shrink-0" style={{ width: "18px", height: "18px" }} />
+            <span className="font-semibold text-white text-[13px] leading-tight whitespace-nowrap">{t(card.titleKey as Parameters<typeof t>[0])}</span>
+          </button>
+        ))}
       </div>
 
       {/* Modal: Tu plan — estilo rulo (space-bg + 3 planes) */}
@@ -453,101 +437,130 @@ export function DashboardView({ refreshKey, onNavigate, onDashboardModalChange }
         </div>
       </div>
 
-      {/* Today's calories vs goal */}
-      <section aria-label={t("dashboard.todayProgress")}>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15">
-                <Flame className="h-6 w-6 text-primary" />
+      {/* ── Section: Hoy ── */}
+      <p className="section-label px-4 pt-5 pb-2 select-none">
+        {t("dashboard.todayProgress")}
+      </p>
+
+      {/* Calories ring + macros — distinctive, not a boring progress bar */}
+      <section aria-label={t("dashboard.todayProgress")} className="px-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+        <div className="rounded-[16px] bg-card overflow-hidden card-warm">
+          <div className="flex items-center gap-4 px-4 py-4">
+            {/* Circular calorie ring */}
+            <div className="relative shrink-0" style={{ width: "80px", height: "80px" }}>
+              <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+                {/* Background ring */}
+                <circle
+                  cx="40" cy="40" r="32"
+                  fill="none"
+                  stroke="var(--secondary)"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                />
+                {/* Progress ring */}
+                <circle
+                  cx="40" cy="40" r="32"
+                  fill="none"
+                  stroke={isOverCal ? "var(--destructive)" : "var(--primary)"}
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 32}`}
+                  strokeDashoffset={`${2 * Math.PI * 32 * (1 - Math.min(calPercent, 100) / 100)}`}
+                  className="animate-ring-fill"
+                  style={{
+                    "--ring-circumference": `${2 * Math.PI * 32}`,
+                    "--ring-offset": `${2 * Math.PI * 32 * (1 - Math.min(calPercent, 100) / 100)}`,
+                    transition: "stroke-dashoffset 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                  } as React.CSSProperties}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <Flame className="h-4 w-4 text-primary mb-0.5" />
+                <span className="text-[11px] font-bold text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{Math.round(calPercent)}%</span>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {todayCalories.toLocaleString()} / {calGoal.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">{t("unit.kcal")}</p>
+            </div>
+
+            {/* Calorie text */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[22px] font-bold text-foreground tracking-tight" style={{ fontVariantNumeric: "tabular-nums" }}>
+                {todayCalories.toLocaleString()}
+                <span className="text-[14px] text-muted-foreground font-normal ml-1">/ {calGoal.toLocaleString()}</span>
+              </p>
+              <p className="text-[12px] text-muted-foreground mt-0.5">{t("unit.kcal")}</p>
+              <p className={`text-[13px] font-semibold mt-1 ${isOverCal ? "text-destructive" : "text-primary"}`}>
+                {calDiff.toLocaleString()} {isOverCal ? t("dashboard.over") : t("dashboard.remaining")}
+              </p>
+            </div>
+          </div>
+
+          {/* Macros row — with mini progress bars */}
+          <div className="border-t border-border/40 grid grid-cols-3">
+            {[
+              { label: t("macro.protein"), value: todayProtein, goal: protGoal, color: "#F05A28" },
+              { label: t("macro.carbs"), value: todayCarbs, goal: carbsGoal, color: "#F59E0B" },
+              { label: t("macro.fat"), value: todayFat, goal: fatGoal, color: "#8B5CF6" },
+            ].map((m, i) => (
+              <div key={m.label} className={`flex flex-col items-center py-3 gap-1 ${i > 0 ? "border-l border-border/40" : ""}`}>
+                <p className="text-[15px] font-bold text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{m.value}<span className="text-[11px] text-muted-foreground font-normal">g</span></p>
+                <div className="w-10 h-[3px] rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min((m.value / m.goal) * 100, 100)}%`, background: m.color }} />
+                </div>
+                <p className="text-[11px] text-muted-foreground">{m.label}</p>
               </div>
-            </div>
-            <p
-              className={`text-sm font-semibold ${isOverCal ? "text-destructive" : "text-primary"}`}
-            >
-              {calDiff.toLocaleString()} {isOverCal ? t("dashboard.over") : t("dashboard.remaining")}
-            </p>
-          </div>
-          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-secondary">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${Math.min(calPercent, 100)}%` }}
-            />
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="text-sm font-semibold text-foreground">{todayProtein}</p>
-              <p className="text-[10px] text-muted-foreground">{t("macro.protein")} (meta {protGoal})</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{todayCarbs}</p>
-              <p className="text-[10px] text-muted-foreground">{t("macro.carbs")} (meta {carbsGoal})</p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{todayFat}</p>
-              <p className="text-[10px] text-muted-foreground">{t("macro.fat")} (meta {fatGoal})</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Today's training */}
-      <section aria-label={t("dashboard.todayTraining")}>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15">
-                <Dumbbell className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                {todayExercises.length > 0 ? (
-                  <>
-                    <p className="font-semibold text-foreground">{t("dashboard.youTrained")}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {todayExercises.length} {t("dashboard.exercises")}
-                      {todayExercises.length <= 3
-                        ? ` · ${todayExercises.map((e) => e.name).join(", ")}`
-                        : ` · ${todayExercises.slice(0, 2).map((e) => e.name).join(", ")}...`}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="font-semibold text-foreground">{t("dashboard.noTrainingYet")}</p>
-                    <p className="text-sm text-muted-foreground">{t("dashboard.addExercise")}</p>
-                  </>
-                )}
-              </div>
+      {/* Training row */}
+      <section aria-label={t("dashboard.todayTraining")} className="px-4 pt-2 animate-slide-up" style={{ animationDelay: "0.15s" }}>
+        <div className="rounded-[16px] bg-card overflow-hidden card-warm">
+          <div className="flex items-center gap-3 px-4 py-3 min-h-[56px]">
+            <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[#3B82F6]">
+              <Dumbbell className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              {todayExercises.length > 0 ? (
+                <>
+                  <p className="text-[15px] font-medium text-foreground">{t("dashboard.youTrained")}</p>
+                  <p className="text-[13px] text-muted-foreground truncate">
+                    {todayExercises.length} {t("dashboard.exercises")}
+                    {todayExercises.length <= 3
+                      ? ` · ${todayExercises.map((e) => e.name).join(", ")}`
+                      : ` · ${todayExercises.slice(0, 2).map((e) => e.name).join(", ")}…`}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-[15px] font-medium text-foreground">{t("dashboard.noTrainingYet")}</p>
+                  <p className="text-[13px] text-muted-foreground">{t("dashboard.addExercise")}</p>
+                </>
+              )}
             </div>
             {onNavigate && (
               <button
                 type="button"
                 onClick={() => onNavigate("training")}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform active:scale-95"
+                className="flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
                 aria-label={t("dashboard.addExercise")}
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-4 w-4" />
               </button>
             )}
           </div>
         </div>
       </section>
 
-      {/* Week at a glance: Training + Meals */}
-      <section aria-label={t("dashboard.thisWeek")}>
-        <div className="rounded-xl border border-border bg-card px-2 py-3">
-          <div className="mb-2 flex gap-4 px-2">
-            <span className="text-xs font-semibold text-muted-foreground">
-              {t("dashboard.weekTraining")}
-            </span>
-            <span className="text-xs font-semibold text-muted-foreground">
-              {t("dashboard.weekMeals")}
-            </span>
+      {/* ── Section: Esta semana ── */}
+      <p className="section-label px-4 pt-5 pb-2 select-none">
+        {t("dashboard.thisWeek")}
+      </p>
+
+      <section aria-label={t("dashboard.thisWeek")} className="px-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+        <div className="rounded-[16px] bg-card px-3 py-3 card-warm">
+          <div className="mb-2 flex gap-4 px-1">
+            <span className="text-[11px] font-medium text-muted-foreground">{t("dashboard.weekTraining")}</span>
+            <span className="text-[11px] font-medium text-muted-foreground">{t("dashboard.weekMeals")}</span>
           </div>
           <div className="flex gap-1">
             {weekDates.map((dateStr) => {
@@ -555,29 +568,24 @@ export function DashboardView({ refreshKey, onNavigate, onDashboardModalChange }
               const hasMeals = allMeals.some((m) => m.date === dateStr)
               const isToday = dateStr === today
               return (
-                <div
-                  key={dateStr}
-                  className="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-lg py-1"
-                >
-                  <span
-                    className={`text-[11px] font-medium uppercase ${isToday ? "text-primary" : "text-muted-foreground"}`}
-                  >
+                <div key={dateStr} className="flex min-w-0 flex-1 flex-col items-center gap-1.5 py-1">
+                  <span className={`text-[11px] font-medium uppercase ${isToday ? "text-primary" : "text-muted-foreground"}`}>
                     {new Date(dateStr + "T12:00:00").toLocaleDateString(loc, { weekday: "short" }).charAt(0)}
                   </span>
                   <div className="flex flex-col items-center gap-0.5">
                     {hasTraining ? (
-                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary">
-                        <Check className="h-2 w-2 text-primary-foreground" strokeWidth={2.5} />
+                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#3B82F6]">
+                        <Check className="h-2 w-2 text-white" strokeWidth={2.5} />
                       </span>
                     ) : (
-                      <Circle className="h-3.5 w-3.5 text-muted-foreground/40" strokeWidth={2} />
+                      <span className="h-3.5 w-3.5 rounded-full border-2 border-border/60" />
                     )}
                     {hasMeals ? (
-                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-chart-3">
-                        <Check className="h-2 w-2 text-primary-foreground" strokeWidth={2.5} />
+                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-[#F59E0B]">
+                        <Check className="h-2 w-2 text-white" strokeWidth={2.5} />
                       </span>
                     ) : (
-                      <Circle className="h-3.5 w-3.5 text-muted-foreground/40" strokeWidth={2} />
+                      <span className="h-3.5 w-3.5 rounded-full border-2 border-border/60" />
                     )}
                   </div>
                 </div>
@@ -587,76 +595,78 @@ export function DashboardView({ refreshKey, onNavigate, onDashboardModalChange }
         </div>
       </section>
 
-      {/* Quick log */}
+      {/* ── Quick log ── */}
       {onNavigate && (
-        <section aria-label={t("dashboard.quickLog")}>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => onNavigate("meals")}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-secondary/50 active:scale-[0.99]"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-chart-3/15">
-                <UtensilsCrossed className="h-5 w-5 text-chart-3" />
-              </div>
-              <span className="font-semibold text-foreground">{t("dashboard.addMeal")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate("training")}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-secondary/50 active:scale-[0.99]"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15">
-                <Dumbbell className="h-5 w-5 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground">{t("dashboard.addExercise")}</span>
-            </button>
-          </div>
-        </section>
+        <>
+          <p className="section-label px-4 pt-5 pb-2 select-none">
+            {t("dashboard.quickLog")}
+          </p>
+          <section aria-label={t("dashboard.quickLog")} className="px-4 animate-slide-up" style={{ animationDelay: "0.25s" }}>
+            <div className="rounded-[16px] bg-card overflow-hidden divide-y divide-border/40 card-warm">
+              <button
+                type="button"
+                onClick={() => onNavigate("meals")}
+                className="flex w-full items-center gap-3 px-4 py-3.5 min-h-[48px] text-left active:bg-secondary/60 transition-colors"
+              >
+                <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[#F59E0B]">
+                  <UtensilsCrossed className="h-4 w-4 text-white" />
+                </div>
+                <span className="flex-1 text-[15px] font-medium text-foreground">{t("dashboard.addMeal")}</span>
+                <Plus className="h-[18px] w-[18px] text-muted-foreground/40 shrink-0" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate("training")}
+                className="flex w-full items-center gap-3 px-4 py-3.5 min-h-[48px] text-left active:bg-secondary/60 transition-colors"
+              >
+                <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[#3B82F6]">
+                  <Dumbbell className="h-4 w-4 text-white" />
+                </div>
+                <span className="flex-1 text-[15px] font-medium text-foreground">{t("dashboard.addExercise")}</span>
+                <Plus className="h-[18px] w-[18px] text-muted-foreground/40 shrink-0" />
+              </button>
+            </div>
+          </section>
+        </>
       )}
 
-      {/* Recent today */}
+      {/* ── Recent activity ── */}
       {(todayMeals.length > 0 || todayExercises.length > 0) && (
-        <section aria-label={t("dashboard.recentActivity")}>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <>
+          <p className="section-label px-4 pt-5 pb-2 select-none">
             {t("dashboard.recentActivity")}
-          </h2>
-          <div className="flex flex-col gap-2">
-            {todayExercises.slice(0, 3).map((ex) => (
-              <div
-                key={ex.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/15">
-                  <Dumbbell className="h-4 w-4 text-primary" />
+          </p>
+          <section aria-label={t("dashboard.recentActivity")} className="px-4 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+            <div className="rounded-[16px] bg-card overflow-hidden divide-y divide-border/40 card-warm">
+              {todayExercises.slice(0, 3).map((ex) => (
+                <div key={ex.id} className="flex items-center gap-3 px-4 py-3 min-h-[48px]">
+                  <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[#3B82F6]">
+                    <Dumbbell className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-medium text-foreground">{ex.name}</p>
+                    <p className="text-[13px] text-muted-foreground">
+                      {ex.sets}×{ex.reps} @ {ex.weight}{t("unit.kg")}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{ex.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {ex.sets}×{ex.reps} @ {ex.weight}
-                    {t("unit.kg")}
-                  </p>
+              ))}
+              {todayMeals.slice(0, 3).map((meal) => (
+                <div key={meal.id} className="flex items-center gap-3 px-4 py-3 min-h-[48px]">
+                  <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-[#F59E0B]">
+                    <Flame className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-medium text-foreground">{meal.name}</p>
+                    <p className="text-[13px] text-muted-foreground">
+                      {meal.calories} {t("unit.cal")} · {meal.time}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-            {todayMeals.slice(0, 3).map((meal) => (
-              <div
-                key={meal.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
-              >
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-chart-3/15">
-                  <Flame className="h-4 w-4 text-chart-3" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">{meal.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {meal.calories} {t("unit.cal")} · {meal.time}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        </>
       )}
     </div>
   )

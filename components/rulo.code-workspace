@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../rulo-landing"
+		},
+		{
+			"path": "../../rulo-mcp-server"
+		},
+		{
+			"path": "../../rulo-api"
+		}
+	],
+	"settings": {}
+}

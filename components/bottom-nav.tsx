@@ -105,20 +105,30 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
               aria-selected={isActive}
               aria-label={label}
               onClick={() => onTabChange(tab.id)}
-              className={`relative z-10 flex rounded-full overflow-hidden ${iconsOnly ? "items-center justify-center" : "flex-col items-center justify-center gap-0.5"}`}
+              className={`relative z-10 flex rounded-full overflow-hidden select-none active:scale-[0.88] ${iconsOnly ? "items-center justify-center" : "flex-col items-center justify-center gap-0.5"}`}
               style={{
                 width: `${tabW}px`,
                 height: `${tabH}px`,
-                transition: `width ${DUR_SHRINK} ${EASE_SHRINK}, height ${DUR_SHRINK} ${EASE_SHRINK}`,
+                transition: `width ${DUR_SHRINK} ${EASE_SHRINK}, height ${DUR_SHRINK} ${EASE_SHRINK}, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1)`,
+                WebkitTapHighlightColor: "transparent",
               }}
             >
-              <span className="flex shrink-0 items-center justify-center">
+              <span
+                className="flex shrink-0 items-center justify-center"
+                style={isActive ? {
+                  filter: "drop-shadow(0 0 6px color-mix(in oklch, var(--primary) 55%, transparent))",
+                  transition: `filter ${DUR_M} ${EASE_SMOOTH}`,
+                } : {
+                  filter: "none",
+                  transition: `filter ${DUR_M} ${EASE_SMOOTH}`,
+                }}
+              >
                 <tab.icon
                   style={{
-                    width: iconsOnly ? "24px" : "23px",
-                    height: iconsOnly ? "24px" : "23px",
+                    width: iconsOnly ? "24px" : "22px",
+                    height: iconsOnly ? "24px" : "22px",
                     color: isActive ? "var(--primary)" : "var(--nav-inactive)",
-                    strokeWidth: isActive ? 2.2 : 1.6,
+                    strokeWidth: isActive ? 2.3 : 1.7,
                     transition: `color ${DUR_M} ${EASE_SMOOTH}, stroke-width ${DUR_M} ${EASE_SMOOTH}`,
                   }}
                 />
@@ -127,13 +137,14 @@ export function BottomNav({ activeTab, onTabChange, scrollShrink = 0, hidden = f
                 aria-hidden
                 className="block w-full text-center"
                 style={{
-                  fontSize: "11px",
-                  fontWeight: isActive ? 600 : 700,
+                  fontSize: "10.5px",
+                  fontWeight: isActive ? 600 : 500,
+                  letterSpacing: isActive ? "-0.01em" : "0",
                   color: isActive ? "var(--primary)" : "var(--nav-inactive)",
                   opacity: labelOpacity,
                   whiteSpace: "nowrap",
                   pointerEvents: "none",
-                  transition: `opacity ${DUR_SHRINK} ${EASE_SHRINK}`,
+                  transition: `opacity ${DUR_SHRINK} ${EASE_SHRINK}, color ${DUR_M} ${EASE_SMOOTH}`,
                 }}
               >
                 {label}
