@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsForDate, createWorkoutLog, updateWorkoutLog, deleteWorkoutLog } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
-import { Plus, Trash2, Dumbbell, X, ChevronLeft, ChevronRight, Pencil, Check } from "lucide-react"
+import { Plus, Trash2, Dumbbell, ChevronLeft, ChevronRight, Pencil, Check, X, ArrowLeft } from "lucide-react"
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
@@ -31,31 +31,25 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [apiLoading, setApiLoading] = useState(false)
-  const [showAddPanel, setShowAddPanel] = useState(false)
-  const [isClosing, setIsClosing] = useState(false)
+  const [showForm, setShowForm] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null)
   const [addFormKey, setAddFormKey] = useState(0)
   const dateInputRef = useRef<HTMLInputElement>(null)
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const setPanelOpen = (open: boolean) => {
-    setShowAddPanel(open)
-    onAddPanelChange?.(open)
+  const openForm = (ex: Exercise | null = null) => {
+    if (!ex) setAddFormKey((k) => k + 1)
+    setEditingExercise(ex)
+    setShowForm(true)
+    onAddPanelChange?.(true)
   }
 
-  const closePanel = useCallback(() => {
-    setIsClosing(true)
-    closeTimeoutRef.current = setTimeout(() => {
-      setShowAddPanel(false)
-      setEditingExercise(null)
-      setIsClosing(false)
-      onAddPanelChange?.(false)
-      closeTimeoutRef.current = null
-    }, 300)
-  }, [onAddPanelChange])
+  const closeForm = () => {
+    setShowForm(false)
+    setEditingExercise(null)
+    onAddPanelChange?.(false)
+  }
 
-  // Cargar con esta fecha: traer de la API los workout logs del usuario y del día seleccionado
   useEffect(() => {
     if (!user?.id) {
       setExercises(getExercisesForDate(selectedDate))
@@ -81,10 +75,6 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
     }
   }, [user?.id, selectedDate])
 
-  useEffect(() => () => {
-    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
-  }, [])
-
   const refresh = (): Promise<void> => {
     if (user?.id) {
       setApiLoading(true)
@@ -104,7 +94,6 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const handleDeleteConfirm = async (exId: string) => {
     setDeletingExerciseId(null)
     if (user?.id) {
-      // Optimista: quitar de la lista al instante; si la API falla, restauramos con refresh
       const previous = exercises.filter((e) => e.id !== exId)
       setExercises(previous)
       onUpdate()
@@ -140,11 +129,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           <p className="text-sm text-muted-foreground">{t("training.subtitle")}</p>
         </div>
         <button
-          onClick={() => {
-            setAddFormKey((k) => k + 1)
-            setPanelOpen(true)
-            setEditingExercise(null)
-          }}
+          onClick={() => openForm(null)}
           className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("training.addExercise")}
         >
@@ -152,97 +137,94 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </button>
       </div>
 
-      {/* Panel deslizante desde abajo para agregar ejercicio */}
+      {/* Full-screen form — slides from right */}
       <div
-        className="fixed inset-0 z-50 flex flex-col justify-end"
+        className="fixed inset-0 z-50 bg-background transition-transform duration-300 ease-out"
         style={{
-          pointerEvents: showAddPanel || isClosing ? "auto" : "none",
-          visibility: showAddPanel || isClosing ? "visible" : "hidden",
+          transform: showForm ? "translateX(0)" : "translateX(100%)",
+          pointerEvents: showForm ? "auto" : "none",
         }}
-        aria-hidden={!showAddPanel && !isClosing}
       >
-        <div
-          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
-          style={{ opacity: showAddPanel && !isClosing ? 1 : 0 }}
-          onClick={closePanel}
-          aria-hidden
-        />
-        <div
-          className="relative mx-auto flex w-full max-w-lg flex-col rounded-t-3xl bg-card shadow-xl transition-transform duration-300 ease-out max-h-[85dvh]"
-          style={{ transform: showAddPanel && !isClosing ? "translateY(0)" : "translateY(100%)" }}
-        >
-          <div className="flex shrink-0 justify-center pt-3 pb-1">
-            <div className="h-1.5 w-10 rounded-full bg-input" aria-hidden />
-          </div>
-          <header className="flex shrink-0 justify-center px-4 py-3">
-            <h2 className="text-center text-lg font-semibold text-foreground">
+        <div className="mx-auto flex h-full max-w-lg flex-col">
+          {/* Header */}
+          <header className="flex shrink-0 items-center gap-3 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 border-b border-border">
+            <button
+              type="button"
+              onClick={closeForm}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h2 className="text-lg font-semibold text-foreground">
               {editingExercise ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
             </h2>
           </header>
-          <div className="flex flex-1 flex-col overflow-y-auto overflow-x-visible px-4 py-4 pb-8">
-            <div className="w-full flex-1">
-            <ExerciseForm
-              key={editingExercise ? editingExercise.id : `new-${addFormKey}`}
-              initial={editingExercise}
-              selectedDate={selectedDate}
-              onSave={async (data) => {
-                if (user?.id) {
-                  let ok = false
-                  if (data.id) {
-                    ok = await updateWorkoutLog(data.id, {
-                      name: data.name,
-                      sets: data.sets,
-                      reps: data.reps,
-                      weight: data.weight,
-                    })
-                    if (ok) {
-                      setExercises((prev) =>
-                        prev.map((ex) =>
-                          ex.id === data.id
-                            ? { id: data.id!, name: data.name, sets: data.sets, reps: data.reps, weight: data.weight }
-                            : ex
+          {/* Form body */}
+          <div className="flex-1 overflow-y-auto px-4 py-6">
+            {showForm && (
+              <ExerciseForm
+                key={editingExercise ? editingExercise.id : `new-${addFormKey}`}
+                initial={editingExercise}
+                selectedDate={selectedDate}
+                onSave={async (data) => {
+                  if (user?.id) {
+                    let ok = false
+                    if (data.id) {
+                      ok = await updateWorkoutLog(data.id, {
+                        name: data.name,
+                        sets: data.sets,
+                        reps: data.reps,
+                        weight: data.weight,
+                      })
+                      if (ok) {
+                        setExercises((prev) =>
+                          prev.map((ex) =>
+                            ex.id === data.id
+                              ? { id: data.id!, name: data.name, sets: data.sets, reps: data.reps, weight: data.weight }
+                              : ex
+                          )
                         )
-                      )
-                      onUpdate()
+                        onUpdate()
+                      }
+                    } else {
+                      const created = await createWorkoutLog(user.id, {
+                        date: selectedDate,
+                        name: data.name,
+                        sets: data.sets,
+                        reps: data.reps,
+                        weight: data.weight,
+                      })
+                      if (created) {
+                        setExercises((prev) => [
+                          ...prev,
+                          {
+                            id: created.id,
+                            name: created.name ?? "",
+                            sets: created.sets ?? 0,
+                            reps: created.reps ?? 0,
+                            weight: created.weight ?? 0,
+                          },
+                        ])
+                        onUpdate()
+                        ok = true
+                      }
                     }
+                    if (ok) closeForm()
                   } else {
-                    const created = await createWorkoutLog(user.id, {
-                      date: selectedDate,
-                      name: data.name,
-                      sets: data.sets,
-                      reps: data.reps,
-                      weight: data.weight,
-                    })
-                    if (created) {
-                      setExercises((prev) => [
-                        ...prev,
-                        {
-                          id: created.id,
-                          name: created.name ?? "",
-                          sets: created.sets ?? 0,
-                          reps: created.reps ?? 0,
-                          weight: created.weight ?? 0,
-                        },
-                      ])
-                      onUpdate()
-                      ok = true
+                    if (data.id) {
+                      updateExercise(selectedDate, { ...data, id: data.id })
+                    } else {
+                      addExerciseToDate(selectedDate, data)
                     }
+                    refresh()
+                    closeForm()
                   }
-                  if (ok) closePanel()
-                } else {
-                  if (data.id) {
-                    updateExercise(selectedDate, { ...data, id: data.id })
-                  } else {
-                    addExerciseToDate(selectedDate, data)
-                  }
-                  refresh()
-                  closePanel()
-                }
-              }}
-              onCancel={closePanel}
-              hideHeader
-            />
-            </div>
+                }}
+                onCancel={closeForm}
+                hideHeader
+              />
+            )}
           </div>
         </div>
       </div>
@@ -287,6 +269,32 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
       </div>
 
+      {/* Training summary card */}
+      {!apiLoading && exercises.length > 0 && (() => {
+        const totalVolume = exercises.reduce((sum, ex) => sum + ex.sets * ex.reps * ex.weight, 0)
+        return (
+          <div className="rounded-[16px] bg-card overflow-hidden card-warm">
+            <div className="flex items-center gap-4 px-4 py-3">
+              <div className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[10px] bg-[#3B82F6]">
+                <Dumbbell className="h-4.5 w-4.5 text-white" />
+              </div>
+              <div className="flex flex-1 gap-6">
+                <div>
+                  <p className="text-[18px] font-bold text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{exercises.length}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("dashboard.totalExercises")}</p>
+                </div>
+                {totalVolume > 0 && (
+                  <div>
+                    <p className="text-[18px] font-bold text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{totalVolume.toLocaleString()}</p>
+                    <p className="text-[11px] text-muted-foreground">{t("unit.kg")} {t("dashboard.todayVolume")}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Área de contenido: carga, vacío o lista */}
       <div className="flex min-h-0 flex-1 flex-col">
         {user?.id && apiLoading && (
@@ -295,7 +303,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           </div>
         )}
 
-        {!apiLoading && exercises.length === 0 && !showAddPanel && (
+        {!apiLoading && exercises.length === 0 && !showForm && (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/50" />
             <p className="text-sm font-medium text-muted-foreground">{t("training.noExercises")}</p>
@@ -309,6 +317,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
             <div key={ex.id} className="flex flex-col gap-2">
               <div
                 className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
+                style={{ borderLeft: "3px solid #3B82F6" }}
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15">
                   <Dumbbell className="h-5 w-5 text-primary" />
@@ -341,7 +350,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                 ) : (
                   <>
                     <button
-                      onClick={() => { setPanelOpen(true); setEditingExercise(ex) }}
+                      onClick={() => openForm(ex)}
                       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary"
                       aria-label={t("training.editExercise")}
                     >
@@ -395,7 +404,6 @@ function ExerciseForm({
   const [reps, setReps] = useState(initial?.reps?.toString() ?? "")
   const [weight, setWeight] = useState(initial?.weight?.toString() ?? "")
 
-  // Al abrir en modo edición, rellenar los inputs con los datos del ejercicio
   useEffect(() => {
     if (initial) {
       setName(initial.name ?? "")
@@ -409,10 +417,6 @@ function ExerciseForm({
       setWeight("")
     }
   }, [initial?.id, initial?.name, initial?.sets, initial?.reps, initial?.weight])
-
-  useEffect(() => {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -431,37 +435,21 @@ function ExerciseForm({
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-4"
     >
-      {!hideHeader && (
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-foreground">
-          {isEdit ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
-        </h3>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary"
-          aria-label={t("profile.cancel")}
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      )}
-
         <input
           type="text"
           placeholder={t("training.exerciseName")}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="h-11 w-full rounded-lg bg-input px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="h-12 w-full rounded-xl bg-input px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           required
           autoFocus
         />
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="mb-1 block text-[10px] text-muted-foreground">{t("training.sets")}</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.sets")}</label>
             <input
               type="number"
               inputMode="decimal"
@@ -469,11 +457,11 @@ function ExerciseForm({
               value={sets}
               onChange={(e) => setSets(e.target.value)}
               min="0"
-              className="h-10 w-full rounded-md bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 w-full rounded-xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] text-muted-foreground">{t("training.reps")}</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.reps")}</label>
             <input
               type="number"
               inputMode="decimal"
@@ -481,11 +469,11 @@ function ExerciseForm({
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               min="0"
-              className="h-10 w-full rounded-md bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 w-full rounded-xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] text-muted-foreground">{t("training.weightKg")}</label>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.weightKg")}</label>
             <input
               type="number"
               inputMode="decimal"
@@ -494,14 +482,14 @@ function ExerciseForm({
               onChange={(e) => setWeight(e.target.value)}
               min="0"
               step="0.5"
-              className="h-10 w-full rounded-md bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 w-full rounded-xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="mt-1 flex h-14 w-full items-center justify-center rounded-xl bg-primary px-5 py-5 text-base font-semibold text-primary-foreground transition-colors active:scale-[0.99]"
+          className="mt-2 flex h-14 w-full items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-colors active:scale-[0.99]"
         >
           {t("register.save")}
         </button>

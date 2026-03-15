@@ -11,6 +11,8 @@ import {
   clearAllData,
   getTrainingSessions,
   getMeals,
+  getWeekSessions,
+  getWeekMeals,
   type UserProfile,
 } from "@/lib/storage"
 import {
@@ -31,7 +33,19 @@ import {
   HelpCircle,
   ChevronRight,
   Check,
+  Smartphone,
+  BarChart3,
+  Share,
+  X,
+  Dumbbell,
+  UtensilsCrossed,
+  Flame,
 } from "lucide-react"
+
+function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
 
 // ── iOS-style helpers ─────────────────────────────────────────────────────────
 
@@ -44,9 +58,15 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function SettingsGroup({ children }: { children: React.ReactNode }) {
+  const items = Array.isArray(children) ? children.filter(Boolean) : [children]
   return (
-    <div className="rounded-[16px] bg-card overflow-hidden divide-y divide-border/40 card-warm">
-      {children}
+    <div className="rounded-[16px] bg-card overflow-hidden card-warm">
+      {items.map((child, i) => (
+        <div key={i}>
+          {i > 0 && <div className="ml-[52px] mr-4 h-px bg-border/40" />}
+          {child}
+        </div>
+      ))}
     </div>
   )
 }
@@ -167,6 +187,8 @@ export function ProfileView() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [showLangPicker, setShowLangPicker] = useState(false)
+  const [openInstall, setOpenInstall] = useState(false)
+  const [openReport, setOpenReport] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -263,17 +285,19 @@ export function ProfileView() {
             onClick={() => { setShowLangPicker((v) => !v); setShowThemePicker(false) }}
           />
           {showLangPicker && (
-            <div className="divide-y divide-border/50">
-              {([{ id: "es" as const, label: t("settings.spanish") }, { id: "en" as const, label: t("settings.english") }]).map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => { setLocale(opt.id); setShowLangPicker(false) }}
-                  className="flex w-full items-center gap-3 pl-[60px] pr-4 py-2 min-h-[44px] text-left active:bg-secondary/60 transition-colors"
-                >
-                  <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
-                  {locale === opt.id && <Check className="h-4 w-4 text-primary shrink-0" />}
-                </button>
+            <div>
+              {([{ id: "es" as const, label: t("settings.spanish") }, { id: "en" as const, label: t("settings.english") }]).map((opt, i) => (
+                <div key={opt.id}>
+                  {i > 0 && <div className="ml-[60px] mr-4 h-px bg-border/40" />}
+                  <button
+                    type="button"
+                    onClick={() => { setLocale(opt.id); setShowLangPicker(false) }}
+                    className="flex w-full items-center gap-3 pl-[60px] pr-4 py-2 min-h-[44px] text-left active:bg-secondary/60 transition-colors"
+                  >
+                    <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
+                    {locale === opt.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                  </button>
+                </div>
               ))}
             </div>
           )}
@@ -292,21 +316,41 @@ export function ProfileView() {
             onClick={() => { setShowThemePicker((v) => !v); setShowLangPicker(false) }}
           />
           {showThemePicker && (
-            <div className="divide-y divide-border/50">
-              {themeOptions.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => { setTheme(opt.id); setShowThemePicker(false) }}
-                  className="flex w-full items-center gap-3 pl-[60px] pr-4 py-2 min-h-[44px] text-left active:bg-secondary/60 transition-colors"
-                >
-                  <opt.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
-                  {mounted && theme === opt.id && <Check className="h-4 w-4 text-primary shrink-0" />}
-                </button>
+            <div>
+              {themeOptions.map((opt, i) => (
+                <div key={opt.id}>
+                  {i > 0 && <div className="ml-[60px] mr-4 h-px bg-border/40" />}
+                  <button
+                    type="button"
+                    onClick={() => { setTheme(opt.id); setShowThemePicker(false) }}
+                    className="flex w-full items-center gap-3 pl-[60px] pr-4 py-2 min-h-[44px] text-left active:bg-secondary/60 transition-colors"
+                  >
+                    <opt.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
+                    {mounted && theme === opt.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                  </button>
+                </div>
               ))}
             </div>
           )}
+
+          {/* Install app */}
+          <SettingsRow
+            iconBg="#7C3AED"
+            icon={<Smartphone className="h-4 w-4 text-white" />}
+            label={t("dashboard.boxInstall")}
+            chevron
+            onClick={() => setOpenInstall(true)}
+          />
+
+          {/* Weekly report */}
+          <SettingsRow
+            iconBg="#0EA5E9"
+            icon={<BarChart3 className="h-4 w-4 text-white" />}
+            label={t("dashboard.boxReport")}
+            chevron
+            onClick={() => setOpenReport(true)}
+          />
         </SettingsGroup>
       </div>
 
@@ -482,6 +526,153 @@ export function ProfileView() {
             </div>
           )}
         </SettingsGroup>
+      </div>
+
+      {/* ── Install App Panel ── */}
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: openInstall ? "auto" : "none",
+          visibility: openInstall ? "visible" : "hidden",
+        }}
+        aria-hidden={!openInstall}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          style={{ opacity: openInstall ? 1 : 0 }}
+          onClick={() => setOpenInstall(false)}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: openInstall ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
+            <h2 className="text-lg font-semibold text-foreground">{t("dashboard.installTitle")}</h2>
+            <button
+              type="button"
+              onClick={() => setOpenInstall(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+            <div className="flex gap-3 mb-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                <Smartphone className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">{t("install.subtitle")}</p>
+            </div>
+            <ol className="space-y-3 text-sm text-foreground">
+              {isIOS() ? (
+                <>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                    <span>{t("install.iosStep1")}</span>
+                    <Share className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </li>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                    <span>{t("install.iosStep2")}</span>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
+                    <span>{t("install.iosStep3")}</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+                    <span>{t("install.androidStep1")}</span>
+                  </li>
+                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+                    <span>{t("install.androidStep2")}</span>
+                  </li>
+                </>
+              )}
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Weekly Report Panel ── */}
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: openReport ? "auto" : "none",
+          visibility: openReport ? "visible" : "hidden",
+        }}
+        aria-hidden={!openReport}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          style={{ opacity: openReport ? 1 : 0 }}
+          onClick={() => setOpenReport(false)}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: openReport ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">{t("dashboard.recapTitle")}</h2>
+              <p className="text-xs text-muted-foreground">{t("dashboard.recapSubtitle")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpenReport(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+            {openReport && (() => {
+              const weekSessions = getWeekSessions()
+              const weekMeals = getWeekMeals()
+              const totalExercises = weekSessions.reduce((sum, s) => sum + s.exercises.length, 0)
+              const totalCalories = weekMeals.reduce((sum, m) => sum + m.calories, 0)
+              return (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Dumbbell className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapSessions")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{weekSessions.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Target className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapExercises")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{totalExercises}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapMeals")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{weekMeals.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <Flame className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{t("dashboard.recapCalories")}</span>
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{totalCalories.toLocaleString()}</p>
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+        </div>
       </div>
     </div>
   )
