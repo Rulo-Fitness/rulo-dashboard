@@ -239,10 +239,11 @@ export function ProfileView() {
 
   return (
     <div className="flex flex-col pb-10">
-      {/* Large title */}
-      <h1 className="px-6 pt-2 pb-2 text-[28px] font-black tracking-tight text-foreground">
-        {t("nav.settings")}
-      </h1>
+      <div className="px-6">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          {t("nav.settings")}
+        </h1>
+      </div>
 
       {/* ── Account card ── */}
       <div className="px-6 pt-4">

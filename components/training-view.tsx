@@ -12,7 +12,17 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsForDate, createWorkoutLog, updateWorkoutLog, deleteWorkoutLog } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
-import { Plus, Trash2, Dumbbell, ChevronLeft, ChevronRight, Pencil, Check, X, ArrowLeft } from "lucide-react"
+import { Plus, Trash, ChevronLeft, ChevronRight, Pencil, CircleCheck, CircleX, ArrowLeft } from "lucide-react"
+
+function BicepStatic({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12.409 13.017A5 5 0 0 1 22 15c0 3.866-4 7-9 7-4.077 0-8.153-.82-10.371-2.462-.426-.316-.631-.832-.62-1.362C2.118 12.723 2.627 2 10 2a3 3 0 0 1 3 3 2 2 0 0 1-2 2c-1.105 0-1.64-.444-2-1" />
+      <path d="M15 14a5 5 0 0 0-7.584 2" />
+      <path d="M9.964 6.825C8.019 7.977 9.5 13 8 15" />
+    </svg>
+  )
+}
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
@@ -278,7 +288,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
 
         {!apiLoading && exercises.length === 0 && !showForm && (
           <div className="bg-card rounded-[32px] p-8 card-shadow text-center">
-            <Dumbbell size={48} className="mx-auto mb-4 text-muted-foreground/30" />
+            <BicepStatic className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
             <p className="text-foreground font-medium">{t("training.noExercises")}</p>
             <p className="text-muted-foreground text-sm mt-1">{t("training.tapToAdd")}</p>
           </div>
@@ -291,7 +301,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
               {idx > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
               <div className="px-5 py-3 min-h-[56px] flex items-center gap-4">
                 <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
-                  <Dumbbell className="h-5 w-5" strokeWidth={2.2} />
+                  <BicepStatic className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-[15px] text-foreground truncate">{ex.name}</p>
@@ -299,41 +309,43 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                     {ex.sets} {t("training.sets")} · {ex.reps} {t("training.reps")} · {ex.weight}{t("unit.kg")}
                   </p>
                 </div>
+                <div className="flex items-center gap-1 shrink-0">
                 {deletingExerciseId === ex.id ? (
                   <>
                     <button
                       onClick={() => handleDeleteConfirm(ex.id)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-green-600 transition-colors hover:bg-green-500/15 dark:text-green-400"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
                       aria-label={t("profile.confirmDelete")}
                     >
-                      <Check className="h-4 w-4" />
+                      <CircleCheck className="h-[18px] w-[18px]" strokeWidth={2.5} />
                     </button>
                     <button
                       onClick={() => setDeletingExerciseId(null)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
                       aria-label={t("profile.cancel")}
                     >
-                      <X className="h-4 w-4" />
+                      <CircleX className="h-[18px] w-[18px]" strokeWidth={2.5} />
                     </button>
                   </>
                 ) : (
                   <>
                     <button
                       onClick={() => openForm(ex)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
                       aria-label={t("training.editExercise")}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className="h-[18px] w-[18px]" strokeWidth={2.5} />
                     </button>
                     <button
                       onClick={() => setDeletingExerciseId(ex.id)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
                       aria-label={t("training.deleteTraining")}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash className="h-[18px] w-[18px]" strokeWidth={2.5} />
                     </button>
                   </>
                 )}
+                </div>
               </div>
             </div>
           ))}

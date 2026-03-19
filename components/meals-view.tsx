@@ -11,9 +11,16 @@ import {
   type Meal,
 } from "@/lib/storage"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
-import { Plus, Trash2, UtensilsCrossed, X, ChevronLeft, ChevronRight, Pencil, ArrowLeft } from "lucide-react"
-import { CalorieRing } from "@/components/ui/calorie-ring"
-import { MacroRingCard } from "@/components/ui/macro-ring-card"
+import { Plus, Trash, X, ChevronLeft, ChevronRight, Pencil, ArrowLeft, CircleCheck, CircleX, Zap, Wheat, Droplet } from "lucide-react"
+
+function BananaStatic({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 13c3.5-2 8-2 10 2a5.5 5.5 0 0 1 8 5" />
+      <path d="M5.15 17.89c5.52-1.52 8.65-6.89 7-12C11.55 4 11.5 2 13 2c3.22 0 5 5.5 5 8 0 6.5-4.2 12-10.49 12C5.11 22 2 22 2 20c0-1.5 1.14-1.55 3.15-2.11Z" />
+    </svg>
+  )
+}
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
@@ -32,6 +39,7 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [showForm, setShowForm] = useState(false)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
+  const [deletingMealId, setDeletingMealId] = useState<string | null>(null)
 
   const openForm = (meal: Meal | null = null) => {
     setEditingMeal(meal)
@@ -59,8 +67,9 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
     onUpdate()
   }
 
-  const handleDelete = (id: string) => {
+  const handleDeleteConfirm = (id: string) => {
     deleteMeal(id)
+    setDeletingMealId(null)
     refresh()
   }
 
@@ -187,26 +196,98 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
         </div>
       </div>
 
-      {/* Nutrition Summary — CalorieRing + MacroRingCards */}
-      <div className="rounded-[32px] bg-card p-6 card-shadow">
-        <div className="flex justify-center pb-3">
-          <CalorieRing
-            current={totals.calories}
-            goal={calGoal}
-            size={140}
-            label={isOver ? t("meals.over") : t("meals.remaining")}
-          />
+      {/* Nutrition Summary — arc gauge + macros */}
+      <div className="rounded-[32px] bg-card pt-1 px-5 pb-10 card-shadow">
+        {/* Arc gauge */}
+        <div className="relative mx-auto" style={{ width: "100%", maxWidth: "320px", height: "210px" }}>
+          <svg viewBox="0 0 320 210" className="w-full h-full">
+            <defs>
+              <linearGradient id="arcFade" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="var(--foreground)" stopOpacity="1" />
+                <stop offset="100%" stopColor="var(--foreground)" stopOpacity="0.15" />
+              </linearGradient>
+            </defs>
+            {/* Background arc */}
+            <path
+              d="M 20 200 A 140 140 0 1 1 300 200"
+              fill="none"
+              stroke="var(--secondary)"
+              strokeWidth="20"
+              strokeLinecap="round"
+            />
+            {/* Filled arc with fade */}
+            <path
+              d="M 20 200 A 140 140 0 1 1 300 200"
+              fill="none"
+              stroke="url(#arcFade)"
+              strokeWidth="20"
+              strokeLinecap="round"
+              strokeDasharray="710"
+              strokeDashoffset={710 - 710 * Math.min(totals.calories / calGoal, 1)}
+              className="transition-all duration-700"
+            />
+          </svg>
+          {/* Center text */}
+          <div className="absolute inset-x-0 top-[44%] flex flex-col items-center">
+            <span className="text-5xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+              {totals.calories}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1.5">
+              kcal {isOver ? t("meals.over") : ""}
+            </span>
+            <span className="text-xs text-muted-foreground font-bold mt-0.5" style={{ fontVariantNumeric: "tabular-nums" }}>
+              {isOver ? `+${totals.calories - calGoal}` : `${calGoal - totals.calories} ${t("meals.remaining")}`}
+            </span>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <MacroRingCard label={t("macro.protein")} current={totals.protein} goal={protGoal} color="#10B981" />
-          <MacroRingCard label={t("macro.carbs")} current={totals.carbs} goal={carbsGoal} color="#F59E0B" />
-          <MacroRingCard label={t("macro.fat")} current={totals.fat} goal={fatGoal} color="#8B5CF6" />
+
+        {/* Macros */}
+        <div className="mt-6 pt-2">
+          {/* Protein — full width */}
+          <div className="mb-3">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Zap size={13} className="text-muted-foreground/50" strokeWidth={2.5} />
+                <span className="text-[11px] font-semibold text-muted-foreground">{t("macro.protein")}</span>
+              </div>
+              <div style={{ fontVariantNumeric: "tabular-nums" }}>
+                <span className="text-sm font-black tracking-tighter">{totals.protein}</span>
+                <span className="text-[10px] text-muted-foreground font-bold ml-0.5">/ {protGoal}g</span>
+              </div>
+            </div>
+            <div className="h-1 rounded-full bg-secondary overflow-hidden">
+              <div className="h-full rounded-full bg-foreground transition-all duration-500" style={{ width: `${Math.min(Math.round((totals.protein / protGoal) * 100), 100)}%` }} />
+            </div>
+          </div>
+          {/* Carbs + Fat — side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            {([
+              { label: t("macro.carbs"), current: totals.carbs, goal: carbsGoal, icon: Wheat },
+              { label: t("macro.fat"), current: totals.fat, goal: fatGoal, icon: Droplet },
+            ] as const).map((macro) => (
+              <div key={macro.label}>
+                <div className="flex items-baseline justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <macro.icon size={13} className="text-muted-foreground/50" strokeWidth={2.5} />
+                    <span className="text-[11px] font-semibold text-muted-foreground">{macro.label}</span>
+                  </div>
+                  <div style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <span className="text-sm font-black tracking-tighter">{macro.current}</span>
+                    <span className="text-[10px] text-muted-foreground font-bold ml-0.5">/ {macro.goal}g</span>
+                  </div>
+                </div>
+                <div className="h-1 rounded-full bg-secondary overflow-hidden">
+                  <div className="h-full rounded-full bg-foreground transition-all duration-500" style={{ width: `${Math.min(Math.round((macro.current / macro.goal) * 100), 100)}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {filteredMeals.length === 0 && !showForm && (
         <div className="bg-card rounded-[32px] p-8 card-shadow text-center">
-          <UtensilsCrossed size={48} className="mx-auto mb-4 text-muted-foreground/30" />
+          <BananaStatic className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
           <p className="text-foreground font-medium">{t("meals.noMeals")}</p>
           <p className="text-muted-foreground text-sm mt-1">{t("meals.tapToLog")}</p>
         </div>
@@ -220,7 +301,7 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
               {idx > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
               <div className="px-5 py-3 min-h-[56px] flex items-center gap-4">
                 <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
-                  <UtensilsCrossed className="h-5 w-5" strokeWidth={2.2} />
+                  <BananaStatic className="h-5 w-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-[15px] text-foreground truncate">{meal.name}</h4>
@@ -229,20 +310,41 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => openForm(meal)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
-                    aria-label={t("meals.editMeal")}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(meal.id)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                    aria-label={`${t("training.deleteTraining")} ${meal.name}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                {deletingMealId === meal.id ? (
+                  <>
+                    <button
+                      onClick={() => handleDeleteConfirm(meal.id)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      aria-label={t("profile.confirmDelete")}
+                    >
+                      <CircleCheck className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                    </button>
+                    <button
+                      onClick={() => setDeletingMealId(null)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      aria-label={t("profile.cancel")}
+                    >
+                      <CircleX className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => openForm(meal)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      aria-label={t("meals.editMeal")}
+                    >
+                      <Pencil className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                    </button>
+                    <button
+                      onClick={() => setDeletingMealId(meal.id)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      aria-label={`${t("training.deleteTraining")} ${meal.name}`}
+                    >
+                      <Trash className="h-[18px] w-[18px]" strokeWidth={2.5} />
+                    </button>
+                  </>
+                )}
                 </div>
               </div>
             </div>

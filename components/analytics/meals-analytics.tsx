@@ -21,22 +21,69 @@ interface MealsAnalyticsProps {
   profile: UserProfile
 }
 
-type DayStatus = "hit" | "over" | "under" | "none"
-
 const WEEKDAY_KEYS = ["L", "M", "M", "J", "V", "S", "D"]
 const WEEKDAY_KEYS_EN = ["M", "T", "W", "T", "F", "S", "S"]
 
-export function MealsAnalytics({ meals, profile }: MealsAnalyticsProps) {
+// TODO: remove hardcoded meals
+const FAKE_MEALS: Meal[] = [
+  // --- marzo 2026 ---
+  { id: "f1",  date: "2026-03-01", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
+  { id: "f2",  date: "2026-03-01", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
+  { id: "f3",  date: "2026-03-01", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
+  { id: "f4",  date: "2026-03-02", name: "Tostadas con palta", time: "09:00", calories: 400, protein: 10, carbs: 35, fat: 22 },
+  { id: "f5",  date: "2026-03-02", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
+  { id: "f6",  date: "2026-03-02", name: "Pasta con carne",  time: "21:00", calories: 700, protein: 35, carbs: 80, fat: 20 },
+  { id: "f7",  date: "2026-03-03", name: "Yogur con granola", time: "08:30", calories: 280, protein: 15, carbs: 40, fat: 6 },
+  { id: "f8",  date: "2026-03-03", name: "Milanesa con puré", time: "13:00", calories: 750, protein: 38, carbs: 60, fat: 32 },
+  { id: "f9",  date: "2026-03-05", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
+  { id: "f10", date: "2026-03-05", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
+  { id: "f11", date: "2026-03-05", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
+  { id: "f12", date: "2026-03-05", name: "Proteína shake",   time: "16:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
+  { id: "f13", date: "2026-03-07", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
+  { id: "f14", date: "2026-03-07", name: "Sushi",            time: "13:00", calories: 550, protein: 22, carbs: 70, fat: 12 },
+  { id: "f15", date: "2026-03-08", name: "Tostadas con palta", time: "09:00", calories: 400, protein: 10, carbs: 35, fat: 22 },
+  { id: "f16", date: "2026-03-08", name: "Hamburguesa",      time: "13:00", calories: 850, protein: 40, carbs: 55, fat: 45 },
+  { id: "f17", date: "2026-03-08", name: "Pizza",            time: "21:00", calories: 900, protein: 30, carbs: 90, fat: 40 },
+  { id: "f18", date: "2026-03-10", name: "Yogur con granola", time: "08:30", calories: 280, protein: 15, carbs: 40, fat: 6 },
+  { id: "f19", date: "2026-03-10", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
+  { id: "f20", date: "2026-03-10", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
+  { id: "f21", date: "2026-03-12", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
+  { id: "f22", date: "2026-03-12", name: "Pasta con carne",  time: "13:00", calories: 700, protein: 35, carbs: 80, fat: 20 },
+  { id: "f23", date: "2026-03-14", name: "Proteína shake",   time: "07:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
+  { id: "f24", date: "2026-03-14", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
+  { id: "f25", date: "2026-03-14", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
+  { id: "f26", date: "2026-03-14", name: "Proteína shake",   time: "22:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
+  { id: "f27", date: "2026-03-15", name: "Milanesa con puré", time: "13:00", calories: 750, protein: 38, carbs: 60, fat: 32 },
+  { id: "f28", date: "2026-03-16", name: "Tostadas con palta", time: "09:00", calories: 400, protein: 10, carbs: 35, fat: 22 },
+  { id: "f29", date: "2026-03-17", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
+  { id: "f30", date: "2026-03-17", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
+  { id: "f31", date: "2026-03-17", name: "Sushi",            time: "21:00", calories: 550, protein: 22, carbs: 70, fat: 12 },
+  { id: "f32", date: "2026-03-18", name: "Hamburguesa",      time: "13:00", calories: 850, protein: 40, carbs: 55, fat: 45 },
+  { id: "f33", date: "2026-03-18", name: "Pizza",            time: "21:00", calories: 900, protein: 30, carbs: 90, fat: 40 },
+  { id: "f34", date: "2026-03-18", name: "Proteína shake",   time: "16:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
+  { id: "f35", date: "2026-03-19", name: "Yogur con granola", time: "08:30", calories: 280, protein: 15, carbs: 40, fat: 6 },
+]
+
+export function MealsAnalytics({ meals: _meals, profile }: MealsAnalyticsProps) {
+  const meals = [..._meals, ...FAKE_MEALS] // TODO: remove
   const { t, locale } = useI18n()
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
 
   const calorieGoal = profile.calorieGoal || 2000
+  const proteinGoal = profile.proteinGoal || 150
+  const carbsGoal = profile.carbsGoal || 250
+  const fatGoal = profile.fatGoal || 70
 
-  // Group meals by date → total calories
+  // Group meals by date → totals
   const mealsByDate = useMemo(() => {
-    const map = new Map<string, number>()
+    const map = new Map<string, { calories: number; protein: number; carbs: number; fat: number }>()
     for (const m of meals) {
-      map.set(m.date, (map.get(m.date) || 0) + m.calories)
+      const existing = map.get(m.date) || { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      existing.calories += m.calories
+      existing.protein += m.protein
+      existing.carbs += m.carbs
+      existing.fat += m.fat
+      map.set(m.date, existing)
     }
     return map
   }, [meals])
@@ -47,43 +94,87 @@ export function MealsAnalytics({ meals, profile }: MealsAnalyticsProps) {
     const monthEnd = endOfMonth(currentMonth)
     const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-    // getDay: 0=Sun, 1=Mon ... → shift to Mon=0
     const firstDayOfWeek = (getDay(monthStart) + 6) % 7
 
-    const cells: { date: Date; dateStr: string; day: number; status: DayStatus }[] = []
+    const cells: { date: Date; dateStr: string; day: number; calories: number | undefined }[] = []
     for (const day of days) {
       const y = day.getFullYear()
       const m = String(day.getMonth() + 1).padStart(2, "0")
       const d = String(day.getDate()).padStart(2, "0")
       const dateStr = `${y}-${m}-${d}`
-      const cal = mealsByDate.get(dateStr)
-      let status: DayStatus = "none"
-      if (cal !== undefined) {
-        const ratio = cal / calorieGoal
-        if (ratio >= 0.9 && ratio <= 1.1) status = "hit"
-        else if (ratio > 1.1) status = "over"
-        else status = "under"
-      }
-      cells.push({ date: day, dateStr, day: day.getDate(), status })
+      const dayData = mealsByDate.get(dateStr)
+      cells.push({ date: day, dateStr, day: day.getDate(), calories: dayData?.calories })
     }
 
     return { cells, firstDayOfWeek }
-  }, [currentMonth, mealsByDate, calorieGoal])
+  }, [currentMonth, mealsByDate])
 
-  // Summary counts
-  const { hitDays, overDays, underDays } = useMemo(() => {
-    let hit = 0, over = 0, under = 0
-    for (const c of calendarData.cells) {
-      if (c.status === "hit") hit++
-      else if (c.status === "over") over++
-      else if (c.status === "under") under++
+  // Average daily calories for current month (only days with data)
+  const avgDaily = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth)
+    const monthEnd = endOfMonth(currentMonth)
+    const prefix = format(monthStart, "yyyy-MM")
+    let total = 0
+    let count = 0
+    for (const [date, data] of mealsByDate) {
+      if (date.startsWith(prefix)) {
+        total += data.calories
+        count++
+      }
     }
-    return { hitDays: hit, overDays: over, underDays: under }
-  }, [calendarData])
+    return count > 0 ? Math.round(total / count) : 0
+  }, [currentMonth, mealsByDate])
+
+  // Average macros for current month
+  const avgMacros = useMemo(() => {
+    const prefix = format(startOfMonth(currentMonth), "yyyy-MM")
+    let totalP = 0, totalC = 0, totalF = 0, count = 0
+    for (const [date, data] of mealsByDate) {
+      if (date.startsWith(prefix)) {
+        totalP += data.protein
+        totalC += data.carbs
+        totalF += data.fat
+        count++
+      }
+    }
+    if (count === 0) return { protein: 0, carbs: 0, fat: 0 }
+    return {
+      protein: Math.round(totalP / count),
+      carbs: Math.round(totalC / count),
+      fat: Math.round(totalF / count),
+    }
+  }, [currentMonth, mealsByDate])
+
+  // Top 5 frequent meals
+  const frequentMeals = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const m of meals) {
+      const key = m.name.trim().toLowerCase()
+      if (key) counts.set(key, (counts.get(key) || 0) + 1)
+    }
+    // Get original name casing
+    const nameMap = new Map<string, string>()
+    for (const m of meals) {
+      const key = m.name.trim().toLowerCase()
+      if (key && !nameMap.has(key)) nameMap.set(key, m.name.trim())
+    }
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([key, count]) => ({ name: nameMap.get(key) || key, count }))
+  }, [meals])
 
   const weekdayHeaders = locale === "es" ? WEEKDAY_KEYS : WEEKDAY_KEYS_EN
-
   const monthLabel = format(currentMonth, "MMMM yyyy", { locale: locale === "es" ? es : enUS })
+
+  // Helper: soft foreground fade per cell, like training's area fill (max ~25%)
+  function getCellStyle(calories: number | undefined): { backgroundColor?: string; color?: string } {
+    if (calories === undefined) return {}
+    const ratio = calories / calorieGoal
+    // 5% → 25% foreground mix — subtle fade
+    const pct = Math.round(Math.min(ratio, 1.2) * 20 + 3)
+    return { backgroundColor: `color-mix(in oklch, var(--foreground) ${pct}%, transparent)`, color: "var(--foreground)" }
+  }
 
   if (meals.length === 0) {
     return (
@@ -95,6 +186,9 @@ export function MealsAnalytics({ meals, profile }: MealsAnalyticsProps) {
       </div>
     )
   }
+
+  const avgRatio = Math.min(avgDaily / calorieGoal, 1)
+  const ofGoalText = t("analytics.ofGoal").replace("{goal}", String(calorieGoal))
 
   return (
     <div className="flex flex-col gap-0">
@@ -122,7 +216,6 @@ export function MealsAnalytics({ meals, profile }: MealsAnalyticsProps) {
       {/* Calendar grid */}
       <section className="px-6 pt-3 animate-slide-up" style={{ animationDelay: "0.1s" }}>
         <div className="bg-card rounded-[32px] p-6 card-shadow">
-          {/* Weekday headers */}
           <div className="grid grid-cols-7 gap-1 pb-2">
             {weekdayHeaders.map((d, i) => (
               <div key={i} className="text-center text-muted-foreground text-xs font-bold uppercase tracking-widest">
@@ -130,29 +223,21 @@ export function MealsAnalytics({ meals, profile }: MealsAnalyticsProps) {
               </div>
             ))}
           </div>
-
-          {/* Day cells */}
           <div className="grid grid-cols-7 gap-1">
-            {/* Empty cells for offset */}
             {Array.from({ length: calendarData.firstDayOfWeek }).map((_, i) => (
               <div key={`empty-${i}`} className="aspect-square" />
             ))}
             {calendarData.cells.map((cell) => {
               const isTodayCell = isToday(cell.date)
-              const bgColor =
-                cell.status === "hit"
-                  ? "bg-emerald-500 text-white"
-                  : cell.status === "over"
-                    ? "bg-red-500 text-white"
-                    : cell.status === "under"
-                      ? "bg-amber-500 text-white"
-                      : "bg-secondary text-muted-foreground"
+              const style = getCellStyle(cell.calories)
+              const hasData = cell.calories !== undefined
               return (
                 <div
                   key={cell.dateStr}
-                  className={`aspect-square flex items-center justify-center rounded-full text-xs font-bold ${bgColor} ${
-                    isTodayCell ? "ring-2 ring-foreground" : ""
-                  }`}
+                  className={`aspect-square flex items-center justify-center rounded-full text-xs font-bold ${
+                    !hasData ? "bg-secondary text-muted-foreground" : ""
+                  } ${isTodayCell ? "ring-2 ring-foreground" : ""}`}
+                  style={hasData ? style : undefined}
                 >
                   {cell.day}
                 </div>
@@ -162,57 +247,84 @@ export function MealsAnalytics({ meals, profile }: MealsAnalyticsProps) {
         </div>
       </section>
 
-      {/* Legend */}
-      <section className="px-6 pt-3 animate-slide-up" style={{ animationDelay: "0.13s" }}>
-        <div className="flex items-center justify-center gap-4 flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span className="text-xs text-muted-foreground">{t("analytics.goalHit")}</span>
+      {/* Daily Average */}
+      <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.15s" }}>
+        <div className="bg-card rounded-[32px] p-5 card-shadow">
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-3">
+            {t("analytics.avgDaily")}
+          </p>
+          <div className="text-3xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {avgDaily}
+            <span className="text-base font-bold text-muted-foreground ml-1">kcal</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-xs text-muted-foreground">{t("analytics.goalOver")}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-amber-500" />
-            <span className="text-xs text-muted-foreground">{t("analytics.goalUnder")}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-secondary" />
-            <span className="text-xs text-muted-foreground">{t("analytics.noLog")}</span>
+          <p className="text-xs text-muted-foreground mt-1">{ofGoalText}</p>
+          <div className="mt-3 h-2 rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-foreground transition-all duration-500"
+              style={{ width: `${Math.round(avgRatio * 100)}%` }}
+            />
           </div>
         </div>
       </section>
 
-      {/* Summary */}
-      <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.16s" }}>
-        <div className="bg-card rounded-[20px] p-5 card-shadow grid grid-cols-3 gap-2 text-center">
-          <div>
-            <span className="text-2xl font-black tracking-tighter text-emerald-500" style={{ fontVariantNumeric: "tabular-nums" }}>
-              {hitDays}
-            </span>
-            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider pt-0.5">
-              {t("analytics.daysOnGoal")}
-            </p>
-          </div>
-          <div>
-            <span className="text-2xl font-black tracking-tighter text-red-500" style={{ fontVariantNumeric: "tabular-nums" }}>
-              {overDays}
-            </span>
-            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider pt-0.5">
-              {t("analytics.goalOver")}
-            </p>
-          </div>
-          <div>
-            <span className="text-2xl font-black tracking-tighter text-amber-500" style={{ fontVariantNumeric: "tabular-nums" }}>
-              {underDays}
-            </span>
-            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider pt-0.5">
-              {t("analytics.goalUnder")}
-            </p>
+      {/* Monthly Macros */}
+      <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+        <div className="bg-card rounded-[32px] p-5 card-shadow">
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-4">
+            {t("analytics.avgMacros")}
+          </p>
+          <div className="flex flex-col gap-3">
+            {([
+              { label: t("macro.protein"), avg: avgMacros.protein, goal: proteinGoal },
+              { label: t("macro.carbs"), avg: avgMacros.carbs, goal: carbsGoal },
+              { label: t("macro.fat"), avg: avgMacros.fat, goal: fatGoal },
+            ] as const).map((macro) => {
+              const pct = Math.min(macro.avg / macro.goal, 1)
+              return (
+                <div key={macro.label} className="flex items-center gap-3">
+                  <span className="text-xs font-bold w-16 shrink-0">{macro.label}</span>
+                  <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-foreground transition-all duration-500"
+                      style={{ width: `${Math.round(pct * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-muted-foreground font-bold w-20 text-right shrink-0" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {macro.avg}g / {macro.goal}g
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
       </section>
+
+      {/* Frequent Meals */}
+      {frequentMeals.length > 0 && (
+        <section className="px-6 pt-4 pb-4 animate-slide-up" style={{ animationDelay: "0.25s" }}>
+          <div className="bg-card rounded-[32px] p-6 card-shadow">
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-4">
+              {t("analytics.frequentMeals")}
+            </p>
+            <div className="space-y-0">
+              {frequentMeals.map((meal, i) => (
+                <div
+                  key={meal.name}
+                  className={`flex items-center justify-between py-2.5 ${i < frequentMeals.length - 1 ? "border-b border-border/30" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-muted-foreground text-xs font-bold w-5">#{i + 1}</span>
+                    <span className="text-sm font-semibold text-foreground">{meal.name}</span>
+                  </div>
+                  <span className="text-sm font-bold text-muted-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {meal.count}x
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

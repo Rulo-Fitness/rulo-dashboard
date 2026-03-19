@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { useI18n } from "@/lib/i18n"
 import type { TrainingSession } from "@/lib/storage"
@@ -338,7 +338,13 @@ export function TrainingAnalytics({ sessions: _sessions }: TrainingAnalyticsProp
                 </div>
               ) : (
                 <ChartContainer config={chartConfig} className="h-[240px] w-full">
-                  <LineChart data={chartData} margin={{ top: 8, right: 0, bottom: 4, left: -20 }}>
+                  <AreaChart data={chartData} margin={{ top: 8, right: 0, bottom: 4, left: -20 }}>
+                    <defs>
+                      <linearGradient id="weightGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--foreground)" stopOpacity={0.2} />
+                        <stop offset="100%" stopColor="var(--foreground)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
                     <XAxis
                       dataKey="dateLabel"
@@ -366,15 +372,16 @@ export function TrainingAnalytics({ sessions: _sessions }: TrainingAnalyticsProp
                         )
                       }}
                     />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="weight"
                       stroke="var(--foreground)"
-                      strokeWidth={2}
+                      strokeWidth={2.5}
+                      fill="url(#weightGradient)"
                       dot={{ r: 4, fill: "var(--foreground)" }}
                       activeDot={{ r: 6 }}
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ChartContainer>
               )}
             </div>
