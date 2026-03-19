@@ -18,6 +18,7 @@ const translations = {
   "greeting.evening": { en: "Good evening", es: "Buenas noches" },
 
   // Dashboard
+  "dashboard.dailyActivity": { en: "Daily Activity", es: "Actividad diaria" },
   "dashboard.todayNutrition": { en: "Today's Nutrition", es: "Nutrición de hoy" },
   "dashboard.caloriesToday": { en: "calories today", es: "calorías hoy" },
   "dashboard.todayTraining": { en: "Today's Training", es: "Entreno de hoy" },

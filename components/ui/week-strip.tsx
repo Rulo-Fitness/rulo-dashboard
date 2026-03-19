@@ -32,20 +32,20 @@ export function WeekStrip({ selectedDate, dataMap, locale = "en" }: WeekStripPro
 
         return (
           <div key={dateStr} className="flex flex-1 flex-col items-center gap-1">
-            <span className={`text-[11px] font-medium ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+            <span className={`text-[11px] font-medium ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>
               {dayLetter}
             </span>
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-semibold transition-colors ${
                 isSelected
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-foreground text-background"
                   : "text-foreground"
               }`}
             >
               {new Date(dateStr + "T12:00:00").getDate()}
             </div>
             {hasData && (
-              <div className="h-1 w-1 rounded-full bg-primary" />
+              <div className="h-1 w-1 rounded-full bg-foreground" />
             )}
             {!hasData && (
               <div className="h-1 w-1" />

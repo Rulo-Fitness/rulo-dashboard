@@ -1,8 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { LayoutDashboard, Dumbbell, UtensilsCrossed, Settings } from "lucide-react"
+import { useRef } from "react"
+import { motion } from "motion/react"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
+import { SettingsIcon, type SettingsIconHandle } from "@/components/ui/settings-icon"
+import { ChartNoAxesColumnIncreasingIcon, type ChartNoAxesColumnIncreasingIconHandle } from "@/components/ui/chart-icon"
+import { BananaIcon, type BananaIconHandle } from "@/components/ui/banana-icon"
+import { BicepsFlexedIcon, type BicepsFlexedIconHandle } from "@/components/ui/biceps-icon"
 
 interface BottomNavProps {
   activeTab: string
@@ -11,75 +15,86 @@ interface BottomNavProps {
 }
 
 const tabs = [
-  { id: "dashboard", labelKey: "nav.home" as TranslationKey, icon: LayoutDashboard },
-  { id: "training", labelKey: "nav.training" as TranslationKey, icon: Dumbbell },
-  { id: "meals", labelKey: "nav.meals" as TranslationKey, icon: UtensilsCrossed },
-  { id: "settings", labelKey: "nav.settings" as TranslationKey, icon: Settings },
+  { id: "dashboard", labelKey: "nav.home" as TranslationKey },
+  { id: "training", labelKey: "nav.training" as TranslationKey },
+  { id: "meals", labelKey: "nav.meals" as TranslationKey },
+  { id: "settings", labelKey: "nav.settings" as TranslationKey },
 ]
 
 export function BottomNav({ activeTab, onTabChange, hidden = false }: BottomNavProps) {
   const { t } = useI18n()
-  const [scrollHidden, setScrollHidden] = useState(false)
-  const lastScrollY = useRef(0)
+  const chartRef = useRef<ChartNoAxesColumnIncreasingIconHandle>(null)
+  const bicepsRef = useRef<BicepsFlexedIconHandle>(null)
+  const bananaRef = useRef<BananaIconHandle>(null)
+  const settingsRef = useRef<SettingsIconHandle>(null)
 
-  useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY
-      if (y > lastScrollY.current && y > 60) {
-        setScrollHidden(true)
-      } else {
-        setScrollHidden(false)
-      }
-      lastScrollY.current = y
+  const handleTabClick = async (tabId: string) => {
+    onTabChange(tabId)
+    if (tabId === "dashboard") chartRef.current?.startAnimation()
+    if (tabId === "training") bicepsRef.current?.startAnimation()
+    if (tabId === "meals") bananaRef.current?.startAnimation()
+    if (tabId === "settings") {
+      settingsRef.current?.stopAnimation()
+      // Small delay so it resets before re-animating
+      requestAnimationFrame(() => {
+        settingsRef.current?.startAnimation()
+      })
     }
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
-
-  const isHidden = hidden || scrollHidden
+  }
 
   return (
     <nav
       role="tablist"
       aria-label="Main navigation"
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border transition-transform duration-300 ease-out"
+      className="fixed bottom-5 left-0 right-0 z-50 flex justify-center transition-all duration-300 ease-out"
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
-        transform: isHidden ? "translateY(100%)" : "translateY(0)",
+        transform: hidden ? "translateY(calc(100% + 40px))" : "translateY(0)",
+        opacity: hidden ? 0 : 1,
       }}
     >
-      <div className="mx-auto flex max-w-lg">
+      <div className="flex items-center gap-3 px-4 py-3.5 rounded-full nav-glass">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id
           const label = t(tab.labelKey)
+
           return (
             <button
               key={tab.id}
               role="tab"
               aria-selected={isActive}
               aria-label={label}
-              onClick={() => onTabChange(tab.id)}
-              className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 select-none active:opacity-70"
+              onClick={() => handleTabClick(tab.id)}
+              className="relative flex items-center justify-center w-16 h-16 rounded-full transition-all duration-300 group outline-none"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
-              <tab.icon
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  color: isActive ? "var(--primary)" : "var(--muted-foreground)",
-                  strokeWidth: isActive ? 2.2 : 1.7,
-                }}
-              />
-              <span
-                aria-hidden
-                style={{
-                  fontSize: "10px",
-                  fontWeight: isActive ? 600 : 400,
-                  color: isActive ? "var(--primary)" : "var(--muted-foreground)",
-                }}
-              >
-                {label}
-              </span>
+              {isActive && (
+                <motion.div
+                  layoutId="active-pill"
+                  className="absolute inset-0 bg-secondary shadow-[0_2px_8px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] rounded-full"
+                  transition={{
+                    type: "spring",
+                    stiffness: 380,
+                    damping: 30,
+                    mass: 1,
+                  }}
+                />
+              )}
+
+              <div className="relative z-10 flex items-center justify-center">
+                <motion.div
+                  animate={{ scale: isActive ? 1.15 : 1 }}
+                  className="flex items-center justify-center"
+                  style={{ color: isActive ? "var(--foreground)" : "#737373" }}
+                >
+                  {tab.id === "dashboard" && <ChartNoAxesColumnIncreasingIcon ref={chartRef} size={28} />}
+                  {tab.id === "training" && <BicepsFlexedIcon ref={bicepsRef} size={28} />}
+                  {tab.id === "meals" && <BananaIcon ref={bananaRef} size={28} />}
+                  {tab.id === "settings" && <SettingsIcon ref={settingsRef} size={28} />}
+                </motion.div>
+              </div>
+
+              <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 bg-black/5 dark:bg-white/5 transition-opacity duration-300 -z-10" />
             </button>
           )
         })}

@@ -122,7 +122,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         })
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 px-4 pb-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-4 px-6 pb-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("training.title")}</h1>
@@ -130,7 +130,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
         <button
           onClick={() => openForm(null)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-transform active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("training.addExercise")}
         >
           <Plus className="h-5 w-5" />
@@ -230,8 +230,8 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       </div>
 
       {/* Selector de día */}
-      <div className="-mx-4 px-4 py-2">
-        <div className="flex items-center justify-between rounded-xl bg-card px-2 py-1.5">
+      <div className="-mx-6 px-6 py-2">
+        <div className="flex items-center justify-between rounded-[32px] bg-card px-3 py-2 card-shadow">
           <button
             onClick={() => setSelectedDate(shiftDate(selectedDate, -1))}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary active:scale-95"
@@ -239,7 +239,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div className="relative cursor-pointer">
-            <span className={`pointer-events-none block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-primary/15 text-primary" : "text-foreground hover:bg-secondary"}`}>
+            <span className={`pointer-events-none block rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors select-none ${isToday || isYesterday ? "bg-secondary text-foreground font-bold" : "text-foreground hover:bg-secondary"}`}>
               {dateLabel}
             </span>
             <input
@@ -273,19 +273,19 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       {!apiLoading && exercises.length > 0 && (() => {
         const totalVolume = exercises.reduce((sum, ex) => sum + ex.sets * ex.reps * ex.weight, 0)
         return (
-          <div className="rounded-[16px] bg-card overflow-hidden card-warm">
-            <div className="flex items-center gap-4 px-4 py-3">
-              <div className="flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-[10px] bg-[#3B82F6]">
-                <Dumbbell className="h-4.5 w-4.5 text-white" />
+          <div className="rounded-[32px] bg-card overflow-hidden card-shadow">
+            <div className="flex items-center gap-4 px-5 py-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground">
+                <Dumbbell className="h-5 w-5" strokeWidth={2.2} />
               </div>
               <div className="flex flex-1 gap-6">
                 <div>
-                  <p className="text-[18px] font-bold text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{exercises.length}</p>
+                  <p className="text-[20px] font-black text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{exercises.length}</p>
                   <p className="text-[11px] text-muted-foreground">{t("dashboard.totalExercises")}</p>
                 </div>
                 {totalVolume > 0 && (
                   <div>
-                    <p className="text-[18px] font-bold text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{totalVolume.toLocaleString()}</p>
+                    <p className="text-[20px] font-black text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{totalVolume.toLocaleString()}</p>
                     <p className="text-[11px] text-muted-foreground">{t("unit.kg")} {t("dashboard.todayVolume")}</p>
                   </div>
                 )}
@@ -304,44 +304,40 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         )}
 
         {!apiLoading && exercises.length === 0 && !showForm && (
-          <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/50" />
-            <p className="text-sm font-medium text-muted-foreground">{t("training.noExercises")}</p>
-            <p className="text-xs text-muted-foreground/70">{t("training.tapToAdd")}</p>
+          <div className="bg-card rounded-[32px] p-8 card-shadow text-center">
+            <Dumbbell size={48} className="mx-auto mb-4 text-muted-foreground/30" />
+            <p className="text-foreground font-medium">{t("training.noExercises")}</p>
+            <p className="text-muted-foreground text-sm mt-1">{t("training.tapToAdd")}</p>
           </div>
         )}
 
         {!apiLoading && exercises.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {exercises.map((ex) => (
-            <div key={ex.id} className="flex flex-col gap-2">
-              <div
-                className="flex items-center gap-3 rounded-xl border border-border bg-card p-4"
-                style={{ borderLeft: "3px solid #3B82F6" }}
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-                  <Dumbbell className="h-5 w-5 text-primary" />
+        <div className="bg-card rounded-[32px] overflow-hidden card-shadow">
+          {exercises.map((ex, idx) => (
+            <div key={ex.id}>
+              {idx > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
+              <div className="px-5 py-3 min-h-[56px] flex items-center gap-4">
+                <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
+                  <Dumbbell className="h-5 w-5" strokeWidth={2.2} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{ex.name}</p>
-                  <div className="mt-0.5 flex gap-3 text-xs text-muted-foreground">
-                    <span>{ex.sets} {t("training.sets")}</span>
-                    <span>{ex.reps} {t("training.reps")}</span>
-                    <span>{ex.weight}{t("unit.kg")}</span>
-                  </div>
+                  <p className="font-bold text-[15px] text-foreground truncate">{ex.name}</p>
+                  <p className="text-muted-foreground text-xs font-medium">
+                    {ex.sets} {t("training.sets")} · {ex.reps} {t("training.reps")} · {ex.weight}{t("unit.kg")}
+                  </p>
                 </div>
                 {deletingExerciseId === ex.id ? (
                   <>
                     <button
                       onClick={() => handleDeleteConfirm(ex.id)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-green-600 transition-colors hover:bg-green-500/15 dark:text-green-400"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-green-600 transition-colors hover:bg-green-500/15 dark:text-green-400"
                       aria-label={t("profile.confirmDelete")}
                     >
                       <Check className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setDeletingExerciseId(null)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
                       aria-label={t("profile.cancel")}
                     >
                       <X className="h-4 w-4" />
@@ -351,14 +347,14 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                   <>
                     <button
                       onClick={() => openForm(ex)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/15 hover:text-primary"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
                       aria-label={t("training.editExercise")}
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setDeletingExerciseId(ex.id)}
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                       aria-label={t("training.deleteTraining")}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -442,7 +438,7 @@ function ExerciseForm({
           placeholder={t("training.exerciseName")}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="h-12 w-full rounded-xl bg-input px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          className="h-12 w-full rounded-2xl bg-input px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
           required
           autoFocus
         />
@@ -457,7 +453,7 @@ function ExerciseForm({
               value={sets}
               onChange={(e) => setSets(e.target.value)}
               min="0"
-              className="h-12 w-full rounded-xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>
           <div>
@@ -469,7 +465,7 @@ function ExerciseForm({
               value={reps}
               onChange={(e) => setReps(e.target.value)}
               min="0"
-              className="h-12 w-full rounded-xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>
           <div>
@@ -482,14 +478,14 @@ function ExerciseForm({
               onChange={(e) => setWeight(e.target.value)}
               min="0"
               step="0.5"
-              className="h-12 w-full rounded-xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>
         </div>
 
         <button
           type="submit"
-          className="mt-2 flex h-14 w-full items-center justify-center rounded-xl bg-primary text-base font-semibold text-primary-foreground transition-colors active:scale-[0.99]"
+          className="mt-2 flex h-14 w-full items-center justify-center rounded-2xl bg-foreground text-base font-bold text-background transition-colors active:scale-[0.99]"
         >
           {t("register.save")}
         </button>

@@ -47,11 +47,11 @@ function isIOS(): boolean {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent)
 }
 
-// ── iOS-style helpers ─────────────────────────────────────────────────────────
+// ── Pulse 2 style helpers ─────────────────────────────────────────────────────
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="section-label px-4 pt-6 pb-2 select-none">
+    <p className="text-muted-foreground text-[13px] font-semibold tracking-wide pl-[44px] pr-6 pt-8 pb-3 select-none">
       {children}
     </p>
   )
@@ -60,10 +60,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function SettingsGroup({ children }: { children: React.ReactNode }) {
   const items = Array.isArray(children) ? children.filter(Boolean) : [children]
   return (
-    <div className="rounded-[16px] bg-card overflow-hidden card-warm">
+    <div className="rounded-[32px] bg-card overflow-hidden card-shadow">
       {items.map((child, i) => (
         <div key={i}>
-          {i > 0 && <div className="ml-[52px] mr-4 h-px bg-border/40" />}
+          {i > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
           {child}
         </div>
       ))}
@@ -71,19 +71,15 @@ function SettingsGroup({ children }: { children: React.ReactNode }) {
   )
 }
 
-function IconBadge({ bg, children }: { bg: string; children: React.ReactNode }) {
+function IconBox({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px]"
-      style={{ background: bg }}
-    >
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary">
       {children}
     </div>
   )
 }
 
 function SettingsRow({
-  iconBg,
   icon,
   label,
   value,
@@ -92,7 +88,6 @@ function SettingsRow({
   onClick,
   children,
 }: {
-  iconBg: string
   icon: React.ReactNode
   label: string
   value?: string
@@ -105,26 +100,25 @@ function SettingsRow({
   return (
     <Tag
       type={onClick ? "button" : undefined}
-      className={`flex w-full items-center gap-3 px-4 min-h-[44px] py-2 text-left transition-colors active:bg-secondary/60 ${destructive ? "active:bg-destructive/10" : ""}`}
+      className={`flex w-full items-center gap-4 px-5 min-h-[56px] py-3 text-left transition-colors active:bg-secondary/60 ${destructive ? "active:bg-destructive/10" : ""}`}
       onClick={onClick}
     >
-      <IconBadge bg={iconBg}>{icon}</IconBadge>
-      <span className={`flex-1 text-[15px] ${destructive ? "text-destructive" : "text-foreground"}`}>
+      <IconBox>{icon}</IconBox>
+      <span className={`flex-1 text-[15px] font-bold ${destructive ? "text-destructive" : "text-foreground"}`}>
         {label}
       </span>
       {children}
       {value && (
-        <span className="text-[15px] text-muted-foreground mr-0.5">{value}</span>
+        <span className="text-[13px] text-muted-foreground">{value}</span>
       )}
       {chevron && (
-        <ChevronRight className="h-[17px] w-[17px] text-muted-foreground/50 shrink-0" />
+        <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
       )}
     </Tag>
   )
 }
 
 function InputRow({
-  iconBg,
   icon,
   label,
   value,
@@ -133,7 +127,6 @@ function InputRow({
   placeholder,
   suffix,
 }: {
-  iconBg: string
   icon: React.ReactNode
   label: string
   value: string
@@ -143,9 +136,9 @@ function InputRow({
   suffix?: string
 }) {
   return (
-    <div className="flex items-center gap-3 px-4 min-h-[44px] py-2 bg-card">
-      <IconBadge bg={iconBg}>{icon}</IconBadge>
-      <span className="w-24 shrink-0 text-[15px] text-foreground">{label}</span>
+    <div className="flex items-center gap-4 px-5 min-h-[56px] py-3 bg-card">
+      <IconBox>{icon}</IconBox>
+      <span className="w-24 shrink-0 text-[15px] font-bold text-foreground">{label}</span>
       <input
         type={type}
         inputMode={type === "number" ? "decimal" : undefined}
@@ -155,7 +148,7 @@ function InputRow({
         className="flex-1 bg-transparent text-[15px] text-right text-foreground outline-none placeholder:text-muted-foreground/30"
       />
       {suffix && (
-        <span className="shrink-0 text-[15px] text-muted-foreground ml-1">{suffix}</span>
+        <span className="shrink-0 text-[13px] text-muted-foreground">{suffix}</span>
       )}
     </div>
   )
@@ -247,38 +240,37 @@ export function ProfileView() {
   return (
     <div className="flex flex-col pb-10">
       {/* Large title */}
-      <h1 className="px-4 pt-2 pb-4 text-[28px] font-bold tracking-tight text-foreground">
+      <h1 className="px-6 pt-2 pb-2 text-[28px] font-black tracking-tight text-foreground">
         {t("nav.settings")}
       </h1>
 
       {/* ── Account card ── */}
-      <div className="px-4">
-        <div className="rounded-[16px] bg-card overflow-hidden">
-          <div className="flex items-center gap-4 px-4 py-3 min-h-[76px]">
-            <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-full bg-secondary">
-              <User className="h-7 w-7 text-muted-foreground" />
+      <div className="px-6 pt-4">
+        <div className="rounded-[32px] bg-card overflow-hidden card-shadow">
+          <div className="flex items-center gap-4 px-5 py-5">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-secondary">
+              <User className="h-7 w-7 text-foreground" strokeWidth={2.2} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[17px] font-semibold text-foreground truncate">
+              <p className="text-[17px] font-bold text-foreground truncate">
                 {profile.name || user?.name || t("profile.yourProfile")}
               </p>
               {user?.phone && (
                 <p className="text-[13px] text-muted-foreground truncate">{user.phone}</p>
               )}
             </div>
-            <ChevronRight className="h-[17px] w-[17px] text-muted-foreground/50 shrink-0" />
+            <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
           </div>
         </div>
       </div>
 
       {/* ── Preferences ── */}
       <SectionLabel>{t("settings.preferences")}</SectionLabel>
-      <div className="px-4">
+      <div className="px-6">
         <SettingsGroup>
           {/* Language row */}
           <SettingsRow
-            iconBg="#3B82F6"
-            icon={<Languages className="h-4 w-4 text-white" />}
+            icon={<Languages className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("settings.language")}
             value={currentLangLabel}
             chevron
@@ -288,14 +280,14 @@ export function ProfileView() {
             <div>
               {([{ id: "es" as const, label: t("settings.spanish") }, { id: "en" as const, label: t("settings.english") }]).map((opt, i) => (
                 <div key={opt.id}>
-                  {i > 0 && <div className="ml-[60px] mr-4 h-px bg-border/40" />}
+                  {i > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
                   <button
                     type="button"
                     onClick={() => { setLocale(opt.id); setShowLangPicker(false) }}
-                    className="flex w-full items-center gap-3 pl-[60px] pr-4 py-2 min-h-[44px] text-left active:bg-secondary/60 transition-colors"
+                    className="flex w-full items-center gap-3 pl-[62px] pr-5 py-3 min-h-[48px] text-left active:bg-secondary/60 transition-colors"
                   >
                     <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
-                    {locale === opt.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                    {locale === opt.id && <Check className="h-5 w-5 text-foreground shrink-0" strokeWidth={2.2} />}
                   </button>
                 </div>
               ))}
@@ -304,11 +296,10 @@ export function ProfileView() {
 
           {/* Theme row */}
           <SettingsRow
-            iconBg={mounted && resolvedTheme === "dark" ? "#636366" : "#F59E0B"}
             icon={
               mounted && resolvedTheme === "dark"
-                ? <Moon className="h-4 w-4 text-white" />
-                : <Sun className="h-4 w-4 text-white" />
+                ? <Moon className="h-5 w-5 text-foreground" strokeWidth={2.2} />
+                : <Sun className="h-5 w-5 text-foreground" strokeWidth={2.2} />
             }
             label={t("settings.theme")}
             value={currentThemeLabel}
@@ -319,15 +310,15 @@ export function ProfileView() {
             <div>
               {themeOptions.map((opt, i) => (
                 <div key={opt.id}>
-                  {i > 0 && <div className="ml-[60px] mr-4 h-px bg-border/40" />}
+                  {i > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
                   <button
                     type="button"
                     onClick={() => { setTheme(opt.id); setShowThemePicker(false) }}
-                    className="flex w-full items-center gap-3 pl-[60px] pr-4 py-2 min-h-[44px] text-left active:bg-secondary/60 transition-colors"
+                    className="flex w-full items-center gap-3 pl-[62px] pr-5 py-3 min-h-[48px] text-left active:bg-secondary/60 transition-colors"
                   >
                     <opt.icon className="h-4 w-4 text-muted-foreground shrink-0" />
                     <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
-                    {mounted && theme === opt.id && <Check className="h-4 w-4 text-primary shrink-0" />}
+                    {mounted && theme === opt.id && <Check className="h-5 w-5 text-foreground shrink-0" strokeWidth={2.2} />}
                   </button>
                 </div>
               ))}
@@ -336,8 +327,7 @@ export function ProfileView() {
 
           {/* Install app */}
           <SettingsRow
-            iconBg="#7C3AED"
-            icon={<Smartphone className="h-4 w-4 text-white" />}
+            icon={<Smartphone className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("dashboard.boxInstall")}
             chevron
             onClick={() => setOpenInstall(true)}
@@ -345,8 +335,7 @@ export function ProfileView() {
 
           {/* Weekly report */}
           <SettingsRow
-            iconBg="#0EA5E9"
-            icon={<BarChart3 className="h-4 w-4 text-white" />}
+            icon={<BarChart3 className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("dashboard.boxReport")}
             chevron
             onClick={() => setOpenReport(true)}
@@ -356,11 +345,10 @@ export function ProfileView() {
 
       {/* ── Personal info ── */}
       <SectionLabel>{t("profile.personalInfo")}</SectionLabel>
-      <div className="px-4">
+      <div className="px-6">
         <SettingsGroup>
           <InputRow
-            iconBg="#10B981"
-            icon={<User className="h-4 w-4 text-white" />}
+            icon={<User className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("profile.name")}
             value={profile.name}
             onChange={(v) => updateField("name", v)}
@@ -368,8 +356,7 @@ export function ProfileView() {
             placeholder={t("profile.yourName")}
           />
           <InputRow
-            iconBg="#F59E0B"
-            icon={<Calendar className="h-4 w-4 text-white" />}
+            icon={<Calendar className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("profile.age")}
             value={profile.age === 0 ? "" : profile.age.toString()}
             onChange={(v) => updateField("age", parseInt(v) || 0)}
@@ -378,8 +365,7 @@ export function ProfileView() {
             suffix={t("unit.yrs")}
           />
           <InputRow
-            iconBg="#AF52DE"
-            icon={<Weight className="h-4 w-4 text-white" />}
+            icon={<Weight className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("profile.weight")}
             value={profile.weight === 0 ? "" : profile.weight.toString()}
             onChange={(v) => updateField("weight", parseFloat(v) || 0)}
@@ -388,8 +374,7 @@ export function ProfileView() {
             suffix={t("unit.kg")}
           />
           <InputRow
-            iconBg="#5856D6"
-            icon={<Ruler className="h-4 w-4 text-white" />}
+            icon={<Ruler className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("profile.height")}
             value={profile.height === 0 ? "" : profile.height.toString()}
             onChange={(v) => updateField("height", parseInt(v) || 0)}
@@ -402,11 +387,10 @@ export function ProfileView() {
 
       {/* ── Daily goals ── */}
       <SectionLabel>{t("profile.dailyGoals")}</SectionLabel>
-      <div className="px-4">
+      <div className="px-6">
         <SettingsGroup>
           <InputRow
-            iconBg="#DC2626"
-            icon={<Target className="h-4 w-4 text-white" />}
+            icon={<Target className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("macro.calories")}
             value={profile.calorieGoal.toString()}
             onChange={(v) => updateField("calorieGoal", parseInt(v) || 0)}
@@ -415,8 +399,7 @@ export function ProfileView() {
             suffix={t("unit.kcal")}
           />
           <InputRow
-            iconBg="#FF6B35"
-            icon={<Beef className="h-4 w-4 text-white" />}
+            icon={<Beef className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("macro.protein")}
             value={profile.proteinGoal.toString()}
             onChange={(v) => updateField("proteinGoal", parseInt(v) || 0)}
@@ -425,8 +408,7 @@ export function ProfileView() {
             suffix={t("unit.g")}
           />
           <InputRow
-            iconBg="#FFB300"
-            icon={<Wheat className="h-4 w-4 text-white" />}
+            icon={<Wheat className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("macro.carbs")}
             value={profile.carbsGoal.toString()}
             onChange={(v) => updateField("carbsGoal", parseInt(v) || 0)}
@@ -435,8 +417,7 @@ export function ProfileView() {
             suffix={t("unit.g")}
           />
           <InputRow
-            iconBg="#32ADE6"
-            icon={<Droplets className="h-4 w-4 text-white" />}
+            icon={<Droplets className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("macro.fat")}
             value={profile.fatGoal.toString()}
             onChange={(v) => updateField("fatGoal", parseInt(v) || 0)}
@@ -448,10 +429,10 @@ export function ProfileView() {
       </div>
 
       {/* Save button */}
-      <div className="px-4 pt-6">
+      <div className="px-6 pt-6">
         <button
           onClick={handleSave}
-          className="flex w-full items-center justify-center gap-2 rounded-[16px] bg-primary px-4 py-3 text-[15px] font-semibold text-primary-foreground transition-all active:scale-[0.98] active:opacity-85"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground px-4 py-4 text-[15px] font-bold text-background transition-all active:scale-[0.98] active:opacity-85"
         >
           {saved ? t("profile.saved") : t("profile.saveProfile")}
         </button>
@@ -459,30 +440,26 @@ export function ProfileView() {
 
       {/* ── Support ── */}
       <SectionLabel>{t("settings.contactSupport")}</SectionLabel>
-      <div className="px-4">
+      <div className="px-6">
         <SettingsGroup>
           <a
             href={supportMailto}
-            className="flex items-center gap-3 px-4 min-h-[44px] py-2 active:bg-secondary/60 transition-colors"
+            className="flex items-center gap-4 px-5 min-h-[56px] py-3 active:bg-secondary/60 transition-colors"
           >
-            <IconBadge bg="#10B981">
-              <HelpCircle className="h-4 w-4 text-white" />
-            </IconBadge>
-            <span className="flex-1 text-[15px] text-foreground">{t("settings.contactSupport")}</span>
-            <span className="text-[15px] text-muted-foreground mr-0.5 text-right text-[13px] truncate max-w-[120px]">
-              {t("settings.contactSupportHint")}
-            </span>
-            <ChevronRight className="h-[17px] w-[17px] text-muted-foreground/50 shrink-0" />
+            <IconBox>
+              <HelpCircle className="h-5 w-5 text-foreground" strokeWidth={2.2} />
+            </IconBox>
+            <span className="flex-1 text-[15px] font-bold text-foreground">{t("settings.contactSupport")}</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
           </a>
         </SettingsGroup>
       </div>
 
       {/* ── Logout ── */}
-      <div className="px-4 pt-6">
+      <div className="px-6 pt-6">
         <SettingsGroup>
           <SettingsRow
-            iconBg="#DC2626"
-            icon={<LogOut className="h-4 w-4 text-white" />}
+            icon={<LogOut className="h-5 w-5 text-destructive" strokeWidth={2.2} />}
             label={t("profile.logout")}
             destructive
             onClick={handleLogout}
@@ -492,18 +469,17 @@ export function ProfileView() {
 
       {/* ── Danger zone ── */}
       <SectionLabel>{t("profile.dangerZone")}</SectionLabel>
-      <div className="px-4">
+      <div className="px-6">
         <SettingsGroup>
           {!showClearConfirm ? (
             <SettingsRow
-              iconBg="#DC2626"
-              icon={<Trash2 className="h-4 w-4 text-white" />}
+              icon={<Trash2 className="h-5 w-5 text-destructive" strokeWidth={2.2} />}
               label={t("profile.clearAllData")}
               destructive
               onClick={() => setShowClearConfirm(true)}
             />
           ) : (
-            <div className="px-4 py-4 flex flex-col gap-3">
+            <div className="px-5 py-5 flex flex-col gap-3">
               <p className="text-[14px] text-center text-muted-foreground">
                 {t("profile.clearConfirm")}
               </p>
@@ -511,14 +487,14 @@ export function ProfileView() {
                 <button
                   type="button"
                   onClick={() => setShowClearConfirm(false)}
-                  className="flex-1 rounded-[8px] bg-secondary py-2.5 text-[15px] font-medium text-foreground active:opacity-75"
+                  className="flex-1 rounded-2xl bg-secondary py-3 text-[15px] font-bold text-foreground active:opacity-75"
                 >
                   {t("profile.cancel")}
                 </button>
                 <button
                   type="button"
                   onClick={handleClearData}
-                  className="flex-1 rounded-[8px] bg-destructive py-2.5 text-[15px] font-semibold text-white active:opacity-75"
+                  className="flex-1 rounded-2xl bg-destructive py-3 text-[15px] font-bold text-white active:opacity-75"
                 >
                   {t("profile.confirmDelete")}
                 </button>
@@ -538,59 +514,54 @@ export function ProfileView() {
         aria-hidden={!openInstall}
       >
         <div
-          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
           style={{ opacity: openInstall ? 1 : 0 }}
           onClick={() => setOpenInstall(false)}
           aria-hidden
         />
         <div
-          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          className="relative mx-auto flex w-full max-w-md max-h-[85dvh] flex-col rounded-t-[32px] bg-card shadow-xl transition-transform duration-300 ease-out"
           style={{ transform: openInstall ? "translateY(0)" : "translateY(100%)" }}
         >
-          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="text-lg font-semibold text-foreground">{t("dashboard.installTitle")}</h2>
+          <header className="flex shrink-0 items-center justify-between px-6 py-5">
+            <h2 className="text-xl font-bold text-foreground">{t("dashboard.installTitle")}</h2>
             <button
               type="button"
               onClick={() => setOpenInstall(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground active:scale-95"
               aria-label={t("profile.cancel")}
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" strokeWidth={2.2} />
             </button>
           </header>
-          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
-            <div className="flex gap-3 mb-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
-                <Smartphone className="h-5 w-5 text-primary" />
-              </div>
-              <p className="text-sm text-muted-foreground">{t("install.subtitle")}</p>
-            </div>
+          <div className="flex-1 overflow-y-auto px-6 pb-8">
+            <p className="text-sm text-muted-foreground mb-5">{t("install.subtitle")}</p>
             <ol className="space-y-3 text-sm text-foreground">
               {isIOS() ? (
                 <>
-                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                    <span>{t("install.iosStep1")}</span>
+                  <li className="flex items-center gap-3 rounded-2xl bg-secondary p-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background text-xs font-bold">1</span>
+                    <span className="font-medium">{t("install.iosStep1")}</span>
                     <Share className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </li>
-                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                    <span>{t("install.iosStep2")}</span>
+                  <li className="flex items-center gap-3 rounded-2xl bg-secondary p-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background text-xs font-bold">2</span>
+                    <span className="font-medium">{t("install.iosStep2")}</span>
                   </li>
-                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
-                    <span>{t("install.iosStep3")}</span>
+                  <li className="flex items-center gap-3 rounded-2xl bg-secondary p-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background text-xs font-bold">3</span>
+                    <span className="font-medium">{t("install.iosStep3")}</span>
                   </li>
                 </>
               ) : (
                 <>
-                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                    <span>{t("install.androidStep1")}</span>
+                  <li className="flex items-center gap-3 rounded-2xl bg-secondary p-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background text-xs font-bold">1</span>
+                    <span className="font-medium">{t("install.androidStep1")}</span>
                   </li>
-                  <li className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                    <span>{t("install.androidStep2")}</span>
+                  <li className="flex items-center gap-3 rounded-2xl bg-secondary p-4">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background text-xs font-bold">2</span>
+                    <span className="font-medium">{t("install.androidStep2")}</span>
                   </li>
                 </>
               )}
@@ -609,30 +580,30 @@ export function ProfileView() {
         aria-hidden={!openReport}
       >
         <div
-          className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
           style={{ opacity: openReport ? 1 : 0 }}
           onClick={() => setOpenReport(false)}
           aria-hidden
         />
         <div
-          className="relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-2xl bg-background shadow-xl transition-transform duration-300 ease-out"
+          className="relative mx-auto flex w-full max-w-md max-h-[85dvh] flex-col rounded-t-[32px] bg-card shadow-xl transition-transform duration-300 ease-out"
           style={{ transform: openReport ? "translateY(0)" : "translateY(100%)" }}
         >
-          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
+          <header className="flex shrink-0 items-center justify-between px-6 py-5">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">{t("dashboard.recapTitle")}</h2>
+              <h2 className="text-xl font-bold text-foreground">{t("dashboard.recapTitle")}</h2>
               <p className="text-xs text-muted-foreground">{t("dashboard.recapSubtitle")}</p>
             </div>
             <button
               type="button"
               onClick={() => setOpenReport(false)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-muted-foreground hover:bg-secondary active:scale-95"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground active:scale-95"
               aria-label={t("profile.cancel")}
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" strokeWidth={2.2} />
             </button>
           </header>
-          <div className="flex-1 overflow-y-auto px-4 py-4 pb-8">
+          <div className="flex-1 overflow-y-auto px-6 pb-8">
             {openReport && (() => {
               const weekSessions = getWeekSessions()
               const weekMeals = getWeekMeals()
@@ -640,33 +611,33 @@ export function ProfileView() {
               const totalCalories = weekMeals.reduce((sum, m) => sum + m.calories, 0)
               return (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl border border-border bg-card p-4">
+                  <div className="rounded-[24px] bg-secondary p-5">
                     <div className="mb-2 flex items-center gap-2">
-                      <Dumbbell className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{t("dashboard.recapSessions")}</span>
+                      <Dumbbell className="h-5 w-5 text-foreground" strokeWidth={2.2} />
                     </div>
-                    <p className="text-2xl font-bold text-foreground">{weekSessions.length}</p>
+                    <p className="text-2xl font-black text-foreground">{weekSessions.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("dashboard.recapSessions")}</p>
                   </div>
-                  <div className="rounded-xl border border-border bg-card p-4">
+                  <div className="rounded-[24px] bg-secondary p-5">
                     <div className="mb-2 flex items-center gap-2">
-                      <Target className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{t("dashboard.recapExercises")}</span>
+                      <Target className="h-5 w-5 text-foreground" strokeWidth={2.2} />
                     </div>
-                    <p className="text-2xl font-bold text-foreground">{totalExercises}</p>
+                    <p className="text-2xl font-black text-foreground">{totalExercises}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("dashboard.recapExercises")}</p>
                   </div>
-                  <div className="rounded-xl border border-border bg-card p-4">
+                  <div className="rounded-[24px] bg-secondary p-5">
                     <div className="mb-2 flex items-center gap-2">
-                      <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{t("dashboard.recapMeals")}</span>
+                      <UtensilsCrossed className="h-5 w-5 text-foreground" strokeWidth={2.2} />
                     </div>
-                    <p className="text-2xl font-bold text-foreground">{weekMeals.length}</p>
+                    <p className="text-2xl font-black text-foreground">{weekMeals.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("dashboard.recapMeals")}</p>
                   </div>
-                  <div className="rounded-xl border border-border bg-card p-4">
+                  <div className="rounded-[24px] bg-secondary p-5">
                     <div className="mb-2 flex items-center gap-2">
-                      <Flame className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{t("dashboard.recapCalories")}</span>
+                      <Flame className="h-5 w-5 text-foreground" strokeWidth={2.2} />
                     </div>
-                    <p className="text-2xl font-bold text-foreground">{totalCalories.toLocaleString()}</p>
+                    <p className="text-2xl font-black text-foreground">{totalCalories.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{t("dashboard.recapCalories")}</p>
                   </div>
                 </div>
               )
