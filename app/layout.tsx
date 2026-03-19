@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Outfit } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Providers } from '@/components/providers'
-import { UpdatePrompt } from '@/components/update-prompt'
 import './globals.css'
 
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', weight: ['300', '400', '500', '600', '700', '800'] })
@@ -47,7 +46,6 @@ export default function RootLayout({
       <body className={`${outfit.className} antialiased`}>
         <Providers>
           {children}
-          <UpdatePrompt />
         </Providers>
         <Analytics />
       </body>
