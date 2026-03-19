@@ -55,12 +55,9 @@ export async function fetchWorkoutLogs(userId: string): Promise<TrainingSession[
   if (!base) return []
   const url = `${base}/workout-logs?search=${encodeURIComponent(userId)}&per_page=100`
   try {
-    const res = await fetch(url)
-    if (!res.ok) {
-      const text = await res.text()
-      console.error("[Rulo API] fetchWorkoutLogs failed:", res.status, res.statusText, text)
-      return []
-    }
+    const res = await fetch(url).catch(() => null)
+    if (!res) return []
+    if (!res.ok) return []
     const data = (await res.json()) as { success?: boolean; result?: WorkoutLogFromApi[] }
     if (!data.success || !Array.isArray(data.result)) {
       console.error("[Rulo API] fetchWorkoutLogs invalid response:", data)
@@ -82,12 +79,9 @@ export async function fetchWorkoutLogsForDate(
   if (!base) return []
   const url = `${base}/workout-logs-by-date?user_id=${encodeURIComponent(userId)}&date=${encodeURIComponent(dateStr)}`
   try {
-    const res = await fetch(url)
-    if (!res.ok) {
-      const text = await res.text()
-      console.error("[Rulo API] fetchWorkoutLogsForDate failed:", res.status, res.statusText, text)
-      return []
-    }
+    const res = await fetch(url).catch(() => null)
+    if (!res) return []
+    if (!res.ok) return []
     const data = (await res.json()) as { success?: boolean; result?: WorkoutLogFromApi[] }
     if (!data.success || !Array.isArray(data.result)) {
       console.error("[Rulo API] fetchWorkoutLogsForDate invalid response:", data)
