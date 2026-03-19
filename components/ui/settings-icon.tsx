@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 export interface SettingsIconHandle {
   startAnimation: () => void;
   stopAnimation: () => void;
+  resetAndAnimate: () => void;
 }
 
 interface SettingsIconProps extends HTMLAttributes<HTMLDivElement> {
@@ -26,6 +27,10 @@ const SettingsIcon = forwardRef<SettingsIconHandle, SettingsIconProps>(
       return {
         startAnimation: () => controls.start("animate"),
         stopAnimation: () => controls.start("normal"),
+        resetAndAnimate: () => {
+          controls.set("normal");
+          controls.start("animate");
+        },
       };
     });
 

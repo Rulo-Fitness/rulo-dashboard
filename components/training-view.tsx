@@ -126,14 +126,13 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("training.title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("training.subtitle")}</p>
         </div>
         <button
           onClick={() => openForm(null)}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("training.addExercise")}
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-5 w-5" strokeWidth={3} />
         </button>
       </div>
 
@@ -268,32 +267,6 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           </button>
         </div>
       </div>
-
-      {/* Training summary card */}
-      {!apiLoading && exercises.length > 0 && (() => {
-        const totalVolume = exercises.reduce((sum, ex) => sum + ex.sets * ex.reps * ex.weight, 0)
-        return (
-          <div className="rounded-[32px] bg-card overflow-hidden card-shadow">
-            <div className="flex items-center gap-4 px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary text-foreground">
-                <Dumbbell className="h-5 w-5" strokeWidth={2.2} />
-              </div>
-              <div className="flex flex-1 gap-6">
-                <div>
-                  <p className="text-[20px] font-black text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{exercises.length}</p>
-                  <p className="text-[11px] text-muted-foreground">{t("dashboard.totalExercises")}</p>
-                </div>
-                {totalVolume > 0 && (
-                  <div>
-                    <p className="text-[20px] font-black text-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>{totalVolume.toLocaleString()}</p>
-                    <p className="text-[11px] text-muted-foreground">{t("unit.kg")} {t("dashboard.todayVolume")}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )
-      })()}
 
       {/* Área de contenido: carga, vacío o lista */}
       <div className="flex min-h-0 flex-1 flex-col">

@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark, .dark *));
+@custom-variant standalone (@media (display-mode: standalone));
 
 :root {
   /* Light – Pulse 2: neutral, clean, black/white */

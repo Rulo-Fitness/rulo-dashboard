@@ -4,7 +4,7 @@ import { useRef } from "react"
 import { motion } from "motion/react"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
 import { SettingsIcon, type SettingsIconHandle } from "@/components/ui/settings-icon"
-import { ChartNoAxesColumnIncreasingIcon, type ChartNoAxesColumnIncreasingIconHandle } from "@/components/ui/chart-icon"
+import { TrendingIcon, type TrendingIconHandle } from "@/components/ui/trending-icon"
 import { BananaIcon, type BananaIconHandle } from "@/components/ui/banana-icon"
 import { BicepsFlexedIcon, type BicepsFlexedIconHandle } from "@/components/ui/biceps-icon"
 
@@ -15,7 +15,7 @@ interface BottomNavProps {
 }
 
 const tabs = [
-  { id: "dashboard", labelKey: "nav.home" as TranslationKey },
+  { id: "analytics", labelKey: "nav.analytics" as TranslationKey },
   { id: "training", labelKey: "nav.training" as TranslationKey },
   { id: "meals", labelKey: "nav.meals" as TranslationKey },
   { id: "settings", labelKey: "nav.settings" as TranslationKey },
@@ -23,22 +23,18 @@ const tabs = [
 
 export function BottomNav({ activeTab, onTabChange, hidden = false }: BottomNavProps) {
   const { t } = useI18n()
-  const chartRef = useRef<ChartNoAxesColumnIncreasingIconHandle>(null)
+  const trendingRef = useRef<TrendingIconHandle>(null)
   const bicepsRef = useRef<BicepsFlexedIconHandle>(null)
   const bananaRef = useRef<BananaIconHandle>(null)
   const settingsRef = useRef<SettingsIconHandle>(null)
 
   const handleTabClick = async (tabId: string) => {
     onTabChange(tabId)
-    if (tabId === "dashboard") chartRef.current?.startAnimation()
+    if (tabId === "analytics") trendingRef.current?.startAnimation()
     if (tabId === "training") bicepsRef.current?.startAnimation()
     if (tabId === "meals") bananaRef.current?.startAnimation()
     if (tabId === "settings") {
-      settingsRef.current?.stopAnimation()
-      // Small delay so it resets before re-animating
-      requestAnimationFrame(() => {
-        settingsRef.current?.startAnimation()
-      })
+      settingsRef.current?.resetAndAnimate()
     }
   }
 
@@ -46,7 +42,7 @@ export function BottomNav({ activeTab, onTabChange, hidden = false }: BottomNavP
     <nav
       role="tablist"
       aria-label="Main navigation"
-      className="fixed bottom-5 left-0 right-0 z-50 flex justify-center transition-all duration-300 ease-out"
+      className="fixed bottom-3 left-0 right-0 z-50 flex justify-center transition-all duration-300 ease-out standalone:bottom-1"
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
         transform: hidden ? "translateY(calc(100% + 40px))" : "translateY(0)",
@@ -87,7 +83,7 @@ export function BottomNav({ activeTab, onTabChange, hidden = false }: BottomNavP
                   className="flex items-center justify-center"
                   style={{ color: isActive ? "var(--foreground)" : "#737373" }}
                 >
-                  {tab.id === "dashboard" && <ChartNoAxesColumnIncreasingIcon ref={chartRef} size={28} />}
+                  {tab.id === "analytics" && <TrendingIcon ref={trendingRef} size={28} />}
                   {tab.id === "training" && <BicepsFlexedIcon ref={bicepsRef} size={28} />}
                   {tab.id === "meals" && <BananaIcon ref={bananaRef} size={28} />}
                   {tab.id === "settings" && <SettingsIcon ref={settingsRef} size={28} />}

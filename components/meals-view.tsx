@@ -97,14 +97,13 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">{t("meals.title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("meals.subtitle")}</p>
         </div>
         <button
           onClick={() => openForm(null)}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
           aria-label={t("meals.logMeal")}
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-5 w-5" strokeWidth={3} />
         </button>
       </div>
 

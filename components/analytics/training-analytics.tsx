@@ -1,0 +1,468 @@
+"use client"
+
+import { useMemo, useState } from "react"
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
+import { useI18n } from "@/lib/i18n"
+import type { TrainingSession } from "@/lib/storage"
+import { TrendingUp, BarChart3, Flame, Calendar, Trophy, ChevronDown } from "lucide-react"
+
+interface TrainingAnalyticsProps {
+  sessions: TrainingSession[]
+}
+
+type Range = "1M" | "3M" | "all"
+
+function getRangeDate(range: Range): string | null {
+  if (range === "all") return null
+  const d = new Date()
+  d.setMonth(d.getMonth() - (range === "1M" ? 1 : 3))
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+function getWeekDays(): string[] {
+  const now = new Date()
+  const day = now.getDay() // 0=Sun
+  const diffToMon = day === 0 ? -6 : 1 - day
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + diffToMon)
+  const days: string[] = []
+  for (let i = 0; i < 7; i++) {
+    const dd = new Date(monday)
+    dd.setDate(monday.getDate() + i)
+    const y = dd.getFullYear()
+    const m = String(dd.getMonth() + 1).padStart(2, "0")
+    const d = String(dd.getDate()).padStart(2, "0")
+    days.push(`${y}-${m}-${d}`)
+  }
+  return days
+}
+
+const weekChartConfig = {
+  volume: { label: "Volume", color: "var(--foreground)" },
+} satisfies ChartConfig
+
+const freqChartConfig = {
+  days: { label: "Days", color: "var(--foreground)" },
+} satisfies ChartConfig
+
+const chartConfig = {
+  weight: {
+    label: "Weight",
+    color: "var(--foreground)",
+  },
+} satisfies ChartConfig
+
+function getMondayOfWeek(date: Date): Date {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  const day = d.getDay() // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day
+  d.setDate(d.getDate() + diff)
+  return d
+}
+
+// TODO: remove mock data
+const MOCK_SESSIONS: TrainingSession[] = [
+  { id: "m1", date: "2026-03-19", name: "Push", exercises: [
+    { id: "e1", name: "Bench Press", sets: 4, reps: 8, weight: 80 },
+    { id: "e2", name: "Overhead Press", sets: 3, reps: 10, weight: 40 },
+    { id: "e3", name: "Lateral Raise", sets: 3, reps: 15, weight: 12 },
+  ]},
+  { id: "m2", date: "2026-03-17", name: "Pull", exercises: [
+    { id: "e4", name: "Deadlift", sets: 4, reps: 5, weight: 120 },
+    { id: "e5", name: "Barbell Row", sets: 4, reps: 8, weight: 70 },
+    { id: "e6", name: "Bench Press", sets: 3, reps: 10, weight: 75 },
+  ]},
+  { id: "m3", date: "2026-03-14", name: "Legs", exercises: [
+    { id: "e7", name: "Squat", sets: 5, reps: 5, weight: 100 },
+    { id: "e8", name: "Leg Press", sets: 4, reps: 10, weight: 180 },
+  ]},
+  { id: "m4", date: "2026-03-12", name: "Push", exercises: [
+    { id: "e9", name: "Bench Press", sets: 4, reps: 8, weight: 77.5 },
+    { id: "e10", name: "Overhead Press", sets: 3, reps: 10, weight: 37.5 },
+  ]},
+  { id: "m5", date: "2026-03-10", name: "Pull", exercises: [
+    { id: "e11", name: "Deadlift", sets: 4, reps: 5, weight: 115 },
+    { id: "e12", name: "Barbell Row", sets: 4, reps: 8, weight: 65 },
+  ]},
+  { id: "m6", date: "2026-03-07", name: "Legs", exercises: [
+    { id: "e13", name: "Squat", sets: 5, reps: 5, weight: 95 },
+  ]},
+  { id: "m7", date: "2026-03-05", name: "Push", exercises: [
+    { id: "e14", name: "Bench Press", sets: 4, reps: 8, weight: 75 },
+  ]},
+  { id: "m8", date: "2026-03-03", name: "Pull", exercises: [
+    { id: "e15", name: "Deadlift", sets: 4, reps: 5, weight: 110 },
+  ]},
+  { id: "m9", date: "2026-02-28", name: "Push", exercises: [
+    { id: "e16", name: "Bench Press", sets: 4, reps: 8, weight: 72.5 },
+  ]},
+  { id: "m10", date: "2026-02-24", name: "Legs", exercises: [
+    { id: "e17", name: "Squat", sets: 5, reps: 5, weight: 90 },
+  ]},
+]
+
+export function TrainingAnalytics({ sessions: _sessions }: TrainingAnalyticsProps) {
+  const sessions = MOCK_SESSIONS // TODO: revert to _sessions
+  const { t } = useI18n()
+  const [range, setRange] = useState<Range>("3M")
+  const [selectedExercise, setSelectedExercise] = useState<string>("")
+
+  // Extract unique exercise names (case-insensitive grouping, most frequent casing)
+  const exerciseNames = useMemo(() => {
+    const nameMap = new Map<string, Map<string, number>>()
+    for (const s of sessions) {
+      for (const ex of s.exercises) {
+        const key = ex.name.toLowerCase()
+        if (!nameMap.has(key)) nameMap.set(key, new Map())
+        const casings = nameMap.get(key)!
+        casings.set(ex.name, (casings.get(ex.name) || 0) + 1)
+      }
+    }
+    const result: { key: string; display: string; count: number }[] = []
+    for (const [key, casings] of nameMap) {
+      let bestCasing = ""
+      let bestCount = 0
+      let totalCount = 0
+      for (const [casing, count] of casings) {
+        totalCount += count
+        if (count > bestCount) {
+          bestCount = count
+          bestCasing = casing
+        }
+      }
+      result.push({ key, display: bestCasing, count: totalCount })
+    }
+    result.sort((a, b) => b.count - a.count)
+    return result
+  }, [sessions])
+
+  // Set default exercise
+  const activeExercise = selectedExercise || exerciseNames[0]?.key || ""
+
+  const displayName = exerciseNames.find((e) => e.key === activeExercise)?.display || activeExercise
+
+  // Filter sessions by range and compute max weight per session
+  const chartData = useMemo(() => {
+    const rangeDate = getRangeDate(range)
+    const points: { date: string; dateLabel: string; weight: number }[] = []
+
+    // Sort sessions by date ascending
+    const sorted = [...sessions].sort((a, b) => a.date.localeCompare(b.date))
+
+    for (const s of sorted) {
+      if (rangeDate && s.date < rangeDate) continue
+      const matching = s.exercises.filter((ex) => ex.name.toLowerCase() === activeExercise)
+      if (matching.length === 0) continue
+      const maxWeight = Math.max(...matching.map((ex) => ex.weight))
+      const [, m, d] = s.date.split("-")
+      points.push({
+        date: s.date,
+        dateLabel: `${parseInt(d)}/${parseInt(m)}`,
+        weight: maxWeight,
+      })
+    }
+    return points
+  }, [sessions, activeExercise, range])
+
+  // Stats
+  const pr = useMemo(() => {
+    if (!activeExercise) return 0
+    let max = 0
+    for (const s of sessions) {
+      for (const ex of s.exercises) {
+        if (ex.name.toLowerCase() === activeExercise && ex.weight > max) {
+          max = ex.weight
+        }
+      }
+    }
+    return max
+  }, [sessions, activeExercise])
+
+  const sessionCount = chartData.length
+
+  const dayLabelKeys = [
+    "training.mon", "training.tue", "training.wed",
+    "training.thu", "training.fri", "training.sat", "training.sun",
+  ] as const
+
+  const weekVolume = useMemo(() => {
+    const weekDays = getWeekDays()
+    const dateSet = new Set(weekDays)
+    const volumeByDate: Record<string, number> = {}
+    for (const date of weekDays) volumeByDate[date] = 0
+    for (const s of sessions) {
+      if (dateSet.has(s.date)) {
+        for (const ex of s.exercises) {
+          volumeByDate[s.date] += ex.sets * ex.reps * ex.weight
+        }
+      }
+    }
+    return weekDays.map((date, i) => ({
+      day: t(dayLabelKeys[i]),
+      volume: volumeByDate[date],
+    }))
+  }, [sessions, t])
+
+  const weekTotal = weekVolume.reduce((sum, d) => sum + d.volume, 0)
+
+  // Streak: consecutive weeks (from current) with at least 1 session
+  const streak = useMemo(() => {
+    if (sessions.length === 0) return 0
+    const now = new Date()
+    let currentMonday = getMondayOfWeek(now)
+    let count = 0
+    const sessionDates = new Set(sessions.map((s) => s.date))
+    for (let w = 0; w < 200; w++) {
+      const weekDays: string[] = []
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(currentMonday)
+        d.setDate(currentMonday.getDate() + i)
+        const y = d.getFullYear()
+        const m = String(d.getMonth() + 1).padStart(2, "0")
+        const day = String(d.getDate()).padStart(2, "0")
+        weekDays.push(`${y}-${m}-${day}`)
+      }
+      const hasSession = weekDays.some((d) => sessionDates.has(d))
+      if (hasSession) {
+        count++
+      } else {
+        break
+      }
+      currentMonday.setDate(currentMonday.getDate() - 7)
+    }
+    return count
+  }, [sessions])
+
+  // Frequency this week: unique days with sessions
+  const freqThisWeek = useMemo(() => {
+    const weekDays = new Set(getWeekDays())
+    const daysWithSession = new Set<string>()
+    for (const s of sessions) {
+      if (weekDays.has(s.date)) daysWithSession.add(s.date)
+    }
+    return daysWithSession.size
+  }, [sessions])
+
+  // Weekly frequency: last 8 weeks
+  const weeklyFrequency = useMemo(() => {
+    const now = new Date()
+    const sessionDates = new Set(sessions.map((s) => s.date))
+    const weeks: { label: string; days: number }[] = []
+    for (let w = 7; w >= 0; w--) {
+      const monday = getMondayOfWeek(now)
+      monday.setDate(monday.getDate() - w * 7)
+      const uniqueDays = new Set<string>()
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday)
+        d.setDate(monday.getDate() + i)
+        const y = d.getFullYear()
+        const m = String(d.getMonth() + 1).padStart(2, "0")
+        const day = String(d.getDate()).padStart(2, "0")
+        const dateStr = `${y}-${m}-${day}`
+        if (sessionDates.has(dateStr)) uniqueDays.add(dateStr)
+      }
+      weeks.push({ label: `${t("analytics.weekLabel")}${8 - w}`, days: uniqueDays.size })
+    }
+    return weeks
+  }, [sessions, t])
+
+  // Top exercises by total volume
+  const topExercises = useMemo(() => {
+    const volumeMap = new Map<string, number>()
+    for (const s of sessions) {
+      for (const ex of s.exercises) {
+        const key = ex.name.toLowerCase()
+        volumeMap.set(key, (volumeMap.get(key) || 0) + ex.sets * ex.reps * ex.weight)
+      }
+    }
+    const entries = [...volumeMap.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+    return entries.map(([key, volume]) => ({
+      key,
+      display: exerciseNames.find((e) => e.key === key)?.display || key,
+      volume,
+    }))
+  }, [sessions, exerciseNames])
+
+  return (
+    <div className="flex flex-col gap-0">
+      {exerciseNames.length > 0 && (
+        <>
+          {/* Chart card with controls */}
+          <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.07s" }}>
+            <div className="bg-card rounded-[32px] p-5 card-shadow">
+              {/* Exercise selector + Range row */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-1.5">
+                  {(["1M", "3M", "all"] as Range[]).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setRange(r)}
+                      className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${
+                        range === r
+                          ? "bg-foreground text-background"
+                          : "bg-secondary text-muted-foreground"
+                      }`}
+                    >
+                      {r === "1M" ? t("analytics.1month") : r === "3M" ? t("analytics.3months") : t("analytics.allTime")}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative">
+                  <select
+                    value={activeExercise}
+                    onChange={(e) => setSelectedExercise(e.target.value)}
+                    className="rounded-full bg-secondary pl-3 pr-8 py-1.5 text-xs font-semibold text-foreground outline-none appearance-none max-w-[165px] truncate"
+                  >
+                    {exerciseNames.map((ex) => (
+                      <option key={ex.key} value={ex.key}>
+                        {ex.display}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} strokeWidth={3} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground pointer-events-none" />
+                </div>
+              </div>
+
+              {chartData.length === 0 ? (
+                <div className="py-10 text-center">
+                  <BarChart3 size={36} className="mx-auto mb-3 text-muted-foreground/30" />
+                  <p className="text-muted-foreground text-sm">{t("analytics.noData")}</p>
+                </div>
+              ) : (
+                <ChartContainer config={chartConfig} className="h-[240px] w-full">
+                  <LineChart data={chartData} margin={{ top: 8, right: 0, bottom: 4, left: -20 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                    <XAxis
+                      dataKey="dateLabel"
+                      tick={{ fontSize: 11, dy: 14 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "var(--muted-foreground)", dx: -10 }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={56}
+                      domain={["dataMin - 5", "dataMax + 5"]}
+                      tickFormatter={(v: number) => `${v} kg`}
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null
+                        const p = payload[0].payload as (typeof chartData)[0]
+                        return (
+                          <div className="rounded-xl bg-background border border-border/50 px-3 py-2 shadow-xl text-xs">
+                            <p className="font-semibold">{p.date}</p>
+                            <p className="text-muted-foreground">{p.weight} kg</p>
+                          </div>
+                        )
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="var(--foreground)"
+                      strokeWidth={2}
+                      dot={{ r: 4, fill: "var(--foreground)" }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              )}
+            </div>
+          </section>
+
+        </>
+      )}
+
+      {sessions.length > 0 && (
+        <>
+          {/* PR + Sessions row */}
+          <section className="grid grid-cols-2 gap-3 px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.13s" }}>
+            <div className="bg-card rounded-[20px] p-5 card-shadow text-center">
+              <TrendingUp size={20} className="mx-auto mb-2 text-emerald-500" />
+              <span className="text-2xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums" }}>
+                {pr} <span className="text-sm font-bold text-muted-foreground">kg</span>
+              </span>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest pt-1">
+                {t("analytics.personalRecord")}
+              </p>
+            </div>
+            <div className="bg-card rounded-[20px] p-5 card-shadow text-center">
+              <BarChart3 size={20} className="mx-auto mb-2 text-blue-500" />
+              <span className="text-2xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums" }}>
+                {sessionCount}
+              </span>
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest pt-1">
+                {t("analytics.sessions")}
+              </p>
+            </div>
+          </section>
+
+          {/* Top exercises */}
+          {topExercises.length > 0 && (
+            <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.15s" }}>
+              <div className="bg-card rounded-[32px] p-6 card-shadow">
+                <div className="flex items-center gap-2 mb-4">
+                  <Trophy size={16} className="text-amber-500" />
+                  <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
+                    {t("analytics.topExercises")}
+                  </p>
+                </div>
+                <div className="space-y-0">
+                  {topExercises.map((ex, i) => (
+                    <div
+                      key={ex.key}
+                      className={`flex items-center justify-between py-2.5 ${i < topExercises.length - 1 ? "border-b border-border/30" : ""}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground text-xs font-bold w-5">#{i + 1}</span>
+                        <span className="text-sm font-semibold text-foreground">{ex.display}</span>
+                      </div>
+                      <span className="text-sm font-bold text-muted-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {ex.volume.toLocaleString()} kg
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Weekly frequency chart */}
+          <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.17s" }}>
+            <div className="bg-card rounded-[32px] p-6 card-shadow">
+              <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-3">
+                {t("analytics.weeklyFrequency")}
+              </p>
+              <ChartContainer config={freqChartConfig} className="h-[120px] w-full">
+                <BarChart data={weeklyFrequency} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                  <XAxis
+                    dataKey="label"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  />
+                  <YAxis domain={[0, 7]} hide />
+                  <Bar
+                    dataKey="days"
+                    fill="var(--foreground)"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          </section>
+        </>
+      )}
+    </div>
+  )
+}

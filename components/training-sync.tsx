@@ -25,7 +25,7 @@ export function TrainingSync({ onSynced }: TrainingSyncProps) {
     fetchWorkoutLogs(user.id)
       .then((sessions) => {
         if (cancelled) return
-        setTrainingSessions(sessions)
+        if (sessions.length > 0) setTrainingSessions(sessions)
         onSynced?.()
       })
       .catch(() => {

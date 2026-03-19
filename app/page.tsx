@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { BottomNav } from "@/components/bottom-nav"
-import { DashboardView } from "@/components/dashboard-view"
+import { AnalyticsView } from "@/components/analytics-view"
 import { TrainingView } from "@/components/training-view"
 import { MealsView } from "@/components/meals-view"
 import { ProfileView } from "@/components/profile-view"
@@ -10,11 +10,11 @@ import { TrainingSync } from "@/components/training-sync"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
-  const [activeTab, setActiveTab] = useState("dashboard")
+  const [activeTab, setActiveTab] = useState("analytics")
   const [refreshKey, setRefreshKey] = useState(0)
   const [trainingAddPanelOpen, setTrainingAddPanelOpen] = useState(false)
   const [mealsPanelOpen, setMealsPanelOpen] = useState(false)
-  const [dashboardModalOpen, setDashboardModalOpen] = useState(false)
+
 
   useEffect(() => {
     setMounted(true)
@@ -102,8 +102,8 @@ export default function Home() {
       <TrainingSync onSynced={handleTrainingSynced} />
       <main className="mx-auto flex min-h-dvh max-w-md flex-1 flex-col bg-background pb-32 pt-12 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
         <div className="flex min-h-0 flex-1 flex-col overflow-visible pointer-events-auto" style={{ touchAction: "pan-y" }}>
-          {activeTab === "dashboard" && (
-            <DashboardView refreshKey={refreshKey} onNavigate={handleTabChange} onDashboardModalChange={setDashboardModalOpen} />
+          {activeTab === "analytics" && (
+            <AnalyticsView refreshKey={refreshKey} onNavigate={handleTabChange} />
           )}
           {activeTab === "training" && (
             <TrainingView onUpdate={triggerRefresh} onAddPanelChange={setTrainingAddPanelOpen} />
@@ -117,7 +117,7 @@ export default function Home() {
       <BottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        hidden={trainingAddPanelOpen || mealsPanelOpen || dashboardModalOpen}
+        hidden={trainingAddPanelOpen || mealsPanelOpen}
       />
     </>
   )
