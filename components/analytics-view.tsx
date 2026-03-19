@@ -52,12 +52,6 @@ export function AnalyticsView({ refreshKey }: AnalyticsViewProps) {
 
   return (
     <div className="relative flex flex-col gap-0 pb-6">
-      {/* Header */}
-      <div className="flex items-center gap-2.5 px-6 pb-4 animate-slide-up">
-        <Image src="/rulo-isotipo.png" alt="Rulo" width={32} height={32} className="rounded-lg" />
-        <span className="text-lg font-bold tracking-tight text-foreground">Rulo</span>
-      </div>
-
       {/* Sub-tabs */}
       <div className="px-6 animate-slide-up" style={{ animationDelay: "0.03s" }}>
         <div className="flex items-center gap-2 px-3 py-2 rounded-full nav-glass w-fit mx-auto">
@@ -92,10 +86,10 @@ export function AnalyticsView({ refreshKey }: AnalyticsViewProps) {
             )
           })}
         </div>
-
-        {activeSubTab === "training" && <TrainingAnalytics sessions={sessions} />}
-        {activeSubTab === "meals" && <MealsAnalytics meals={meals} profile={profile} />}
       </div>
+
+      {activeSubTab === "training" && <TrainingAnalytics sessions={sessions} />}
+      {activeSubTab === "meals" && <MealsAnalytics meals={meals} profile={profile} />}
     </div>
   )
 }
