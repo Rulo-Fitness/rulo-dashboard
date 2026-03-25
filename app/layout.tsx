@@ -8,14 +8,7 @@ const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', weight: [
 
 export const metadata: Metadata = {
   title: 'Dashboard | Rulo Fitness',
-  description: 'Track your gym training sessions and meals with macros. Installable PWA for iOS and Android.',
-  generator: 'v0.app',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Rulo Fitness',
-  },
+  description: 'Track your gym training sessions and meals with macros.',
   icons: {
     icon: '/logo.png',
     apple: '/logo.png',
@@ -39,8 +32,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
       <body className={`${outfit.className} antialiased`}>

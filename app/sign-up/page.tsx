@@ -1,18 +1,6 @@
 "use client"
 
 import { useState, useRef, useCallback, useEffect } from "react"
-
-function useIsPwa() {
-  const [isPwa, setIsPwa] = useState(false)
-  useEffect(() => {
-    const standalone =
-      typeof window !== "undefined" &&
-      (window.matchMedia("(display-mode: standalone)").matches ||
-        (navigator as { standalone?: boolean }).standalone === true)
-    setIsPwa(!!standalone)
-  }, [])
-  return isPwa
-}
 import Link from "next/link"
 import { useI18n } from "@/lib/i18n"
 import { saveProfile } from "@/lib/storage"
@@ -21,6 +9,7 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { PhoneInput } from "@/components/phone-input"
 import {
   ChevronLeft,
   ChevronRight,
@@ -35,30 +24,9 @@ import {
   EyeOff,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useForceLightMode } from "@/lib/hooks/use-force-light-mode"
 
-const COUNTRY_CODES = [
-  { code: "+34", label: "ES", country: "España", flag: "🇪🇸" },
-  { code: "+52", label: "MX", country: "México", flag: "🇲🇽" },
-  { code: "+54", label: "AR", country: "Argentina", flag: "🇦🇷" },
-  { code: "+57", label: "CO", country: "Colombia", flag: "🇨🇴" },
-  { code: "+51", label: "PE", country: "Perú", flag: "🇵🇪" },
-  { code: "+56", label: "CL", country: "Chile", flag: "🇨🇱" },
-  { code: "+58", label: "VE", country: "Venezuela", flag: "🇻🇪" },
-  { code: "+593", label: "EC", country: "Ecuador", flag: "🇪🇨" },
-  { code: "+1", label: "US", country: "EE.UU.", flag: "🇺🇸" },
-]
-
-type OpenField =
-  | "age"
-  | "sex"
-  | "weight"
-  | "height"
-  | "activityLevel"
-  | "goal"
-  | "weeklyRateKg"
-  | null
-
-const STEPS = 4
+const STEPS = 5
 
 const ACTIVITY_OPTIONS: { id: ActivityLevel; labelKey: "register.sedentary" | "register.light" | "register.moderate" | "register.high" | "register.veryHigh" }[] = [
   { id: "sedentary", labelKey: "register.sedentary" },
@@ -75,6 +43,16 @@ const GOAL_OPTIONS: { id: Goal; labelKey: "register.loseFat" | "register.maintai
 ]
 
 const WEEKLY_RATE_OPTIONS = [0.25, 0.5, 0.75, 1] as const
+
+type OpenField =
+  | "age"
+  | "sex"
+  | "weight"
+  | "height"
+  | "activityLevel"
+  | "goal"
+  | "weeklyRateKg"
+  | null
 
 type RegisterProfile = Omit<UserProfile, "activityLevel" | "sex" | "goal"> & {
   activityLevel: ActivityLevel | ""
@@ -132,11 +110,11 @@ function FieldRow({
 export default function SignUpPage() {
   const { t } = useI18n()
   const { register: registerApi } = useAuth()
-  const isPwa = useIsPwa()
+  useForceLightMode()
+
   const [step, setStep] = useState(1)
   const [profile, setProfile] = useState<RegisterProfile>({ ...defaultForm })
   const [done, setDone] = useState(false)
-  const [showCreateAccount, setShowCreateAccount] = useState(false)
   const [openField, setOpenField] = useState<OpenField>(null)
   const [isClosing, setIsClosing] = useState(false)
   const [triedNext, setTriedNext] = useState(false)
@@ -153,6 +131,8 @@ export default function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isAccountStep = step === 5
 
   const closeModal = useCallback(() => {
     if (!openField) return
@@ -200,19 +180,18 @@ export default function SignUpPage() {
     }
     setTriedNext(false)
     setSlideDirection("forward")
-    if (step < STEPS) setStep((s) => s + 1)
-    else {
-      setShowCreateAccount(true)
+    if (step < STEPS) {
+      // Clear register error when entering account step
+      if (step === 4) setRegisterError("")
+      setStep((s) => s + 1)
     }
   }
 
   function handleBack() {
-    if (showCreateAccount) {
-      setShowCreateAccount(false)
-      setRegisterError("")
-    } else if (step > 1) {
+    if (step > 1) {
       setTriedNext(false)
       setSlideDirection("backward")
+      if (isAccountStep) setRegisterError("")
       setStep((s) => s - 1)
     }
   }
@@ -298,11 +277,11 @@ export default function SignUpPage() {
     closeModal()
   }
 
-  const stepTitles = [t("register.step1"), t("register.step2"), t("register.step3"), t("register.step4")] as const
+  const stepTitles = [t("register.step1"), t("register.step2"), t("register.step3"), t("register.step4"), t("register.createAccountTitle")] as const
 
   const mascotMessage = done
     ? t("register.mascotMessage")
-    : showCreateAccount
+    : isAccountStep
       ? t("register.mascotCreateAccount")
       : t(`register.mascotStep${step}` as "register.mascotStep1" | "register.mascotStep2" | "register.mascotStep3" | "register.mascotStep4")
 
@@ -315,12 +294,9 @@ export default function SignUpPage() {
         aria-hidden
       />
 
-      {/* Móvil: ilustración arriba (mascota + burbuja) */}
+      {/* Mobile: mascot + bubble */}
       <div
-        className={cn(
-          "relative z-10 flex min-h-0 flex-shrink-0 items-end justify-start pb-0 pt-16 md:hidden",
-          isPwa && "select-none",
-        )}
+        className="relative z-10 flex min-h-0 flex-shrink-0 items-end justify-start pb-0 pt-16 md:hidden"
       >
         <div className="-mt-4 flex items-end gap-0 pl-2 pr-4">
           <div className="flex shrink-0 animate-float">
@@ -339,13 +315,10 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Form card — izquierda; en desktop 50% */}
+      {/* Form card — left side; 50% on desktop */}
       <div className="relative z-10 mt-2 flex min-h-0 flex-1 flex-col px-0 pt-2 md:mt-0 md:min-h-dvh md:w-[50%] md:flex-none md:px-3 md:pt-3 md:pb-0 md:pr-0 lg:px-4 lg:pt-4 lg:pb-0 lg:pr-0">
         <div
-          className={cn(
-            "flex min-h-0 flex-1 flex-col justify-start overflow-y-auto rounded-t-[2rem] rounded-b-none border border-border bg-card px-4 py-6 shadow-xl md:rounded-t-3xl md:rounded-b-none md:px-8 md:py-9",
-            isPwa && "select-none",
-          )}
+          className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto rounded-t-[2rem] rounded-b-none border border-border bg-card px-4 py-6 shadow-xl md:rounded-t-3xl md:rounded-b-none md:px-8 md:py-9"
         >
           <div className="mx-auto w-full max-w-[340px] md:max-w-[400px]">
             {done ? (
@@ -358,7 +331,7 @@ export default function SignUpPage() {
                   </Link>
                 </Button>
               </div>
-            ) : showCreateAccount ? (
+            ) : isAccountStep ? (
               <div className="flex min-h-0 w-full flex-1 flex-col items-center">
                 <header className="-mx-2 w-full shrink-0 self-stretch">
                   <div className="flex w-full items-center justify-center gap-3 rounded-xl px-3 py-2">
@@ -373,7 +346,7 @@ export default function SignUpPage() {
                     <div className="relative flex-1 max-w-[300px] overflow-hidden rounded-full bg-muted" style={{ height: 6 }}>
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/30 transition-all duration-300 ease-out"
-                        style={{ width: "100%" }}
+                        style={{ width: `${(step / STEPS) * 100}%` }}
                         aria-hidden
                       />
                     </div>
@@ -383,36 +356,20 @@ export default function SignUpPage() {
                   </h1>
                 </header>
                 <div className="flex h-[360px] w-full max-w-md shrink-0 flex-col items-stretch justify-start overflow-y-auto overflow-x-hidden">
-                  <form id="register-create-account-form" onSubmit={handleCreateAccount} className="flex w-full flex-col gap-5 py-2">
+                  <form id="register-create-account-form" onSubmit={handleCreateAccount} noValidate className="flex w-full flex-col gap-5 py-2">
                     {registerError && (
                       <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">{registerError}</p>
                     )}
                     <div className="space-y-2">
                       <Label htmlFor="register-phone">{t("register.createAccountPhone")}</Label>
-                      <div className="flex h-12 overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background md:rounded-xl md:border-input">
-                        <select
-                          value={countryCode}
-                          onChange={(e) => setCountryCode(e.target.value)}
-                          className="flex h-12 items-center border-0 bg-muted/50 px-4 text-sm font-medium text-foreground outline-none [&>option]:bg-card"
-                          aria-label="Código de país"
-                        >
-                          {COUNTRY_CODES.map(({ code, label, flag }) => (
-                            <option key={code} value={code}>
-                              {flag} {code} {label}
-                            </option>
-                          ))}
-                        </select>
-                        <Input
-                          id="register-phone"
-                          type="tel"
-                          inputMode="numeric"
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 15))}
-                          autoComplete="tel"
-                          disabled={isSubmitting}
-                          className="h-12 min-w-0 flex-1 rounded-none border-0 border-l bg-transparent px-4 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                      </div>
+                      <PhoneInput
+                        id="register-phone"
+                        countryCode={countryCode}
+                        onCountryCodeChange={setCountryCode}
+                        phoneNumber={phoneNumber}
+                        onPhoneNumberChange={setPhoneNumber}
+                        disabled={isSubmitting}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="register-password">{t("register.createAccountPassword")}</Label>
@@ -450,7 +407,7 @@ export default function SignUpPage() {
                         className="h-12 rounded-2xl border-border/60 md:rounded-xl md:border-input"
                       />
                     </div>
-                    <p className={cn("text-center text-sm text-muted-foreground", isPwa && "select-none")}>
+                    <p className="text-center text-sm text-muted-foreground">
                       ¿Ya tenés cuenta?{" "}
                       <Link href="/sign-in" className="font-medium text-primary hover:underline">
                         Iniciar sesión
@@ -472,7 +429,7 @@ export default function SignUpPage() {
               </div>
             ) : (
         <div className="flex min-h-0 w-full flex-1 flex-col items-center">
-          {/* Header: flecha atrás + barra de progreso */}
+          {/* Header: back arrow + progress bar */}
           <header className="-mx-2 w-full shrink-0 self-stretch">
             <div className="flex w-full items-center justify-center gap-3 rounded-xl px-3 py-2">
               {step === 1 ? (
@@ -519,7 +476,7 @@ export default function SignUpPage() {
                 slideDirection === "forward" ? "animate-register-slide-right" : "animate-register-slide-left"
               )}
             >
-          {/* Step 1: Datos físicos */}
+          {/* Step 1: Physical data */}
           {step === 1 && (
             <>
               <div className="w-full space-y-4">
@@ -555,7 +512,7 @@ export default function SignUpPage() {
             </>
           )}
 
-          {/* Step 2: Nivel de actividad */}
+          {/* Step 2: Activity level */}
           {step === 2 && (
             <div className="w-full space-y-4">
               <FieldRow
@@ -571,7 +528,7 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Step 3: Objetivo */}
+          {/* Step 3: Goal */}
           {step === 3 && (
             <div className="w-full space-y-4">
               <FieldRow
@@ -584,7 +541,7 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Step 4: Ritmo semanal */}
+          {/* Step 4: Weekly rate */}
           {step === 4 && (
             <div className="w-full space-y-4">
               <FieldRow
@@ -608,7 +565,7 @@ export default function SignUpPage() {
               disabled={!canNext}
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 md:h-14 md:rounded-3xl"
             >
-              {step === STEPS ? t("register.finish") : t("register.next")}
+              {step === 4 ? t("register.finish") : t("register.next")}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -618,12 +575,9 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Derecha: ilustración (solo desktop) */}
+      {/* Desktop right side: mascot */}
       <div
-        className={cn(
-          "relative z-10 hidden min-h-[280px] flex-1 md:flex md:min-w-0 md:flex-col md:justify-center md:px-12 lg:px-20",
-          isPwa && "select-none",
-        )}
+        className="relative z-10 hidden min-h-[280px] flex-1 md:flex md:min-w-0 md:flex-col md:justify-center md:px-12 lg:px-20"
       >
         <div className="relative flex flex-col items-center justify-center gap-4 py-12">
           <div className="relative rounded-3xl rounded-b-lg border border-border bg-card px-5 py-4 shadow-lg md:px-6 md:py-5">
@@ -646,7 +600,8 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {!done && !showCreateAccount && (
+      {/* Bottom sheet modal */}
+      {!done && !isAccountStep && (
           <div
             className="fixed inset-0 z-50 flex flex-col justify-end"
             style={{
@@ -655,14 +610,12 @@ export default function SignUpPage() {
             }}
             aria-hidden={!openField && !isClosing}
           >
-            {/* Backdrop: toda la pantalla */}
             <div
               className="absolute inset-0 bg-black/40 transition-opacity duration-300"
               style={{ opacity: openField && !isClosing ? 1 : 0 }}
               onClick={handleBackdropClick}
               aria-hidden
             />
-            {/* Modal: centrado en la mitad izquierda en desktop; no captura clics para que el backdrop reciba "click outside" */}
             <div className="pointer-events-none relative flex flex-col items-center justify-end md:absolute md:left-0 md:top-0 md:h-full md:w-[50%] md:justify-end">
               <div
                 className="pointer-events-auto relative mx-auto flex w-full max-w-lg flex-col rounded-t-3xl bg-card shadow-xl transition-transform duration-300 ease-out max-h-[85dvh] md:max-w-[400px]"
