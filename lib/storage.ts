@@ -111,6 +111,11 @@ export function getExercisesForDate(date: string): Exercise[] {
 }
 
 // Meals
+export function setMeals(meals: Meal[]): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('fittrack-meals', JSON.stringify(meals));
+}
+
 export function getMeals(): Meal[] {
   if (typeof window === 'undefined') return [];
   const data = localStorage.getItem('fittrack-meals');

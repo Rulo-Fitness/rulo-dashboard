@@ -7,6 +7,7 @@ import { TrainingView } from "@/components/training-view"
 import { MealsView } from "@/components/meals-view"
 import { ProfileView } from "@/components/profile-view"
 import { TrainingSync } from "@/components/training-sync"
+import { MealsSync } from "@/components/meals-sync"
 
 export default function Home() {
   const [mounted, setMounted] = useState(false)
@@ -100,6 +101,7 @@ export default function Home() {
   return (
     <>
       <TrainingSync onSynced={handleTrainingSynced} />
+      <MealsSync onSynced={handleTrainingSynced} />
       <main className="mx-auto flex min-h-dvh max-w-md flex-1 flex-col bg-background pb-32 pt-12 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
         <div className="flex min-h-0 flex-1 flex-col overflow-visible pointer-events-auto" style={{ touchAction: "pan-y" }}>
           {activeTab === "analytics" && (

@@ -10,6 +10,8 @@ import {
   getProfile,
   type Meal,
 } from "@/lib/storage"
+import { useAuth } from "@/lib/auth-context"
+import { fetchMealsForDate, createMeal, updateMealApi, deleteMealApi } from "@/lib/api"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
 import { Plus, Trash, X, ChevronLeft, ChevronRight, Pencil, ArrowLeft, CircleCheck, CircleX, Zap, Wheat, Droplet } from "lucide-react"
 
@@ -35,11 +37,13 @@ interface MealsViewProps {
 
 export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const { t, locale } = useI18n()
+  const { user } = useAuth()
   const [allMeals, setAllMeals] = useState<Meal[]>([])
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [showForm, setShowForm] = useState(false)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
   const [deletingMealId, setDeletingMealId] = useState<string | null>(null)
+  const [apiLoading, setApiLoading] = useState(false)
 
   const openForm = (meal: Meal | null = null) => {
     setEditingMeal(meal)
@@ -54,23 +58,63 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   }
 
   useEffect(() => {
-    setAllMeals(getMeals())
-  }, [])
+    if (!user?.id) {
+      setAllMeals(getMeals().filter((m) => m.date === selectedDate))
+      return
+    }
+    let cancelled = false
+    setApiLoading(true)
+    fetchMealsForDate(user.id, selectedDate)
+      .then((meals) => {
+        if (!cancelled) {
+          setAllMeals(meals)
+          setApiLoading(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAllMeals(getMeals().filter((m) => m.date === selectedDate))
+          setApiLoading(false)
+        }
+      })
+    return () => { cancelled = true }
+  }, [user?.id, selectedDate])
 
   const filteredMeals = useMemo(
-    () => allMeals.filter((m) => m.date === selectedDate),
-    [allMeals, selectedDate]
+    () => user?.id ? allMeals : allMeals.filter((m) => m.date === selectedDate),
+    [allMeals, selectedDate, user?.id]
   )
 
-  const refresh = () => {
-    setAllMeals(getMeals())
+  const refresh = (): Promise<void> => {
+    if (user?.id) {
+      setApiLoading(true)
+      return fetchMealsForDate(user.id, selectedDate)
+        .then((meals) => {
+          setAllMeals(meals)
+          onUpdate()
+        })
+        .catch(() => setAllMeals(getMeals().filter((m) => m.date === selectedDate)))
+        .finally(() => setApiLoading(false))
+    }
+    setAllMeals(getMeals().filter((m) => m.date === selectedDate))
     onUpdate()
+    return Promise.resolve()
   }
 
-  const handleDeleteConfirm = (id: string) => {
-    deleteMeal(id)
+  const handleDeleteConfirm = async (id: string) => {
     setDeletingMealId(null)
-    refresh()
+    if (user?.id) {
+      const previous = allMeals.filter((m) => m.id !== id)
+      setAllMeals(previous)
+      onUpdate()
+      const ok = await deleteMealApi(id)
+      if (!ok) {
+        await refresh()
+      }
+    } else {
+      deleteMeal(id)
+      refresh()
+    }
   }
 
   const todayStr = getTodayString()
@@ -145,9 +189,63 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
               <MealForm
                 initial={editingMeal ?? null}
                 selectedDate={selectedDate}
-                onSave={() => {
+                onSave={async (data) => {
+                  if (user?.id) {
+                    if (data.id) {
+                      const ok = await updateMealApi(data.id, {
+                        name: data.name,
+                        calories: data.calories,
+                        protein: data.protein,
+                        carbs: data.carbs,
+                        fat: data.fat,
+                      })
+                      if (ok) {
+                        setAllMeals((prev) =>
+                          prev.map((m) =>
+                            m.id === data.id
+                              ? { ...m, name: data.name, calories: data.calories, protein: data.protein, carbs: data.carbs, fat: data.fat }
+                              : m
+                          )
+                        )
+                        onUpdate()
+                      }
+                    } else {
+                      const created = await createMeal(user.id, {
+                        date: selectedDate,
+                        name: data.name,
+                        calories: data.calories,
+                        protein: data.protein,
+                        carbs: data.carbs,
+                        fat: data.fat,
+                      })
+                      if (created) {
+                        setAllMeals((prev) => [
+                          ...prev,
+                          {
+                            id: created.id,
+                            date: created.date?.slice(0, 10) ?? selectedDate,
+                            name: created.name ?? "",
+                            time: "",
+                            calories: created.calories ?? 0,
+                            protein: created.protein ?? 0,
+                            carbs: created.carbs ?? 0,
+                            fat: created.fat ?? 0,
+                          },
+                        ])
+                        onUpdate()
+                      }
+                    }
+                  } else {
+                    const time = editingMeal?.time ?? new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
+                    if (data.id) {
+                      updateMeal({ id: data.id, date: selectedDate, time, ...data })
+                    } else {
+                      saveMeal({ date: selectedDate, time, ...data })
+                    }
+                    setAllMeals(getMeals().filter((m) => m.date === selectedDate))
+                    onUpdate()
+                  }
                   closeForm()
-                  refresh()
                 }}
                 onCancel={closeForm}
                 hideHeader
@@ -355,6 +453,15 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   )
 }
 
+type MealPayload = {
+  id?: string
+  name: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+}
+
 function MealForm({
   initial,
   selectedDate,
@@ -364,7 +471,7 @@ function MealForm({
 }: {
   initial?: Meal | null
   selectedDate: string
-  onSave: () => void
+  onSave: (data: MealPayload) => void | Promise<void>
   onCancel: () => void
   hideHeader?: boolean
 }) {
@@ -380,31 +487,15 @@ function MealForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !calories) return
-
-    const time = initial?.time ?? new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })
-    if (isEdit && initial) {
-      updateMeal({
-        id: initial.id,
-        name: name.trim(),
-        date: selectedDate,
-        time,
-        calories: Number(calories),
-        protein: Number(protein) || 0,
-        carbs: Number(carbs) || 0,
-        fat: Number(fat) || 0,
-      })
-    } else {
-      saveMeal({
-        name: name.trim(),
-        date: selectedDate,
-        time,
-        calories: Number(calories),
-        protein: Number(protein) || 0,
-        carbs: Number(carbs) || 0,
-        fat: Number(fat) || 0,
-      })
+    const payload: MealPayload = {
+      ...(isEdit && initial ? { id: initial.id } : {}),
+      name: name.trim(),
+      calories: Number(calories),
+      protein: Number(protein) || 0,
+      carbs: Number(carbs) || 0,
+      fat: Number(fat) || 0,
     }
-    onSave()
+    onSave(payload)
   }
 
   return (

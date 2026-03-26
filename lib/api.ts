@@ -1,4 +1,4 @@
-import type { TrainingSession } from "./storage"
+import type { TrainingSession, Meal } from "./storage"
 
 const API_URL =
   (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_URL : undefined) ?? ""
@@ -175,6 +175,126 @@ export async function deleteWorkoutLog(id: string): Promise<boolean> {
     return true
   } catch (err) {
     console.error("[Rulo API] deleteWorkoutLog error:", id, err)
+    return false
+  }
+}
+
+// ─── Meals API ───
+
+type MealFromApi = {
+  id: string
+  user_id: string
+  date: string | null
+  name: string | null
+  calories: number | null
+  protein: number | null
+  carbs: number | null
+  fat: number | null
+}
+
+function mapApiMealsToMeals(apiMeals: MealFromApi[]): Meal[] {
+  return apiMeals.map((m) => ({
+    id: m.id,
+    date: m.date ? m.date.slice(0, 10) : "",
+    name: m.name ?? "",
+    time: "",
+    calories: m.calories ?? 0,
+    protein: m.protein ?? 0,
+    carbs: m.carbs ?? 0,
+    fat: m.fat ?? 0,
+  }))
+}
+
+export async function fetchMeals(userId: string): Promise<Meal[]> {
+  const base = getApiUrl()
+  if (!base) return []
+  const url = `${base}/meals?search=${encodeURIComponent(userId)}&per_page=100`
+  try {
+    const res = await fetch(url).catch(() => null)
+    if (!res || !res.ok) return []
+    const data = (await res.json()) as { success?: boolean; result?: MealFromApi[] }
+    if (!data.success || !Array.isArray(data.result)) return []
+    return mapApiMealsToMeals(data.result)
+  } catch (err) {
+    console.error("[Rulo API] fetchMeals error:", err)
+    return []
+  }
+}
+
+export async function fetchMealsForDate(userId: string, dateStr: string): Promise<Meal[]> {
+  const base = getApiUrl()
+  if (!base) return []
+  const url = `${base}/meals-by-date?user_id=${encodeURIComponent(userId)}&date=${encodeURIComponent(dateStr)}`
+  try {
+    const res = await fetch(url).catch(() => null)
+    if (!res || !res.ok) return []
+    const data = (await res.json()) as { success?: boolean; result?: MealFromApi[] }
+    if (!data.success || !Array.isArray(data.result)) return []
+    return mapApiMealsToMeals(data.result)
+  } catch (err) {
+    console.error("[Rulo API] fetchMealsForDate error:", err)
+    return []
+  }
+}
+
+export async function createMeal(
+  userId: string,
+  body: { date?: string; name?: string; calories?: number; protein?: number; carbs?: number; fat?: number }
+): Promise<MealFromApi | null> {
+  const base = getApiUrl()
+  if (!base) return null
+  try {
+    const res = await fetch(`${base}/meals`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        ...(body.date != null && body.date !== "" && { date: body.date }),
+        name: body.name ?? "",
+        calories: body.calories ?? 0,
+        protein: body.protein ?? 0,
+        carbs: body.carbs ?? 0,
+        fat: body.fat ?? 0,
+      }),
+    })
+    const data = (await res.json()) as { success?: boolean; result?: MealFromApi }
+    if (!res.ok || !data.success || !data.result) return null
+    return data.result
+  } catch (err) {
+    console.error("[Rulo API] createMeal error:", err)
+    return null
+  }
+}
+
+export async function updateMealApi(
+  id: string,
+  body: { name?: string; calories?: number; protein?: number; carbs?: number; fat?: number }
+): Promise<boolean> {
+  const base = getApiUrl()
+  if (!base) return false
+  try {
+    const res = await fetch(`${base}/meals/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) return false
+    return true
+  } catch (err) {
+    console.error("[Rulo API] updateMeal error:", id, err)
+    return false
+  }
+}
+
+export async function deleteMealApi(id: string): Promise<boolean> {
+  const base = getApiUrl()
+  if (!base) return false
+  try {
+    const res = await fetch(`${base}/meals/${id}`, { method: "DELETE" })
+    if (!res.ok) return false
+    return true
+  } catch (err) {
+    console.error("[Rulo API] deleteMeal error:", id, err)
     return false
   }
 }
