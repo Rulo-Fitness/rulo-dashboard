@@ -102,7 +102,7 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
     <div className="relative flex flex-col gap-0 pb-6">
       {/* ── Header ── */}
       <div className="flex items-center gap-2.5 px-6 pb-4 animate-slide-up">
-        <Image src="/rulo-isotipo.png" alt="Rulo" width={32} height={32} className="rounded-lg" />
+        <Image src="/rulo-isotipo.webp" alt="Rulo" width={32} height={32} className="rounded-lg" />
         <span className="text-lg font-bold tracking-tight text-foreground">Rulo</span>
       </div>
 

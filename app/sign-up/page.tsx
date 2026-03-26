@@ -290,7 +290,7 @@ export default function SignUpPage() {
       {/* Background */}
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url(/login-bg.png)" }}
+        style={{ backgroundImage: "url(/login-bg.webp)" }}
         aria-hidden
       />
 
@@ -300,7 +300,7 @@ export default function SignUpPage() {
       >
         <div className="-mt-4 flex items-end gap-0 pl-2 pr-4">
           <div className="flex shrink-0 animate-float">
-            <img src="/rulo-mascot.png" alt="Rulo" className="h-28 w-auto object-contain" />
+            <img src="/rulo-mascot.webp" alt="Rulo" className="h-28 w-auto object-contain" />
           </div>
           <div className="relative -ml-1 rounded-3xl rounded-bl-lg border border-border bg-card px-4 py-3 shadow-sm">
             <p className="max-w-[200px] text-left text-sm font-medium text-foreground">
@@ -592,7 +592,7 @@ export default function SignUpPage() {
           </div>
           <div className="flex w-full flex-1 items-center justify-center animate-float">
             <img
-              src="/rulo-mascot.png"
+              src="/rulo-mascot.webp"
               alt="Rulo"
               className="h-52 w-auto object-contain md:h-64 lg:h-72"
             />
