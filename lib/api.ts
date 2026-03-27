@@ -1,22 +1,5 @@
 import type { TrainingSession, Meal } from "./storage"
 
-const API_URL =
-  (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_URL : undefined) ?? ""
-
-const API_KEY =
-  (typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_KEY : undefined) ?? ""
-
-export function getApiUrl(): string {
-  return API_URL.replace(/\/$/, "")
-}
-
-function apiHeaders(extra?: Record<string, string>): Record<string, string> {
-  return {
-    ...extra,
-    ...(API_KEY && { Authorization: `Bearer ${API_KEY}` }),
-  }
-}
-
 type WorkoutLogFromApi = {
   id: string
   user_id: string
@@ -61,11 +44,8 @@ function mapWorkoutLogsToSessions(logs: WorkoutLogFromApi[]): TrainingSession[] 
 }
 
 export async function fetchWorkoutLogs(userId: string): Promise<TrainingSession[]> {
-  const base = getApiUrl()
-  if (!base) return []
-  const url = `${base}/workout-logs?search=${encodeURIComponent(userId)}&per_page=100`
   try {
-    const res = await fetch(url, { headers: apiHeaders() }).catch(() => null)
+    const res = await fetch(`/api/workout-logs?search=${encodeURIComponent(userId)}&per_page=100`).catch(() => null)
     if (!res) return []
     if (!res.ok) return []
     const data = (await res.json()) as { success?: boolean; result?: WorkoutLogFromApi[] }
@@ -85,11 +65,8 @@ export async function fetchWorkoutLogsForDate(
   userId: string,
   dateStr: string
 ): Promise<import("./storage").Exercise[]> {
-  const base = getApiUrl()
-  if (!base) return []
-  const url = `${base}/workout-logs-by-date?user_id=${encodeURIComponent(userId)}&date=${encodeURIComponent(dateStr)}`
   try {
-    const res = await fetch(url, { headers: apiHeaders() }).catch(() => null)
+    const res = await fetch(`/api/workout-logs-by-date?user_id=${encodeURIComponent(userId)}&date=${encodeURIComponent(dateStr)}`).catch(() => null)
     if (!res) return []
     if (!res.ok) return []
     const data = (await res.json()) as { success?: boolean; result?: WorkoutLogFromApi[] }
@@ -115,12 +92,10 @@ export async function createWorkoutLog(
   userId: string,
   body: { date?: string; name?: string; sets?: number; reps?: number; weight?: number }
 ): Promise<WorkoutLogFromApi | null> {
-  const base = getApiUrl()
-  if (!base) return null
   try {
-    const res = await fetch(`${base}/workout-logs`, {
+    const res = await fetch("/api/workout-logs", {
       method: "POST",
-      headers: apiHeaders({ "Content-Type": "application/json" }),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user_id: userId,
         ...(body.date != null && body.date !== "" && { date: body.date }),
@@ -151,12 +126,10 @@ export async function updateWorkoutLog(
   id: string,
   body: { name?: string; sets?: number; reps?: number; weight?: number }
 ): Promise<boolean> {
-  const base = getApiUrl()
-  if (!base) return false
   try {
-    const res = await fetch(`${base}/workout-logs/${id}`, {
+    const res = await fetch(`/api/workout-logs/${id}`, {
       method: "PUT",
-      headers: apiHeaders({ "Content-Type": "application/json" }),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     })
     if (!res.ok) {
@@ -173,10 +146,8 @@ export async function updateWorkoutLog(
 
 /** Elimina un workout log en la API. */
 export async function deleteWorkoutLog(id: string): Promise<boolean> {
-  const base = getApiUrl()
-  if (!base) return false
   try {
-    const res = await fetch(`${base}/workout-logs/${id}`, { method: "DELETE", headers: apiHeaders() })
+    const res = await fetch(`/api/workout-logs/${id}`, { method: "DELETE" })
     if (!res.ok) {
       const text = await res.text()
       console.error("[Rulo API] deleteWorkoutLog failed:", id, res.status, res.statusText, text)
@@ -216,11 +187,8 @@ function mapApiMealsToMeals(apiMeals: MealFromApi[]): Meal[] {
 }
 
 export async function fetchMeals(userId: string): Promise<Meal[]> {
-  const base = getApiUrl()
-  if (!base) return []
-  const url = `${base}/meals?search=${encodeURIComponent(userId)}&per_page=100`
   try {
-    const res = await fetch(url, { headers: apiHeaders() }).catch(() => null)
+    const res = await fetch(`/api/meals?search=${encodeURIComponent(userId)}&per_page=100`).catch(() => null)
     if (!res || !res.ok) return []
     const data = (await res.json()) as { success?: boolean; result?: MealFromApi[] }
     if (!data.success || !Array.isArray(data.result)) return []
@@ -232,11 +200,8 @@ export async function fetchMeals(userId: string): Promise<Meal[]> {
 }
 
 export async function fetchMealsForDate(userId: string, dateStr: string): Promise<Meal[]> {
-  const base = getApiUrl()
-  if (!base) return []
-  const url = `${base}/meals-by-date?user_id=${encodeURIComponent(userId)}&date=${encodeURIComponent(dateStr)}`
   try {
-    const res = await fetch(url, { headers: apiHeaders() }).catch(() => null)
+    const res = await fetch(`/api/meals-by-date?user_id=${encodeURIComponent(userId)}&date=${encodeURIComponent(dateStr)}`).catch(() => null)
     if (!res || !res.ok) return []
     const data = (await res.json()) as { success?: boolean; result?: MealFromApi[] }
     if (!data.success || !Array.isArray(data.result)) return []
@@ -251,12 +216,10 @@ export async function createMeal(
   userId: string,
   body: { date?: string; name?: string; calories?: number; protein?: number; carbs?: number; fat?: number }
 ): Promise<MealFromApi | null> {
-  const base = getApiUrl()
-  if (!base) return null
   try {
-    const res = await fetch(`${base}/meals`, {
+    const res = await fetch("/api/meals", {
       method: "POST",
-      headers: apiHeaders({ "Content-Type": "application/json" }),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user_id: userId,
         ...(body.date != null && body.date !== "" && { date: body.date }),
@@ -280,12 +243,10 @@ export async function updateMealApi(
   id: string,
   body: { name?: string; calories?: number; protein?: number; carbs?: number; fat?: number }
 ): Promise<boolean> {
-  const base = getApiUrl()
-  if (!base) return false
   try {
-    const res = await fetch(`${base}/meals/${id}`, {
+    const res = await fetch(`/api/meals/${id}`, {
       method: "PUT",
-      headers: apiHeaders({ "Content-Type": "application/json" }),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     })
     if (!res.ok) return false
@@ -297,10 +258,8 @@ export async function updateMealApi(
 }
 
 export async function deleteMealApi(id: string): Promise<boolean> {
-  const base = getApiUrl()
-  if (!base) return false
   try {
-    const res = await fetch(`${base}/meals/${id}`, { method: "DELETE", headers: apiHeaders() })
+    const res = await fetch(`/api/meals/${id}`, { method: "DELETE" })
     if (!res.ok) return false
     return true
   } catch (err) {

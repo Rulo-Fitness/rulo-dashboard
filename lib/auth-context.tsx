@@ -12,16 +12,6 @@ import {
 /** Clave en localStorage. Persiste en web y en PWA (mismo origen, mismo storage). */
 const STORAGE_KEY = "rulo-auth"
 
-const API_URL = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_URL ?? "" : ""
-const API_KEY = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_KEY ?? "" : ""
-
-function authHeaders(extra?: Record<string, string>): Record<string, string> {
-  return {
-    ...extra,
-    ...(API_KEY && { Authorization: `Bearer ${API_KEY}` }),
-  }
-}
-
 export type AuthUser = {
   id: string
   phone: string
@@ -78,22 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!password || password.length < 4) {
         return { ok: false, error: "La contraseña debe tener al menos 4 caracteres" }
       }
-      if (!API_URL) {
-        return {
-          ok: false,
-          error: "API no configurada. Añade NEXT_PUBLIC_RULO_API_URL en .env.local (ej. https://rulo-api.kommo-test.workers.dev)",
-        }
-      }
 
       const body = {
         phone: phone.trim().startsWith("+") ? phone.trim() : `+${normalized}`,
         password,
       }
       try {
-        const url = `${API_URL.replace(/\/$/, "")}/auth/login`
-        const res = await fetch(url, {
+        const res = await fetch("/api/auth/login", {
           method: "POST",
-          headers: authHeaders({ "Content-Type": "application/json" }),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         })
         const text = await res.text()
@@ -108,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error("[Rulo Auth] login parse error:", parseErr, "raw:", text)
           return {
             ok: false,
-            error: "La API devolvió una respuesta no válida. Comprueba que NEXT_PUBLIC_RULO_API_URL sea la URL correcta de la API (ej. https://rulo-api.kommo-test.workers.dev).",
+            error: "La API devolvió una respuesta no válida.",
           }
         }
         if (!res.ok || !data.success || !data.result) {
@@ -130,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("[Rulo Auth] login error:", err)
         return {
           ok: false,
-          error: err instanceof Error ? err.message : "Error de conexión. Revisa la URL de la API.",
+          error: err instanceof Error ? err.message : "Error de conexión.",
         }
       }
     },
@@ -146,22 +129,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!password || password.length < 4) {
         return { ok: false, error: "La contraseña debe tener al menos 4 caracteres" }
       }
-      if (!API_URL) {
-        return {
-          ok: false,
-          error: "API no configurada. Añade NEXT_PUBLIC_RULO_API_URL en .env.local",
-        }
-      }
       const body = {
         phone: phone.trim().startsWith("+") ? phone.trim() : `+${normalized}`,
         password,
         ...(name?.trim() ? { name: name.trim() } : {}),
       }
       try {
-        const url = `${API_URL.replace(/\/$/, "")}/users`
-        const res = await fetch(url, {
+        const res = await fetch("/api/users", {
           method: "POST",
-          headers: authHeaders({ "Content-Type": "application/json" }),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         })
         const text = await res.text()
