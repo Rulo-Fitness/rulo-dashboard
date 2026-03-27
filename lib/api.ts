@@ -43,6 +43,26 @@ function mapWorkoutLogsToSessions(logs: WorkoutLogFromApi[]): TrainingSession[] 
   return sessions
 }
 
+/** Todos los workout logs del usuario en un rango de fechas. Sin límite de cantidad. */
+export async function fetchWorkoutLogsByRange(
+  userId: string,
+  from: string,
+  to: string
+): Promise<TrainingSession[]> {
+  try {
+    const params = new URLSearchParams({ user_id: userId, from, to })
+    const res = await fetch(`/api/workout-logs-by-range?${params}`).catch(() => null)
+    if (!res) return []
+    if (!res.ok) return []
+    const data = (await res.json()) as { success?: boolean; result?: WorkoutLogFromApi[] }
+    if (!data.success || !Array.isArray(data.result)) return []
+    return mapWorkoutLogsToSessions(data.result)
+  } catch (err) {
+    console.error("[Rulo API] fetchWorkoutLogsByRange error:", err)
+    return []
+  }
+}
+
 export async function fetchWorkoutLogs(userId: string): Promise<TrainingSession[]> {
   try {
     const res = await fetch(`/api/workout-logs?search=${encodeURIComponent(userId)}&per_page=100`).catch(() => null)

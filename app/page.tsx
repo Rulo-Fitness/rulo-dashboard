@@ -77,6 +77,7 @@ export default function Home() {
 
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab)
+    setRefreshKey((k) => k + 1)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
 

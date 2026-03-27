@@ -272,6 +272,7 @@ const translations = {
   "analytics.3months": { en: "3M", es: "3M" },
   "analytics.allTime": { en: "All", es: "Todo" },
   "analytics.noData": { en: "No training data yet", es: "Sin datos de entreno aún" },
+  "analytics.startTraining": { en: "Start training to see your stats", es: "Empezá a entrenar para ver tus estadísticas" },
   "analytics.noMealsData": { en: "No meals logged yet", es: "Sin comidas registradas aún" },
   "analytics.goalHit": { en: "On goal", es: "En meta" },
   "analytics.goalOver": { en: "Over", es: "Exceso" },

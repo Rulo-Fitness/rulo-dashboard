@@ -65,49 +65,7 @@ function getMondayOfWeek(date: Date): Date {
   return d
 }
 
-// TODO: remove mock data
-const MOCK_SESSIONS: TrainingSession[] = [
-  { id: "m1", date: "2026-03-19", name: "Push", exercises: [
-    { id: "e1", name: "Bench Press", sets: 4, reps: 8, weight: 80 },
-    { id: "e2", name: "Overhead Press", sets: 3, reps: 10, weight: 40 },
-    { id: "e3", name: "Lateral Raise", sets: 3, reps: 15, weight: 12 },
-  ]},
-  { id: "m2", date: "2026-03-17", name: "Pull", exercises: [
-    { id: "e4", name: "Deadlift", sets: 4, reps: 5, weight: 120 },
-    { id: "e5", name: "Barbell Row", sets: 4, reps: 8, weight: 70 },
-    { id: "e6", name: "Bench Press", sets: 3, reps: 10, weight: 75 },
-  ]},
-  { id: "m3", date: "2026-03-14", name: "Legs", exercises: [
-    { id: "e7", name: "Squat", sets: 5, reps: 5, weight: 100 },
-    { id: "e8", name: "Leg Press", sets: 4, reps: 10, weight: 180 },
-  ]},
-  { id: "m4", date: "2026-03-12", name: "Push", exercises: [
-    { id: "e9", name: "Bench Press", sets: 4, reps: 8, weight: 77.5 },
-    { id: "e10", name: "Overhead Press", sets: 3, reps: 10, weight: 37.5 },
-  ]},
-  { id: "m5", date: "2026-03-10", name: "Pull", exercises: [
-    { id: "e11", name: "Deadlift", sets: 4, reps: 5, weight: 115 },
-    { id: "e12", name: "Barbell Row", sets: 4, reps: 8, weight: 65 },
-  ]},
-  { id: "m6", date: "2026-03-07", name: "Legs", exercises: [
-    { id: "e13", name: "Squat", sets: 5, reps: 5, weight: 95 },
-  ]},
-  { id: "m7", date: "2026-03-05", name: "Push", exercises: [
-    { id: "e14", name: "Bench Press", sets: 4, reps: 8, weight: 75 },
-  ]},
-  { id: "m8", date: "2026-03-03", name: "Pull", exercises: [
-    { id: "e15", name: "Deadlift", sets: 4, reps: 5, weight: 110 },
-  ]},
-  { id: "m9", date: "2026-02-28", name: "Push", exercises: [
-    { id: "e16", name: "Bench Press", sets: 4, reps: 8, weight: 72.5 },
-  ]},
-  { id: "m10", date: "2026-02-24", name: "Legs", exercises: [
-    { id: "e17", name: "Squat", sets: 5, reps: 5, weight: 90 },
-  ]},
-]
-
-export function TrainingAnalytics({ sessions: _sessions }: TrainingAnalyticsProps) {
-  const sessions = MOCK_SESSIONS // TODO: revert to _sessions
+export function TrainingAnalytics({ sessions }: TrainingAnalyticsProps) {
   const { t } = useI18n()
   const [range, setRange] = useState<Range>("3M")
   const [selectedExercise, setSelectedExercise] = useState<string>("")
@@ -290,186 +248,187 @@ export function TrainingAnalytics({ sessions: _sessions }: TrainingAnalyticsProp
     }))
   }, [sessions, exerciseNames])
 
+  const hasData = sessions.length > 0
+
   return (
     <div className="flex flex-col gap-0">
-      {exerciseNames.length > 0 && (
-        <>
-          {/* Chart card with controls */}
-          <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.07s" }}>
-            <div className="bg-card rounded-[32px] p-5 card-shadow">
-              {/* Exercise selector + Range row */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-1.5">
-                  {(["1M", "3M", "all"] as Range[]).map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRange(r)}
-                      className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${
-                        range === r
-                          ? "bg-foreground text-background"
-                          : "bg-secondary text-muted-foreground"
-                      }`}
-                    >
-                      {r === "1M" ? t("analytics.1month") : r === "3M" ? t("analytics.3months") : t("analytics.allTime")}
-                    </button>
-                  ))}
-                </div>
-                <div className="relative">
-                  <select
-                    value={activeExercise}
-                    onChange={(e) => setSelectedExercise(e.target.value)}
-                    className="rounded-full bg-secondary pl-3 pr-8 py-1.5 text-xs font-semibold text-foreground outline-none appearance-none max-w-[165px] truncate"
+      {/* Chart card with controls */}
+      <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.07s" }}>
+        <div className="bg-card rounded-[32px] p-5 card-shadow">
+          {hasData && (
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-1.5">
+                {(["1M", "3M", "all"] as Range[]).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setRange(r)}
+                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${
+                      range === r
+                        ? "bg-foreground text-background"
+                        : "bg-secondary text-muted-foreground"
+                    }`}
                   >
-                    {exerciseNames.map((ex) => (
-                      <option key={ex.key} value={ex.key}>
-                        {ex.display}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} strokeWidth={3} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground pointer-events-none" />
-                </div>
+                    {r === "1M" ? t("analytics.1month") : r === "3M" ? t("analytics.3months") : t("analytics.allTime")}
+                  </button>
+                ))}
               </div>
-
-              {chartData.length === 0 ? (
-                <div className="py-10 text-center">
-                  <BarChart3 size={36} className="mx-auto mb-3 text-muted-foreground/30" />
-                  <p className="text-muted-foreground text-sm">{t("analytics.noData")}</p>
-                </div>
-              ) : (
-                <ChartContainer config={chartConfig} className="h-[240px] w-full">
-                  <AreaChart data={chartData} margin={{ top: 8, right: 0, bottom: 4, left: -20 }}>
-                    <defs>
-                      <linearGradient id="weightGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--foreground)" stopOpacity={0.2} />
-                        <stop offset="100%" stopColor="var(--foreground)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
-                    <XAxis
-                      dataKey="dateLabel"
-                      tick={{ fontSize: 11, dy: 14 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)", dx: -10 }}
-                      tickLine={false}
-                      axisLine={false}
-                      width={56}
-                      domain={["dataMin - 5", "dataMax + 5"]}
-                      tickFormatter={(v: number) => `${v} kg`}
-                    />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null
-                        const p = payload[0].payload as (typeof chartData)[0]
-                        return (
-                          <div className="rounded-xl bg-background border border-border/50 px-3 py-2 shadow-xl text-xs">
-                            <p className="font-semibold">{p.date}</p>
-                            <p className="text-muted-foreground">{p.weight} kg</p>
-                          </div>
-                        )
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="weight"
-                      stroke="var(--foreground)"
-                      strokeWidth={2.5}
-                      fill="url(#weightGradient)"
-                      dot={{ r: 4, fill: "var(--foreground)" }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </AreaChart>
-                </ChartContainer>
-              )}
-            </div>
-          </section>
-
-        </>
-      )}
-
-      {sessions.length > 0 && (
-        <>
-          {/* PR + Sessions row */}
-          <section className="grid grid-cols-2 gap-3 px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.13s" }}>
-            <div className="bg-card rounded-[20px] p-5 card-shadow text-center">
-              <TrendingUp size={20} className="mx-auto mb-2 text-emerald-500" />
-              <span className="text-2xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums" }}>
-                {pr} <span className="text-sm font-bold text-muted-foreground">kg</span>
-              </span>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest pt-1">
-                {t("analytics.personalRecord")}
-              </p>
-            </div>
-            <div className="bg-card rounded-[20px] p-5 card-shadow text-center">
-              <BarChart3 size={20} className="mx-auto mb-2 text-blue-500" />
-              <span className="text-2xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums" }}>
-                {sessionCount}
-              </span>
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest pt-1">
-                {t("analytics.sessions")}
-              </p>
-            </div>
-          </section>
-
-          {/* Top exercises */}
-          {topExercises.length > 0 && (
-            <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.15s" }}>
-              <div className="bg-card rounded-[32px] p-6 card-shadow">
-                <div className="flex items-center gap-2 mb-4">
-                  <Trophy size={16} className="text-amber-500" />
-                  <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
-                    {t("analytics.topExercises")}
-                  </p>
-                </div>
-                <div className="space-y-0">
-                  {topExercises.map((ex, i) => (
-                    <div
-                      key={ex.key}
-                      className={`flex items-center justify-between py-2.5 ${i < topExercises.length - 1 ? "border-b border-border/30" : ""}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-muted-foreground text-xs font-bold w-5">#{i + 1}</span>
-                        <span className="text-sm font-semibold text-foreground">{ex.display}</span>
-                      </div>
-                      <span className="text-sm font-bold text-muted-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>
-                        {ex.volume.toLocaleString()} kg
-                      </span>
-                    </div>
+              <div className="relative">
+                <select
+                  value={activeExercise}
+                  onChange={(e) => setSelectedExercise(e.target.value)}
+                  className="rounded-full bg-secondary pl-3 pr-8 py-1.5 text-xs font-semibold text-foreground outline-none appearance-none max-w-[165px] truncate"
+                >
+                  {exerciseNames.map((ex) => (
+                    <option key={ex.key} value={ex.key}>
+                      {ex.display}
+                    </option>
                   ))}
-                </div>
+                </select>
+                <ChevronDown size={14} strokeWidth={3} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground pointer-events-none" />
               </div>
-            </section>
+            </div>
           )}
 
-          {/* Weekly frequency chart */}
-          <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.17s" }}>
-            <div className="bg-card rounded-[32px] p-6 card-shadow">
-              <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-3">
-                {t("analytics.weeklyFrequency")}
-              </p>
-              <ChartContainer config={freqChartConfig} className="h-[120px] w-full">
-                <BarChart data={weeklyFrequency} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                  />
-                  <YAxis domain={[0, 7]} hide />
-                  <Bar
-                    dataKey="days"
-                    fill="var(--foreground)"
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ChartContainer>
+          {!hasData ? (
+            <div className="py-10 text-center">
+              <BarChart3 size={36} className="mx-auto mb-3 text-muted-foreground/30" />
+              <p className="text-muted-foreground text-sm">{t("analytics.startTraining")}</p>
             </div>
-          </section>
-        </>
-      )}
+          ) : chartData.length === 0 ? (
+            <div className="py-10 text-center">
+              <BarChart3 size={36} className="mx-auto mb-3 text-muted-foreground/30" />
+              <p className="text-muted-foreground text-sm">{t("analytics.noData")}</p>
+            </div>
+          ) : (
+            <ChartContainer config={chartConfig} className="h-[240px] w-full">
+              <AreaChart data={chartData} margin={{ top: 8, right: 0, bottom: 4, left: -20 }}>
+                <defs>
+                  <linearGradient id="weightGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--foreground)" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="var(--foreground)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                <XAxis
+                  dataKey="dateLabel"
+                  tick={{ fontSize: 11, dy: 14 }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)", dx: -10 }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={56}
+                  domain={["dataMin - 5", "dataMax + 5"]}
+                  tickFormatter={(v: number) => `${v} kg`}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const p = payload[0].payload as (typeof chartData)[0]
+                    return (
+                      <div className="rounded-xl bg-background border border-border/50 px-3 py-2 shadow-xl text-xs">
+                        <p className="font-semibold">{p.date}</p>
+                        <p className="text-muted-foreground">{p.weight} kg</p>
+                      </div>
+                    )
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="weight"
+                  stroke="var(--foreground)"
+                  strokeWidth={2.5}
+                  fill="url(#weightGradient)"
+                  dot={{ r: 4, fill: "var(--foreground)" }}
+                  activeDot={{ r: 6 }}
+                />
+              </AreaChart>
+            </ChartContainer>
+          )}
+        </div>
+      </section>
+
+      {/* PR + Sessions row */}
+      <section className="grid grid-cols-2 gap-3 px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.13s" }}>
+        <div className="bg-card rounded-[20px] p-5 card-shadow text-center">
+          <TrendingUp size={20} className="mx-auto mb-2 text-emerald-500" />
+          <span className="text-2xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {pr} <span className="text-sm font-bold text-muted-foreground">kg</span>
+          </span>
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest pt-1">
+            {t("analytics.personalRecord")}
+          </p>
+        </div>
+        <div className="bg-card rounded-[20px] p-5 card-shadow text-center">
+          <BarChart3 size={20} className="mx-auto mb-2 text-blue-500" />
+          <span className="text-2xl font-black tracking-tighter" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {sessionCount}
+          </span>
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest pt-1">
+            {t("analytics.sessions")}
+          </p>
+        </div>
+      </section>
+
+      {/* Top exercises */}
+      <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.15s" }}>
+        <div className="bg-card rounded-[32px] p-6 card-shadow">
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy size={16} className="text-amber-500" />
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
+              {t("analytics.topExercises")}
+            </p>
+          </div>
+          {topExercises.length > 0 ? (
+            <div className="space-y-0">
+              {topExercises.map((ex, i) => (
+                <div
+                  key={ex.key}
+                  className={`flex items-center justify-between py-2.5 ${i < topExercises.length - 1 ? "border-b border-border/30" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-muted-foreground text-xs font-bold w-5">#{i + 1}</span>
+                    <span className="text-sm font-semibold text-foreground">{ex.display}</span>
+                  </div>
+                  <span className="text-sm font-bold text-muted-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {ex.volume.toLocaleString()} kg
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm text-center py-2">{t("analytics.noData")}</p>
+          )}
+        </div>
+      </section>
+
+      {/* Weekly frequency chart */}
+      <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.17s" }}>
+        <div className="bg-card rounded-[32px] p-6 card-shadow">
+          <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-3">
+            {t("analytics.weeklyFrequency")}
+          </p>
+          <ChartContainer config={freqChartConfig} className="h-[120px] w-full">
+            <BarChart data={weeklyFrequency} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+              <XAxis
+                dataKey="label"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              />
+              <YAxis domain={[0, 7]} hide />
+              <Bar
+                dataKey="days"
+                fill="var(--foreground)"
+                radius={[6, 6, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
+        </div>
+      </section>
     </div>
   )
 }
