@@ -13,6 +13,14 @@ import {
 const STORAGE_KEY = "rulo-auth"
 
 const API_URL = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_URL ?? "" : ""
+const API_KEY = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_RULO_API_KEY ?? "" : ""
+
+function authHeaders(extra?: Record<string, string>): Record<string, string> {
+  return {
+    ...extra,
+    ...(API_KEY && { Authorization: `Bearer ${API_KEY}` }),
+  }
+}
 
 export type AuthUser = {
   id: string
@@ -85,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const url = `${API_URL.replace(/\/$/, "")}/auth/login`
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(body),
         })
         const text = await res.text()
@@ -153,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const url = `${API_URL.replace(/\/$/, "")}/users`
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: authHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify(body),
         })
         const text = await res.text()
