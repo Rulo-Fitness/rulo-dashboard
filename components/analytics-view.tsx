@@ -4,10 +4,10 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { motion } from "motion/react"
 import { useI18n } from "@/lib/i18n"
-import { getMeals, getProfile } from "@/lib/storage"
+import { getProfile } from "@/lib/storage"
 import type { TrainingSession, Meal, UserProfile } from "@/lib/storage"
 import { useAuth } from "@/lib/auth-context"
-import { fetchWorkoutLogsByRange } from "@/lib/api"
+import { fetchWorkoutLogsByRange, fetchMealsByRange } from "@/lib/api"
 import { TrainingAnalytics } from "@/components/analytics/training-analytics"
 import { MealsAnalytics } from "@/components/analytics/meals-analytics"
 
@@ -31,11 +31,11 @@ export function AnalyticsView({ refreshKey }: AnalyticsViewProps) {
 
   useEffect(() => {
     if (!mounted) return
-    setMeals(getMeals())
     setProfile(getProfile())
     if (user) {
       const today = new Date().toISOString().slice(0, 10)
       fetchWorkoutLogsByRange(user.id, "2020-01-01", today).then(setSessions)
+      fetchMealsByRange(user.id, "2020-01-01", today).then(setMeals)
     }
   }, [mounted, refreshKey, user])
 

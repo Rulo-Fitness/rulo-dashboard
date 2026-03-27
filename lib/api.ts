@@ -206,6 +206,25 @@ function mapApiMealsToMeals(apiMeals: MealFromApi[]): Meal[] {
   }))
 }
 
+/** Todas las meals del usuario en un rango de fechas. Sin límite de cantidad. */
+export async function fetchMealsByRange(
+  userId: string,
+  from: string,
+  to: string
+): Promise<Meal[]> {
+  try {
+    const params = new URLSearchParams({ user_id: userId, from, to })
+    const res = await fetch(`/api/meals-by-range?${params}`).catch(() => null)
+    if (!res || !res.ok) return []
+    const data = (await res.json()) as { success?: boolean; result?: MealFromApi[] }
+    if (!data.success || !Array.isArray(data.result)) return []
+    return mapApiMealsToMeals(data.result)
+  } catch (err) {
+    console.error("[Rulo API] fetchMealsByRange error:", err)
+    return []
+  }
+}
+
 export async function fetchMeals(userId: string): Promise<Meal[]> {
   try {
     const res = await fetch(`/api/meals?search=${encodeURIComponent(userId)}&per_page=100`).catch(() => null)

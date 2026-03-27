@@ -12,7 +12,7 @@ import {
   isToday,
 } from "date-fns"
 import { es, enUS } from "date-fns/locale"
-import { ChevronLeft, ChevronRight, UtensilsCrossed } from "lucide-react"
+import { ChevronLeft, ChevronRight, UtensilsCrossed, Trophy } from "lucide-react"
 import { useI18n } from "@/lib/i18n"
 import type { Meal, UserProfile } from "@/lib/storage"
 
@@ -24,48 +24,7 @@ interface MealsAnalyticsProps {
 const WEEKDAY_KEYS = ["L", "M", "M", "J", "V", "S", "D"]
 const WEEKDAY_KEYS_EN = ["M", "T", "W", "T", "F", "S", "S"]
 
-// TODO: remove hardcoded meals
-const FAKE_MEALS: Meal[] = [
-  // --- marzo 2026 ---
-  { id: "f1",  date: "2026-03-01", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
-  { id: "f2",  date: "2026-03-01", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
-  { id: "f3",  date: "2026-03-01", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
-  { id: "f4",  date: "2026-03-02", name: "Tostadas con palta", time: "09:00", calories: 400, protein: 10, carbs: 35, fat: 22 },
-  { id: "f5",  date: "2026-03-02", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
-  { id: "f6",  date: "2026-03-02", name: "Pasta con carne",  time: "21:00", calories: 700, protein: 35, carbs: 80, fat: 20 },
-  { id: "f7",  date: "2026-03-03", name: "Yogur con granola", time: "08:30", calories: 280, protein: 15, carbs: 40, fat: 6 },
-  { id: "f8",  date: "2026-03-03", name: "Milanesa con puré", time: "13:00", calories: 750, protein: 38, carbs: 60, fat: 32 },
-  { id: "f9",  date: "2026-03-05", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
-  { id: "f10", date: "2026-03-05", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
-  { id: "f11", date: "2026-03-05", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
-  { id: "f12", date: "2026-03-05", name: "Proteína shake",   time: "16:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
-  { id: "f13", date: "2026-03-07", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
-  { id: "f14", date: "2026-03-07", name: "Sushi",            time: "13:00", calories: 550, protein: 22, carbs: 70, fat: 12 },
-  { id: "f15", date: "2026-03-08", name: "Tostadas con palta", time: "09:00", calories: 400, protein: 10, carbs: 35, fat: 22 },
-  { id: "f16", date: "2026-03-08", name: "Hamburguesa",      time: "13:00", calories: 850, protein: 40, carbs: 55, fat: 45 },
-  { id: "f17", date: "2026-03-08", name: "Pizza",            time: "21:00", calories: 900, protein: 30, carbs: 90, fat: 40 },
-  { id: "f18", date: "2026-03-10", name: "Yogur con granola", time: "08:30", calories: 280, protein: 15, carbs: 40, fat: 6 },
-  { id: "f19", date: "2026-03-10", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
-  { id: "f20", date: "2026-03-10", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
-  { id: "f21", date: "2026-03-12", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
-  { id: "f22", date: "2026-03-12", name: "Pasta con carne",  time: "13:00", calories: 700, protein: 35, carbs: 80, fat: 20 },
-  { id: "f23", date: "2026-03-14", name: "Proteína shake",   time: "07:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
-  { id: "f24", date: "2026-03-14", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
-  { id: "f25", date: "2026-03-14", name: "Ensalada César",   time: "20:00", calories: 480, protein: 28, carbs: 20, fat: 30 },
-  { id: "f26", date: "2026-03-14", name: "Proteína shake",   time: "22:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
-  { id: "f27", date: "2026-03-15", name: "Milanesa con puré", time: "13:00", calories: 750, protein: 38, carbs: 60, fat: 32 },
-  { id: "f28", date: "2026-03-16", name: "Tostadas con palta", time: "09:00", calories: 400, protein: 10, carbs: 35, fat: 22 },
-  { id: "f29", date: "2026-03-17", name: "Avena con banana", time: "08:00", calories: 350, protein: 12, carbs: 55, fat: 8 },
-  { id: "f30", date: "2026-03-17", name: "Pollo con arroz",  time: "13:00", calories: 620, protein: 42, carbs: 65, fat: 14 },
-  { id: "f31", date: "2026-03-17", name: "Sushi",            time: "21:00", calories: 550, protein: 22, carbs: 70, fat: 12 },
-  { id: "f32", date: "2026-03-18", name: "Hamburguesa",      time: "13:00", calories: 850, protein: 40, carbs: 55, fat: 45 },
-  { id: "f33", date: "2026-03-18", name: "Pizza",            time: "21:00", calories: 900, protein: 30, carbs: 90, fat: 40 },
-  { id: "f34", date: "2026-03-18", name: "Proteína shake",   time: "16:00", calories: 200, protein: 30, carbs: 10, fat: 5 },
-  { id: "f35", date: "2026-03-19", name: "Yogur con granola", time: "08:30", calories: 280, protein: 15, carbs: 40, fat: 6 },
-]
-
-export function MealsAnalytics({ meals: _meals, profile }: MealsAnalyticsProps) {
-  const meals = [..._meals, ...FAKE_MEALS] // TODO: remove
+export function MealsAnalytics({ meals, profile }: MealsAnalyticsProps) {
   const { t, locale } = useI18n()
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
 
@@ -176,17 +135,7 @@ export function MealsAnalytics({ meals: _meals, profile }: MealsAnalyticsProps) 
     return { backgroundColor: `color-mix(in oklch, var(--foreground) ${pct}%, transparent)`, color: "var(--foreground)" }
   }
 
-  if (meals.length === 0) {
-    return (
-      <div className="px-6 pt-4 animate-slide-up">
-        <div className="bg-card rounded-[32px] p-8 card-shadow text-center">
-          <UtensilsCrossed size={48} className="mx-auto mb-4 text-muted-foreground/30" />
-          <p className="text-muted-foreground font-medium">{t("analytics.noMealsData")}</p>
-        </div>
-      </div>
-    )
-  }
-
+  const hasData = meals.length > 0
   const avgRatio = Math.min(avgDaily / calorieGoal, 1)
   const ofGoalText = t("analytics.ofGoal").replace("{goal}", String(calorieGoal))
 
@@ -216,34 +165,43 @@ export function MealsAnalytics({ meals: _meals, profile }: MealsAnalyticsProps) 
       {/* Calendar grid */}
       <section className="px-6 pt-3 animate-slide-up" style={{ animationDelay: "0.1s" }}>
         <div className="bg-card rounded-[32px] p-6 card-shadow">
-          <div className="grid grid-cols-7 gap-1 pb-2">
-            {weekdayHeaders.map((d, i) => (
-              <div key={i} className="text-center text-muted-foreground text-xs font-bold uppercase tracking-widest">
-                {d}
+          {!hasData ? (
+            <div className="py-10 text-center">
+              <UtensilsCrossed size={36} className="mx-auto mb-3 text-muted-foreground/30" />
+              <p className="text-muted-foreground text-sm">{t("analytics.startMeals")}</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-7 gap-1 pb-2">
+                {weekdayHeaders.map((d, i) => (
+                  <div key={i} className="text-center text-muted-foreground text-xs font-bold uppercase tracking-widest">
+                    {d}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: calendarData.firstDayOfWeek }).map((_, i) => (
-              <div key={`empty-${i}`} className="aspect-square" />
-            ))}
-            {calendarData.cells.map((cell) => {
-              const isTodayCell = isToday(cell.date)
-              const style = getCellStyle(cell.calories)
-              const hasData = cell.calories !== undefined
-              return (
-                <div
-                  key={cell.dateStr}
-                  className={`aspect-square flex items-center justify-center rounded-full text-xs font-bold ${
-                    !hasData ? "bg-secondary text-muted-foreground" : ""
-                  } ${isTodayCell ? "ring-2 ring-foreground" : ""}`}
-                  style={hasData ? style : undefined}
-                >
-                  {cell.day}
-                </div>
-              )
-            })}
-          </div>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: calendarData.firstDayOfWeek }).map((_, i) => (
+                  <div key={`empty-${i}`} className="aspect-square" />
+                ))}
+                {calendarData.cells.map((cell) => {
+                  const isTodayCell = isToday(cell.date)
+                  const style = getCellStyle(cell.calories)
+                  const cellHasData = cell.calories !== undefined
+                  return (
+                    <div
+                      key={cell.dateStr}
+                      className={`aspect-square flex items-center justify-center rounded-full text-xs font-bold ${
+                        !cellHasData ? "bg-secondary text-muted-foreground" : ""
+                      } ${isTodayCell ? "ring-2 ring-foreground" : ""}`}
+                      style={cellHasData ? style : undefined}
+                    >
+                      {cell.day}
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -299,13 +257,16 @@ export function MealsAnalytics({ meals: _meals, profile }: MealsAnalyticsProps) 
         </div>
       </section>
 
-      {/* Frequent Meals */}
-      {frequentMeals.length > 0 && (
-        <section className="px-6 pt-4 pb-4 animate-slide-up" style={{ animationDelay: "0.25s" }}>
-          <div className="bg-card rounded-[32px] p-6 card-shadow">
-            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-4">
+      {/* Top Meals */}
+      <section className="px-6 pt-4 pb-4 animate-slide-up" style={{ animationDelay: "0.25s" }}>
+        <div className="bg-card rounded-[32px] p-6 card-shadow">
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy size={16} className="text-amber-500" />
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
               {t("analytics.frequentMeals")}
             </p>
+          </div>
+          {frequentMeals.length > 0 ? (
             <div className="space-y-0">
               {frequentMeals.map((meal, i) => (
                 <div
@@ -322,9 +283,11 @@ export function MealsAnalytics({ meals: _meals, profile }: MealsAnalyticsProps) 
                 </div>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <p className="text-muted-foreground text-sm text-center py-2">{t("analytics.noMealsData")}</p>
+          )}
+        </div>
+      </section>
     </div>
   )
 }
