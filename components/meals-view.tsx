@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-context"
 import { fetchMealsForDate, createMeal, updateMealApi, deleteMealApi } from "@/lib/api"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
 import { Plus, Trash, X, ChevronLeft, ChevronRight, Pencil, ArrowLeft, CircleCheck, CircleX, Zap, Wheat, Droplet } from "lucide-react"
+import { AppSignature } from "@/components/app-signature"
 
 function BananaStatic({ className }: { className?: string }) {
   return (
@@ -121,6 +122,8 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const yesterdayStr = shiftDate(todayStr, -1)
   const isToday = selectedDate === todayStr
   const isYesterday = selectedDate === yesterdayStr
+  const emptyTitle = isToday ? t("meals.emptyTodayTitle") : t("meals.emptyPastTitle")
+  const emptySubtitle = isToday ? t("meals.emptyTodaySubtitle") : t("meals.emptyPastSubtitle")
   const dateLabel = isToday
     ? t("date.today")
     : isYesterday
@@ -384,10 +387,12 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
       </div>
 
       {filteredMeals.length === 0 && !showForm && (
-        <div className="bg-card rounded-[32px] p-8 card-shadow text-center">
-          <BananaStatic className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-          <p className="text-foreground font-medium">{t("meals.noMeals")}</p>
-          <p className="text-muted-foreground text-sm mt-1">{t("meals.tapToLog")}</p>
+        <div className="bg-card rounded-[32px] px-8 py-9 card-shadow text-center">
+          <BananaStatic className="h-12 w-12 mx-auto mb-5 text-muted-foreground/25" />
+          <p className="text-[17px] font-semibold tracking-tight text-foreground">{emptyTitle}</p>
+          <p className="mx-auto mt-2 max-w-[240px] text-sm leading-5 text-muted-foreground">
+            {emptySubtitle}
+          </p>
         </div>
       )}
 
@@ -449,6 +454,8 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
           ))}
         </div>
       )}
+
+      <AppSignature className="px-0" />
     </div>
   )
 }

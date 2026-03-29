@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { motion } from "motion/react"
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { useI18n } from "@/lib/i18n"
@@ -9,9 +10,18 @@ import { TrendingUp, BarChart3, Flame, Calendar, Trophy, ChevronDown } from "luc
 
 interface TrainingAnalyticsProps {
   sessions: TrainingSession[]
+  onOpenRecap: () => void
+  recapMorphEnabled?: boolean
 }
 
 type Range = "1M" | "3M" | "all"
+
+const recapTransition = {
+  type: "spring",
+  stiffness: 230,
+  damping: 28,
+  mass: 1,
+} as const
 
 function getRangeDate(range: Range): string | null {
   if (range === "all") return null
@@ -65,7 +75,7 @@ function getMondayOfWeek(date: Date): Date {
   return d
 }
 
-export function TrainingAnalytics({ sessions }: TrainingAnalyticsProps) {
+export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = true }: TrainingAnalyticsProps) {
   const { t } = useI18n()
   const [range, setRange] = useState<Range>("3M")
   const [selectedExercise, setSelectedExercise] = useState<string>("")
@@ -252,6 +262,54 @@ export function TrainingAnalytics({ sessions }: TrainingAnalyticsProps) {
 
   return (
     <div className="flex flex-col gap-0">
+      <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.05s" }}>
+        <button
+          type="button"
+          onClick={onOpenRecap}
+          className="group relative w-full overflow-hidden rounded-[30px] border border-white/5 p-5 text-left shadow-[0_18px_40px_rgba(15,23,42,0.24)] transition-transform active:scale-[0.99]"
+        >
+          {recapMorphEnabled ? (
+            <>
+              <motion.div
+                layoutId="training-recap-shell"
+                transition={recapTransition}
+                className="absolute inset-0 bg-[linear-gradient(135deg,#1f2937_0%,#0f172a_42%,#111827_100%)]"
+              />
+              <motion.div
+                layoutId="training-recap-glow"
+                transition={recapTransition}
+                className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_35%)] opacity-80"
+                aria-hidden
+              />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#1f2937_0%,#0f172a_42%,#111827_100%)]" />
+              <div
+                className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_35%)] opacity-80"
+                aria-hidden
+              />
+            </>
+          )}
+          <div className="relative z-10 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
+                {t("analytics.recapMockEyebrow")}
+              </span>
+              <h2 className="mt-4 text-[24px] font-black leading-[1] tracking-[-0.04em] text-white">
+                {t("analytics.recapMockCta")}
+              </h2>
+              <p className="mt-2 max-w-[240px] text-sm leading-5 text-white/70">
+                {t("analytics.recapMockCtaHint")}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white transition-transform duration-300 group-hover:scale-105">
+              <Trophy className="h-5 w-5" strokeWidth={2.2} />
+            </div>
+          </div>
+        </button>
+      </section>
+
       {/* Chart card with controls */}
       <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.07s" }}>
         <div className="bg-card rounded-[32px] p-5 card-shadow">

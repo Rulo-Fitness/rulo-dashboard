@@ -611,33 +611,30 @@ export default function SignUpPage() {
             aria-hidden={!openField && !isClosing}
           >
             <div
-              className="absolute inset-0 bg-black/40 transition-opacity duration-300"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
               style={{ opacity: openField && !isClosing ? 1 : 0 }}
               onClick={handleBackdropClick}
               aria-hidden
             />
             <div className="pointer-events-none relative flex flex-col items-center justify-end md:absolute md:left-0 md:top-0 md:h-full md:w-[50%] md:justify-end">
               <div
-                className="pointer-events-auto relative mx-auto flex w-full max-w-lg flex-col rounded-t-3xl bg-card shadow-xl transition-transform duration-300 ease-out max-h-[85dvh] md:max-w-[400px]"
+                className="pointer-events-auto relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-[32px] bg-card shadow-xl transition-transform duration-300 ease-out md:max-w-[400px]"
                 style={{ transform: openField && !isClosing ? "translateY(0)" : "translateY(100%)" }}
                 onClick={(e) => e.stopPropagation()}
               >
-              <div className="flex shrink-0 justify-center pt-3 pb-1">
-                <div className="h-1.5 w-10 rounded-full bg-input" aria-hidden />
-              </div>
-              <header className="flex shrink-0 justify-center px-4 py-3">
-                <h2 className="text-center text-lg font-semibold text-foreground">
-                  {openField === "age" && t("register.age")}
-                  {openField === "sex" && t("register.sex")}
-                  {openField === "weight" && `${t("register.weight")} (kg)`}
-                  {openField === "height" && `${t("register.height")} (cm)`}
-                  {openField === "activityLevel" && t("register.activityLevel")}
-                  {openField === "goal" && t("register.goal")}
-                  {openField === "weeklyRateKg" && t("register.weeklyRate")}
-                </h2>
-              </header>
-              <div className="flex flex-1 flex-col overflow-y-auto overflow-x-visible px-4 py-4 pb-8">
-                <div className="mx-auto w-full max-w-xs flex-1">
+                <header className="flex shrink-0 justify-center px-6 py-4">
+                  <h2 className="text-center text-xl font-bold text-foreground">
+                    {openField === "age" && t("register.age")}
+                    {openField === "sex" && t("register.sex")}
+                    {openField === "weight" && `${t("register.weight")} (kg)`}
+                    {openField === "height" && `${t("register.height")} (cm)`}
+                    {openField === "activityLevel" && t("register.activityLevel")}
+                    {openField === "goal" && t("register.goal")}
+                    {openField === "weeklyRateKg" && t("register.weeklyRate")}
+                  </h2>
+                </header>
+                <div className="flex flex-1 flex-col overflow-y-auto overflow-x-visible px-6 pb-8">
+                  <div className="mx-auto w-full max-w-xs flex-1">
                   {openField === "age" && (
                     <div className="w-full">
                       <div className="mx-auto w-full max-w-[5.5rem]">
@@ -810,7 +807,7 @@ export default function SignUpPage() {
                   </div>
                 )}
               </div>
-            </div>
+              </div>
             </div>
           </div>
         )}

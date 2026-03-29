@@ -14,6 +14,7 @@ import Image from "next/image"
 import { CalorieRing } from "@/components/ui/calorie-ring"
 import { MacroRingCard } from "@/components/ui/macro-ring-card"
 import { WeekStrip } from "@/components/ui/week-strip"
+import { AppSignature } from "@/components/app-signature"
 
 function getWeekDates(centerDate: string): string[] {
   const d = new Date(centerDate + "T12:00:00")
@@ -249,6 +250,8 @@ export function DashboardView({ refreshKey, onNavigate }: DashboardViewProps) {
           </div>
         </section>
       )}
+
+      <AppSignature className="animate-slide-up" />
     </div>
   )
 }

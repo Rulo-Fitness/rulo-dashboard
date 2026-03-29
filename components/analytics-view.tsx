@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Image from "next/image"
 import { motion } from "motion/react"
 import { useI18n } from "@/lib/i18n"
 import { getProfile } from "@/lib/storage"
@@ -10,13 +9,17 @@ import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsByRange, fetchMealsByRange } from "@/lib/api"
 import { TrainingAnalytics } from "@/components/analytics/training-analytics"
 import { MealsAnalytics } from "@/components/analytics/meals-analytics"
+import { AppSignature } from "@/components/app-signature"
 
 interface AnalyticsViewProps {
   refreshKey: number
   onNavigate?: (tab: string) => void
+  onOpenRecap: () => void
+  recapOpen: boolean
+  recapSource: "analytics" | "settings" | null
 }
 
-export function AnalyticsView({ refreshKey }: AnalyticsViewProps) {
+export function AnalyticsView({ refreshKey, onOpenRecap, recapOpen, recapSource }: AnalyticsViewProps) {
   const { t } = useI18n()
   const { user } = useAuth()
   const [mounted, setMounted] = useState(false)
@@ -94,8 +97,15 @@ export function AnalyticsView({ refreshKey }: AnalyticsViewProps) {
         </div>
       </div>
 
-      {activeSubTab === "training" && <TrainingAnalytics sessions={sessions} />}
+      {activeSubTab === "training" && (
+        <TrainingAnalytics
+          sessions={sessions}
+          onOpenRecap={onOpenRecap}
+          recapMorphEnabled={recapSource === "analytics" || (recapOpen && recapSource === "analytics")}
+        />
+      )}
       {activeSubTab === "meals" && <MealsAnalytics meals={meals} profile={profile} />}
+      <AppSignature />
     </div>
   )
 }

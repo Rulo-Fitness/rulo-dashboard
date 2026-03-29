@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsForDate, createWorkoutLog, updateWorkoutLog, deleteWorkoutLog } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { Plus, Trash, ChevronLeft, ChevronRight, Pencil, CircleCheck, CircleX, ArrowLeft } from "lucide-react"
+import { AppSignature } from "@/components/app-signature"
 
 function BicepStatic({ className }: { className?: string }) {
   return (
@@ -121,6 +122,8 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const yesterdayStr = shiftDate(todayStr, -1)
   const isToday = selectedDate === todayStr
   const isYesterday = selectedDate === yesterdayStr
+  const emptyTitle = isToday ? t("training.emptyTodayTitle") : t("training.emptyPastTitle")
+  const emptySubtitle = isToday ? t("training.emptyTodaySubtitle") : t("training.emptyPastSubtitle")
   const dateLabel = isToday
     ? t("date.today")
     : isYesterday
@@ -287,10 +290,12 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         )}
 
         {!apiLoading && exercises.length === 0 && !showForm && (
-          <div className="bg-card rounded-[32px] p-8 card-shadow text-center">
-            <BicepStatic className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
-            <p className="text-foreground font-medium">{t("training.noExercises")}</p>
-            <p className="text-muted-foreground text-sm mt-1">{t("training.tapToAdd")}</p>
+          <div className="bg-card rounded-[32px] px-8 py-9 card-shadow text-center">
+            <BicepStatic className="h-12 w-12 mx-auto mb-5 text-muted-foreground/25" />
+            <p className="text-[17px] font-semibold tracking-tight text-foreground">{emptyTitle}</p>
+            <p className="mx-auto mt-2 max-w-[240px] text-sm leading-5 text-muted-foreground">
+              {emptySubtitle}
+            </p>
           </div>
         )}
 
@@ -352,6 +357,8 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
         )}
       </div>
+
+      <AppSignature className="px-0" />
     </div>
   )
 }

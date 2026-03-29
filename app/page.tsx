@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { TrainingRecapMock } from "@/components/analytics/training-recap-mock"
 import { BottomNav } from "@/components/bottom-nav"
 import { AnalyticsView } from "@/components/analytics-view"
 import { TrainingView } from "@/components/training-view"
@@ -15,6 +16,10 @@ export default function Home() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [trainingAddPanelOpen, setTrainingAddPanelOpen] = useState(false)
   const [mealsPanelOpen, setMealsPanelOpen] = useState(false)
+  const [recapOpen, setRecapOpen] = useState(false)
+  const [recapSource, setRecapSource] = useState<"analytics" | "settings" | null>(null)
+  const [settingsOverlayOpen, setSettingsOverlayOpen] = useState(false)
+  const [navHiddenByScroll, setNavHiddenByScroll] = useState(false)
 
 
   useEffect(() => {
@@ -27,6 +32,85 @@ export default function Home() {
   useEffect(() => {
     if (activeTab !== "meals") setMealsPanelOpen(false)
   }, [activeTab])
+  useEffect(() => {
+    if (activeTab !== "analytics" && activeTab !== "settings") setRecapOpen(false)
+  }, [activeTab])
+
+  useEffect(() => {
+    if (recapOpen) return
+    const timeout = window.setTimeout(() => setRecapSource(null), 320)
+    return () => window.clearTimeout(timeout)
+  }, [recapOpen])
+  useEffect(() => {
+    if (activeTab !== "settings") setSettingsOverlayOpen(false)
+  }, [activeTab])
+
+  useEffect(() => {
+    if (!mounted) return
+
+    const getScrollY = () =>
+      window.scrollY ||
+      document.documentElement.scrollTop ||
+      document.body.scrollTop ||
+      0
+
+    let lastScrollY = getScrollY()
+    let lastTouchY = 0
+
+    const revealNav = () => setNavHiddenByScroll(false)
+    const hideNav = () => setNavHiddenByScroll(true)
+
+    const handleDirectionalChange = (delta: number) => {
+      const currentScrollY = getScrollY()
+      if (currentScrollY <= 24) {
+        setNavHiddenByScroll(false)
+        lastScrollY = currentScrollY
+        return
+      }
+
+      if (delta > 3) {
+        hideNav()
+        lastScrollY = currentScrollY
+        return
+      }
+
+      if (delta < -3) {
+        revealNav()
+        lastScrollY = currentScrollY
+      }
+    }
+
+    const handleScroll = () => {
+      const currentScrollY = getScrollY()
+      handleDirectionalChange(currentScrollY - lastScrollY)
+    }
+
+    const handleWheel = (event: WheelEvent) => {
+      handleDirectionalChange(event.deltaY)
+    }
+
+    const handleTouchStart = (event: TouchEvent) => {
+      lastTouchY = event.touches[0]?.clientY ?? 0
+    }
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const currentTouchY = event.touches[0]?.clientY ?? lastTouchY
+      const delta = lastTouchY - currentTouchY
+      lastTouchY = currentTouchY
+      handleDirectionalChange(delta)
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    window.addEventListener("wheel", handleWheel, { passive: true })
+    window.addEventListener("touchstart", handleTouchStart, { passive: true })
+    window.addEventListener("touchmove", handleTouchMove, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+      window.removeEventListener("wheel", handleWheel)
+      window.removeEventListener("touchstart", handleTouchStart)
+      window.removeEventListener("touchmove", handleTouchMove)
+    }
+  }, [mounted, activeTab])
 
   // #region agent log
   useEffect(() => {
@@ -78,6 +162,7 @@ export default function Home() {
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab)
     setRefreshKey((k) => k + 1)
+    setNavHiddenByScroll(false)
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [])
 
@@ -106,7 +191,16 @@ export default function Home() {
       <main className="mx-auto flex min-h-dvh max-w-md flex-1 flex-col bg-background pb-32 pt-12 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
         <div className="flex min-h-0 flex-1 flex-col overflow-visible pointer-events-auto" style={{ touchAction: "pan-y" }}>
           {activeTab === "analytics" && (
-            <AnalyticsView refreshKey={refreshKey} onNavigate={handleTabChange} />
+            <AnalyticsView
+              refreshKey={refreshKey}
+              onNavigate={handleTabChange}
+              onOpenRecap={() => {
+                setRecapSource("analytics")
+                setRecapOpen(true)
+              }}
+              recapOpen={recapOpen}
+              recapSource={recapSource}
+            />
           )}
           {activeTab === "training" && (
             <TrainingView onUpdate={triggerRefresh} onAddPanelChange={setTrainingAddPanelOpen} />
@@ -114,13 +208,24 @@ export default function Home() {
           {activeTab === "meals" && (
             <MealsView onUpdate={triggerRefresh} onMealPanelChange={setMealsPanelOpen} />
           )}
-          {activeTab === "settings" && <ProfileView />}
+          {activeTab === "settings" && (
+            <ProfileView
+              onOverlayChange={setSettingsOverlayOpen}
+              onOpenRecap={() => {
+                setRecapSource("settings")
+                setRecapOpen(true)
+              }}
+              recapOpen={recapOpen}
+              recapSource={recapSource}
+            />
+          )}
         </div>
       </main>
+      {recapOpen && <TrainingRecapMock onClose={() => setRecapOpen(false)} />}
       <BottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        hidden={trainingAddPanelOpen || mealsPanelOpen}
+        hidden={trainingAddPanelOpen || mealsPanelOpen || recapOpen || settingsOverlayOpen || navHiddenByScroll}
       />
     </>
   )
