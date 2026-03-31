@@ -107,6 +107,7 @@ html {
   overflow-y: hidden;
   -webkit-user-select: none;
   user-select: none;
+  background-color: var(--background);
 }
 body {
   position: relative;
@@ -119,6 +120,8 @@ body {
   -ms-overflow-style: none;
   -webkit-user-select: none;
   user-select: none;
+  background-color: var(--background);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 input,
 textarea,

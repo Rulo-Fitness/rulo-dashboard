@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { PhoneInput } from "@/components/phone-input"
 import { Eye, EyeOff, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Spinner } from "@/components/ui/spinner"
 import { useForceLightMode } from "@/lib/hooks/use-force-light-mode"
 
 export default function SignInPage() {
@@ -51,12 +50,13 @@ export default function SignInPage() {
 
       {isSubmitting && (
         <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background"
           aria-live="polite"
           aria-busy="true"
         >
-          <Spinner className="h-10 w-10 text-primary" />
-          <p className="text-sm font-medium text-muted-foreground">Entrando…</p>
+          <span className="text-4xl font-bold tracking-[0.3em] text-foreground animate-pulse select-none">
+            RULO
+          </span>
         </div>
       )}
 

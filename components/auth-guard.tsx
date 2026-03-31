@@ -3,12 +3,21 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, type ReactNode } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { Spinner } from "@/components/ui/spinner"
 
 const SIGN_IN_PATH = "/sign-in"
 
 function isAuthRoute(pathname: string) {
   return pathname === SIGN_IN_PATH || pathname.startsWith(`${SIGN_IN_PATH}/`) || pathname === "/sign-up"
+}
+
+function LoadingScreen() {
+  return (
+    <main className="flex min-h-dvh items-center justify-center bg-background" aria-live="polite" aria-busy="true">
+      <span className="text-4xl font-bold tracking-[0.3em] text-foreground animate-pulse select-none">
+        RULO
+      </span>
+    </main>
+  )
 }
 
 export function AuthGuard({ children }: { children: ReactNode }) {
@@ -32,23 +41,9 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
   }, [user, isLoading, pathname, router])
 
-  if (isLoading) {
-    return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background" aria-live="polite" aria-busy="true">
-        <Spinner className="h-10 w-10 text-primary" />
-        <p className="text-sm font-medium text-muted-foreground">Cargando…</p>
-      </main>
-    )
-  }
+  if (isLoading) return <LoadingScreen />
 
-  if (!user && !isAuthRoute(pathname)) {
-    return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background" aria-live="polite" aria-busy="true">
-        <Spinner className="h-10 w-10 text-primary" />
-        <p className="text-sm font-medium text-muted-foreground">Cargando…</p>
-      </main>
-    )
-  }
+  if (!user && !isAuthRoute(pathname)) return <LoadingScreen />
 
   return <>{children}</>
 }
