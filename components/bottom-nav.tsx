@@ -42,7 +42,7 @@ export function BottomNav({ activeTab, onTabChange, hidden = false }: BottomNavP
     <nav
       role="tablist"
       aria-label="Main navigation"
-      className="fixed bottom-3 left-0 right-0 z-50 flex justify-center transition-all duration-300 ease-out standalone:bottom-1 standalone:pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-3 left-0 right-0 z-50 flex justify-center transition-all duration-300 ease-out"
       style={{
         transform: hidden ? "translateY(calc(100% + 40px))" : "translateY(0)",
         opacity: hidden ? 0 : 1,

@@ -266,34 +266,31 @@ export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = t
         <button
           type="button"
           onClick={onOpenRecap}
-          className="group relative w-full overflow-hidden rounded-[30px] border border-white/5 p-5 text-left shadow-[0_18px_40px_rgba(15,23,42,0.24)] transition-transform active:scale-[0.99]"
+          className="group relative w-full overflow-hidden rounded-[30px] border border-white/10 p-5 text-left shadow-[0_0_30px_rgba(168,85,247,0.15)] dark:shadow-[0_0_30px_rgba(255,107,0,0.15)] transition-transform active:scale-[0.99]"
         >
           {recapMorphEnabled ? (
             <>
               <motion.div
                 layoutId="training-recap-shell"
                 transition={recapTransition}
-                className="absolute inset-0 bg-[linear-gradient(135deg,#1f2937_0%,#0f172a_42%,#111827_100%)]"
+                className="absolute inset-0 bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 dark:from-[#FF6B00] dark:via-[#FF8C33] dark:to-[#CC5500]"
               />
               <motion.div
                 layoutId="training-recap-glow"
                 transition={recapTransition}
-                className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_35%)] opacity-80"
+                className="absolute inset-0 bg-black/40"
                 aria-hidden
               />
             </>
           ) : (
             <>
-              <div className="absolute inset-0 bg-[linear-gradient(135deg,#1f2937_0%,#0f172a_42%,#111827_100%)]" />
-              <div
-                className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.18),transparent_35%)] opacity-80"
-                aria-hidden
-              />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 dark:from-[#FF6B00] dark:via-[#FF8C33] dark:to-[#CC5500]" />
+              <div className="absolute inset-0 bg-black/40" aria-hidden />
             </>
           )}
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
+              <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80">
                 {t("analytics.recapMockEyebrow")}
               </span>
               <h2 className="mt-4 text-[24px] font-black leading-[1] tracking-[-0.04em] text-white">
@@ -303,7 +300,7 @@ export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = t
                 {t("analytics.recapMockCtaHint")}
               </p>
             </div>
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white transition-transform duration-300 group-hover:scale-105">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition-transform duration-300 group-hover:scale-105">
               <Trophy className="h-5 w-5" strokeWidth={2.2} />
             </div>
           </div>

@@ -173,7 +173,7 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
       >
         <div className="mx-auto flex h-full max-w-lg flex-col">
           {/* Header */}
-          <header className="flex shrink-0 items-center gap-3 px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 border-b border-border">
+          <header className="flex shrink-0 items-center gap-3 px-4 pt-3 pb-3 border-b border-border">
             <button
               type="button"
               onClick={closeForm}

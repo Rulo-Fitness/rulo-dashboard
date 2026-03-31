@@ -6,8 +6,13 @@ import { useAuth } from "@/lib/auth-context"
 
 const SIGN_IN_PATH = "/sign-in"
 
-function isAuthRoute(pathname: string) {
-  return pathname === SIGN_IN_PATH || pathname.startsWith(`${SIGN_IN_PATH}/`) || pathname === "/sign-up"
+function isPublicRoute(pathname: string) {
+  return (
+    pathname === SIGN_IN_PATH ||
+    pathname.startsWith(`${SIGN_IN_PATH}/`) ||
+    pathname === "/sign-up" ||
+    pathname.startsWith("/checkout")
+  )
 }
 
 function LoadingScreen() {
@@ -28,7 +33,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return
 
-    const onAuthRoute = isAuthRoute(pathname)
+    const onAuthRoute = isPublicRoute(pathname)
 
     if (!user && !onAuthRoute) {
       router.replace(SIGN_IN_PATH)
@@ -43,7 +48,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (isLoading) return <LoadingScreen />
 
-  if (!user && !isAuthRoute(pathname)) return <LoadingScreen />
+  if (!user && !isPublicRoute(pathname)) return <LoadingScreen />
 
   return <>{children}</>
 }
