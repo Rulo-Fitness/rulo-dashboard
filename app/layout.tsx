@@ -16,7 +16,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0a0a0f',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#e8e8e8' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -34,7 +37,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/logo.png" />
       </head>
-      <body className={`${outfit.className} antialiased`}>
+      <body className={`${outfit.className} antialiased bg-background`}>
         <Providers>
           {children}
         </Providers>

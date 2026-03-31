@@ -103,14 +103,23 @@ html {
   position: relative;
   height: 100%;
   min-height: 100dvh;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
   overflow-y: hidden;
   -webkit-user-select: none;
   user-select: none;
-  background-color: var(--background);
+  background: #e8e8e8;
+  background: var(--background, #e8e8e8);
+}
+html.dark {
+  background: #000000;
+  background: var(--background, #000000);
 }
 body {
   position: relative;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100dvh;
@@ -120,8 +129,7 @@ body {
   -ms-overflow-style: none;
   -webkit-user-select: none;
   user-select: none;
-  background-color: var(--background);
-  padding-bottom: env(safe-area-inset-bottom);
+  background: inherit;
 }
 input,
 textarea,
