@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import {
   Mic, Camera, BarChart3, TrendingUp, Bell, Target,
   Activity, Calendar, Zap, Smartphone, Lock,
@@ -68,6 +70,8 @@ export default function CheckoutPage() {
   const [error, setError] = useState("")
   const plansScrollRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
+  const { user } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -115,10 +119,18 @@ export default function CheckoutPage() {
   }
 
   async function handleCheckout(planIndex: number) {
+    if (!user) {
+      router.push("/sign-in")
+      return
+    }
     setLoadingPlan(planIndex)
     setError("")
     try {
-      const res = await fetch("/api/checkout", { method: "POST" })
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, plan: plans[planIndex].name }),
+      })
       const data = await res.json()
       if (!res.ok || !data.init_point) {
         setError(data.error ?? "Error al iniciar el pago")

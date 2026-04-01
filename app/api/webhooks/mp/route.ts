@@ -31,8 +31,52 @@ export async function POST(request: Request) {
       }
     }
 
-    // Log the event — persistence comes later
-    console.log("[mp-webhook] Payment event:", { type, paymentId: id })
+    // Process approved payments
+    if (type === "payment") {
+      const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
+      if (!accessToken) {
+        console.error("[mp-webhook] MERCADOPAGO_ACCESS_TOKEN not set")
+        return NextResponse.json({ status: "ok" })
+      }
+
+      const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const payment = await mpRes.json()
+
+      console.log("[mp-webhook] Payment status:", payment.status, "ref:", payment.external_reference)
+
+      if (payment.status === "approved" && payment.external_reference) {
+        const ref = JSON.parse(payment.external_reference) as { user_id: string; plan: string }
+
+        const apiUrl = process.env.RULO_API_URL
+        const apiKey = process.env.RULO_API_KEY
+        if (apiUrl && apiKey) {
+          const persistRes = await fetch(`${apiUrl}/payments`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              user_id: ref.user_id,
+              mp_payment_id: String(id),
+              plan: ref.plan,
+              amount: payment.transaction_amount,
+              currency: payment.currency_id,
+              status: "approved",
+            }),
+          })
+
+          if (!persistRes.ok) {
+            const err = await persistRes.text()
+            console.error("[mp-webhook] Failed to persist payment:", err)
+          } else {
+            console.log("[mp-webhook] Payment persisted for user:", ref.user_id)
+          }
+        }
+      }
+    }
 
     return NextResponse.json({ status: "ok" })
   } catch (error) {

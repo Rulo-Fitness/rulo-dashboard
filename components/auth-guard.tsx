@@ -6,13 +6,16 @@ import { useAuth } from "@/lib/auth-context"
 
 const SIGN_IN_PATH = "/sign-in"
 
-function isPublicRoute(pathname: string) {
+function isAuthOnlyRoute(pathname: string) {
   return (
     pathname === SIGN_IN_PATH ||
     pathname.startsWith(`${SIGN_IN_PATH}/`) ||
-    pathname === "/sign-up" ||
-    pathname.startsWith("/checkout")
+    pathname === "/sign-up"
   )
+}
+
+function isPublicRoute(pathname: string) {
+  return isAuthOnlyRoute(pathname) || pathname.startsWith("/checkout")
 }
 
 function LoadingScreen() {
@@ -40,7 +43,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
       return
     }
 
-    if (user && onAuthRoute) {
+    if (user && isAuthOnlyRoute(pathname)) {
       router.replace("/")
       return
     }

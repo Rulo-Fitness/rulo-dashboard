@@ -17,6 +17,7 @@ export type AuthUser = {
   phone: string
   name?: string
   email?: string | null
+  subscription_active_until?: string | null
 }
 
 type AuthContextValue = {
@@ -82,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const text = await res.text()
         let data: {
           success?: boolean
-          result?: { id: string; phone: string | null; email: string | null; name: string | null; surname: string | null }
+          result?: { id: string; phone: string | null; email: string | null; name: string | null; surname: string | null; subscription_active_until: string | null }
           errors?: { message: string }[]
         }
         try {
@@ -105,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: r.phone ?? body.phone,
           name: [r.name, r.surname].filter(Boolean).join(" ") || undefined,
           email: r.email ?? undefined,
+          subscription_active_until: r.subscription_active_until ?? undefined,
         }
         setUser(newUser)
         saveUser(newUser)
