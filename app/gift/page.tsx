@@ -160,7 +160,7 @@ export default function GiftPage() {
             <div className="absolute inset-x-8 inset-y-10 bg-[radial-gradient(circle,rgba(255,214,10,0.28),rgba(255,255,255,0)_70%)] blur-3xl" aria-hidden />
             <div className="relative flex w-full justify-center overflow-visible">
               <img
-                src="/rulo-gift.png"
+                src="/rulo-gift.webp"
                 alt="Rulo con un regalo"
                 className="relative z-10 h-auto w-full object-contain drop-shadow-[0_22px_45px_rgba(34,34,34,0.18)]"
               />
