@@ -112,7 +112,7 @@ function SettingsRow({
       onClick={onClick}
     >
       <IconBox>{icon}</IconBox>
-      <span className={`flex-1 text-[15px] font-bold ${destructive ? "text-destructive" : "text-foreground"}`}>
+      <span className="flex-1 text-[15px] font-medium text-foreground">
         {label}
       </span>
       {children}
@@ -147,7 +147,7 @@ function FieldRow({
       className={`flex w-full items-center gap-4 px-5 min-h-[56px] py-3 bg-card text-left transition-colors active:bg-secondary/60 ${disabled ? "opacity-50 pointer-events-none" : ""}`}
     >
       <IconBox>{icon}</IconBox>
-      <span className="w-32 shrink-0 text-[15px] font-bold leading-tight text-foreground">{label}</span>
+      <span className="w-32 shrink-0 text-[15px] font-medium leading-tight text-foreground">{label}</span>
       <div className="ml-auto w-[96px] shrink-0">
         <span className="block w-full text-[15px] text-right text-muted-foreground">
           {value}
@@ -374,18 +374,14 @@ export function ProfileView({
               </>
             ) : (
               <>
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,#1f2937_0%,#0f172a_42%,#111827_100%)] opacity-[0.14]" />
-                <div
-                  className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.16),transparent_35%)] opacity-60"
-                  aria-hidden
-                />
+                <div className="absolute inset-0 bg-card" />
               </>
             )}
             <div className="relative z-10 flex w-full items-center gap-4">
               <IconBox>
                 <Trophy className="h-5 w-5 text-foreground" strokeWidth={2.2} />
               </IconBox>
-              <span className="flex-1 text-[15px] font-bold text-foreground">{t("analytics.recapMockCta")}</span>
+              <span className="flex-1 text-[15px] font-medium text-foreground">{t("analytics.recapMockCta")}</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
             </div>
           </button>
@@ -477,14 +473,14 @@ export function ProfileView({
           </a>
 
           <SettingsRow
-            icon={<LogOut className="h-5 w-5 text-destructive" strokeWidth={2.2} />}
+            icon={<LogOut className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("profile.logout")}
             destructive
             onClick={() => setShowLogoutConfirm(true)}
           />
 
           <SettingsRow
-            icon={<Trash2 className="h-5 w-5 text-destructive" strokeWidth={2.2} />}
+            icon={<Trash2 className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("profile.clearAllData")}
             destructive
             onClick={() => setShowClearConfirm(true)}

@@ -11,6 +11,7 @@ const translations = {
   "nav.meals": { en: "Meals", es: "Comidas" },
   "nav.profile": { en: "Profile", es: "Perfil" },
   "nav.settings": { en: "Settings", es: "Ajustes" },
+  "nav.chatRulo": { en: "Chat with Rulo", es: "Hablar con Rulo" },
 
   // Greetings
   "greeting.morning": { en: "Good morning", es: "Buenos días" },
