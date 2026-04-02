@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useI18n } from "@/lib/i18n"
 import { saveProfile } from "@/lib/storage"
 import type { UserProfile, Sex, ActivityLevel, Goal } from "@/lib/storage"
@@ -109,7 +110,8 @@ function FieldRow({
 
 export default function SignUpPage() {
   const { t } = useI18n()
-  const { register: registerApi } = useAuth()
+  const { register: registerApi, login: loginApi } = useAuth()
+  const router = useRouter()
   useForceLightMode()
 
   const [step, setStep] = useState(1)
@@ -133,6 +135,11 @@ export default function SignUpPage() {
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const isAccountStep = step === 5
+
+  // Clear register errors when entering the account creation step
+  useEffect(() => {
+    if (isAccountStep) setRegisterError("")
+  }, [isAccountStep])
 
   const closeModal = useCallback(() => {
     if (!openField) return
@@ -214,8 +221,8 @@ export default function SignUpPage() {
     }
     setIsSubmitting(true)
     const result = await registerApi(fullPhone, password, profile.name || undefined)
-    setIsSubmitting(false)
     if (!result.ok) {
+      setIsSubmitting(false)
       setRegisterError(result.error ?? t("register.createAccountError"))
       return
     }
@@ -225,7 +232,9 @@ export default function SignUpPage() {
       activityLevel: profile.activityLevel as ActivityLevel,
       goal: profile.goal as Goal,
     })
-    setDone(true)
+    // Navigate first, then auto-login (avoids AuthGuard redirecting /sign-up → / before we reach /checkout)
+    router.push("/checkout")
+    await loginApi(fullPhone, password)
   }
 
   const canNextStep1 =
@@ -355,11 +364,24 @@ export default function SignUpPage() {
                     {t("register.createAccountTitle")}
                   </h1>
                 </header>
-                <div className="flex h-[360px] w-full max-w-md shrink-0 flex-col items-stretch justify-start overflow-y-auto overflow-x-hidden">
-                  <form id="register-create-account-form" onSubmit={handleCreateAccount} noValidate className="flex w-full flex-col gap-5 py-2">
+                <div className="flex h-[420px] w-full max-w-md shrink-0 flex-col items-stretch justify-start overflow-y-auto overflow-x-hidden">
+                  <form id="register-create-account-form" onSubmit={handleCreateAccount} noValidate className="flex w-full flex-col gap-4 py-2">
                     {registerError && (
                       <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">{registerError}</p>
                     )}
+                    <div className="space-y-2">
+                      <Label htmlFor="register-name">{t("profile.name")}</Label>
+                      <Input
+                        id="register-name"
+                        type="text"
+                        placeholder="Tu nombre"
+                        value={profile.name}
+                        onChange={(e) => update("name", e.target.value)}
+                        autoComplete="given-name"
+                        disabled={isSubmitting}
+                        className="h-12 rounded-2xl border-border/60 md:rounded-xl md:border-input"
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="register-phone">{t("register.createAccountPhone")}</Label>
                       <PhoneInput
@@ -417,8 +439,13 @@ export default function SignUpPage() {
                 </div>
                 <div className="flex w-full max-w-md shrink-0 justify-center pt-3">
                   <Button
-                    type="submit"
-                    form="register-create-account-form"
+                    type="button"
+                    onClick={(e) => {
+                      // Trigger the form's onSubmit manually to avoid React DOM recycling
+                      // causing auto-submit when transitioning from step 4's button
+                      const form = document.getElementById("register-create-account-form") as HTMLFormElement | null
+                      if (form) form.requestSubmit()
+                    }}
                     disabled={isSubmitting}
                     className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 md:h-14 md:rounded-3xl"
                   >

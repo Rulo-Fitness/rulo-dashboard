@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import {
   Mic, Camera, BarChart3, TrendingUp, Bell, Target,
-  Activity, Calendar, Zap, Smartphone, Lock,
-  ArrowRight, Check,
+  Activity, Calendar, Zap, Smartphone, Lock, ArrowRight, Check,
 } from "lucide-react"
 
 const PLAN_CARD_WIDTH_MOBILE = 280
@@ -68,9 +67,10 @@ export default function CheckoutPage() {
   const [selectedPlanIndex, setSelectedPlanIndex] = useState(1)
   const [loadingPlan, setLoadingPlan] = useState<number | null>(null)
   const [error, setError] = useState("")
+  const [loadingTrial, setLoadingTrial] = useState(false)
   const plansScrollRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -142,6 +142,35 @@ export default function CheckoutPage() {
       setError("Error de conexión")
       setLoadingPlan(null)
     }
+  }
+
+  async function handleTrialActivation() {
+    if (!user) {
+      router.push("/sign-in")
+      return
+    }
+    setLoadingTrial(true)
+    setError("")
+    try {
+      const res = await fetch("/api/auth/activate-trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        updateUser({
+          subscription_active_until: data.result.subscription_active_until,
+          trial_used: true,
+        })
+        router.push("/trial-activated")
+      } else {
+        setError(data.errors?.[0]?.message ?? "Error activando prueba gratuita")
+      }
+    } catch {
+      setError("Error de conexión")
+    }
+    setLoadingTrial(false)
   }
 
   const particles = [
@@ -218,7 +247,7 @@ export default function CheckoutPage() {
                 : "bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 border border-white/20"
             }`}
           >
-            {isLoading ? "Redirigiendo..." : "Empezar gratis"} <ArrowRight className="w-4 h-4" />
+            {isLoading ? "Redirigiendo..." : "Suscribirse"} <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -268,6 +297,24 @@ export default function CheckoutPage() {
             </button>
           </div>
         </div>
+
+        {/* Trial banner */}
+        {user && !user.trial_used && (
+          <div className="max-w-md mx-auto mb-10 md:mb-12">
+            <div className="relative rounded-2xl border border-green-500/30 bg-green-500/10 backdrop-blur-sm p-6 text-center">
+              <h3 className="text-lg font-bold text-white mb-2">Probá Rulo 7 días gratis</h3>
+              <p className="text-sm text-slate-300 mb-4">Sin tarjeta de crédito. Acceso completo a todas las funciones.</p>
+              <button
+                onClick={handleTrialActivation}
+                disabled={loadingTrial}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-green-500 text-white hover:bg-green-400 active:scale-[0.98] transition-all duration-300 disabled:opacity-60 shadow-lg shadow-green-500/30"
+              >
+                {loadingTrial ? "Activando..." : "Empezar prueba gratis"}
+                <Zap className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Desktop: grid de 3 planes */}
         <div className="hidden md:grid md:grid-cols-3 gap-6 mb-16 max-w-5xl mx-auto items-stretch">
@@ -321,7 +368,7 @@ export default function CheckoutPage() {
         <div className="text-center max-md:mt-10 mb-12">
           <p className="text-green-400 text-sm inline-flex items-center gap-2 bg-green-500/10 px-4 py-2 rounded-full">
             <Check className="w-4 h-4" />
-            7 días de prueba gratis. Probá sin pagar.
+            Cancelá cuando quieras. Sin permanencia.
           </p>
         </div>
 

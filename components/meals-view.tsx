@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { fetchMealsForDate, createMeal, updateMealApi, deleteMealApi } from "@/lib/api"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
+import { useSubscription } from "@/lib/hooks/use-subscription"
 import { Plus, Trash, X, ChevronLeft, ChevronRight, Pencil, ArrowLeft, CircleCheck, CircleX, Zap, Wheat, Droplet } from "lucide-react"
 import { AppSignature } from "@/components/app-signature"
 
@@ -39,6 +40,7 @@ interface MealsViewProps {
 export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const { t, locale } = useI18n()
   const { user } = useAuth()
+  const { isActive: subActive } = useSubscription()
   const [allMeals, setAllMeals] = useState<Meal[]>([])
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [showForm, setShowForm] = useState(false)
@@ -156,7 +158,8 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
         </div>
         <button
           onClick={() => openForm(null)}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
+          disabled={!subActive}
+          className={`flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
           aria-label={t("meals.logMeal")}
         >
           <Plus className="h-5 w-5" strokeWidth={3} />
@@ -434,14 +437,16 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
                   <>
                     <button
                       onClick={() => openForm(meal)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      disabled={!subActive}
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
                       aria-label={t("meals.editMeal")}
                     >
                       <Pencil className="h-[18px] w-[18px]" strokeWidth={2.5} />
                     </button>
                     <button
                       onClick={() => setDeletingMealId(meal.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      disabled={!subActive}
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
                       aria-label={`${t("training.deleteTraining")} ${meal.name}`}
                     >
                       <Trash className="h-[18px] w-[18px]" strokeWidth={2.5} />

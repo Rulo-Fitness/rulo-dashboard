@@ -16,8 +16,8 @@ export type AuthUser = {
   id: string
   phone: string
   name?: string
-  email?: string | null
   subscription_active_until?: string | null
+  trial_used?: boolean
 }
 
 type AuthContextValue = {
@@ -25,6 +25,7 @@ type AuthContextValue = {
   isLoading: boolean
   login: (phone: string, password: string) => Promise<{ ok: boolean; error?: string }>
   register: (phone: string, password: string, name?: string) => Promise<{ ok: boolean; error?: string }>
+  updateUser: (updates: Partial<AuthUser>) => void
   logout: () => void
 }
 
@@ -83,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const text = await res.text()
         let data: {
           success?: boolean
-          result?: { id: string; phone: string | null; email: string | null; name: string | null; surname: string | null; subscription_active_until: string | null }
+          result?: { id: string; phone: string | null; name: string | null; subscription_active_until: string | null; trial_used: boolean }
           errors?: { message: string }[]
         }
         try {
@@ -104,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const newUser: AuthUser = {
           id: r.id,
           phone: r.phone ?? body.phone,
-          name: [r.name, r.surname].filter(Boolean).join(" ") || undefined,
-          email: r.email ?? undefined,
+          name: r.name || undefined,
           subscription_active_until: r.subscription_active_until ?? undefined,
+          trial_used: r.trial_used ?? false,
         }
         setUser(newUser)
         saveUser(newUser)
@@ -150,7 +151,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // ignore
         }
         if (!res.ok) {
-          const message = data.errors?.[0]?.message ?? "No se pudo crear la cuenta. ¿El teléfono ya está registrado?"
+          const raw = data.errors?.[0]?.message ?? ""
+          const isUniqueError = raw.includes("UNIQUE") || raw.includes("constraint") || res.status === 409
+          const message = isUniqueError
+            ? "Ya existe una cuenta vinculada a ese número"
+            : raw || "No se pudo crear la cuenta"
           return { ok: false, error: message }
         }
         return { ok: true }
@@ -165,6 +170,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const updateUser = useCallback((updates: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev
+      const updated = { ...prev, ...updates }
+      saveUser(updated)
+      return updated
+    })
+  }, [])
+
   const logout = useCallback(() => {
     setUser(null)
     saveUser(null)
@@ -175,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     login,
     register,
+    updateUser,
     logout,
   }
 

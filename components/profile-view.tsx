@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useI18n } from "@/lib/i18n"
 import { useAuth } from "@/lib/auth-context"
+import { useSubscription } from "@/lib/hooks/use-subscription"
 import {
   getProfile,
   saveProfile,
@@ -130,17 +131,20 @@ function FieldRow({
   label,
   value,
   onClick,
+  disabled,
 }: {
   icon: React.ReactNode
   label: string
   value: string
   onClick: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-4 px-5 min-h-[56px] py-3 bg-card text-left transition-colors active:bg-secondary/60"
+      disabled={disabled}
+      className={`flex w-full items-center gap-4 px-5 min-h-[56px] py-3 bg-card text-left transition-colors active:bg-secondary/60 ${disabled ? "opacity-50 pointer-events-none" : ""}`}
     >
       <IconBox>{icon}</IconBox>
       <span className="w-32 shrink-0 text-[15px] font-bold leading-tight text-foreground">{label}</span>
@@ -169,6 +173,7 @@ export function ProfileView({
 }) {
   const router = useRouter()
   const { user, logout } = useAuth()
+  const { isActive: subActive } = useSubscription()
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -395,24 +400,28 @@ export function ProfileView({
             label={t("profile.name")}
             value={profile.name || t("profile.yourName")}
             onClick={() => openFieldEditor("name")}
+            disabled={!subActive}
           />
           <FieldRow
             icon={<Calendar className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={t("profile.age")}
             value={profile.age === 0 ? "25" : profile.age.toString()}
             onClick={() => openFieldEditor("age")}
+            disabled={!subActive}
           />
           <FieldRow
             icon={<Weight className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={`${t("profile.weight")} (${t("unit.kg")})`}
             value={profile.weight === 0 ? "70" : profile.weight.toString()}
             onClick={() => openFieldEditor("weight")}
+            disabled={!subActive}
           />
           <FieldRow
             icon={<Ruler className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={`${t("profile.height")} (${t("unit.cm")})`}
             value={profile.height === 0 ? "175" : profile.height.toString()}
             onClick={() => openFieldEditor("height")}
+            disabled={!subActive}
           />
         </SettingsGroup>
       </div>
@@ -426,24 +435,28 @@ export function ProfileView({
             label={`${t("macro.calories")} (${t("unit.kcal")})`}
             value={profile.calorieGoal.toString()}
             onClick={() => openFieldEditor("calorieGoal")}
+            disabled={!subActive}
           />
           <FieldRow
             icon={<Beef className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={`${t("macro.protein")} (${t("unit.g")})`}
             value={profile.proteinGoal.toString()}
             onClick={() => openFieldEditor("proteinGoal")}
+            disabled={!subActive}
           />
           <FieldRow
             icon={<Wheat className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={`${t("macro.carbs")} (${t("unit.g")})`}
             value={profile.carbsGoal.toString()}
             onClick={() => openFieldEditor("carbsGoal")}
+            disabled={!subActive}
           />
           <FieldRow
             icon={<Droplets className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
             label={`${t("macro.fat")} (${t("unit.g")})`}
             value={profile.fatGoal.toString()}
             onClick={() => openFieldEditor("fatGoal")}
+            disabled={!subActive}
           />
         </SettingsGroup>
       </div>

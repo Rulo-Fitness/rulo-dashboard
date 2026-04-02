@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsForDate, createWorkoutLog, updateWorkoutLog, deleteWorkoutLog } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
+import { useSubscription } from "@/lib/hooks/use-subscription"
 import { Plus, Trash, ChevronLeft, ChevronRight, Pencil, CircleCheck, CircleX, ArrowLeft } from "lucide-react"
 import { AppSignature } from "@/components/app-signature"
 
@@ -39,6 +40,7 @@ interface TrainingViewProps {
 export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) {
   const { t, locale } = useI18n()
   const { user } = useAuth()
+  const { isActive: subActive } = useSubscription()
   const [selectedDate, setSelectedDate] = useState(getTodayString())
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [apiLoading, setApiLoading] = useState(false)
@@ -142,7 +144,8 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         </div>
         <button
           onClick={() => openForm(null)}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95"
+          disabled={!subActive}
+          className={`flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
           aria-label={t("training.addExercise")}
         >
           <Plus className="h-5 w-5" strokeWidth={3} />
@@ -336,14 +339,16 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                   <>
                     <button
                       onClick={() => openForm(ex)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      disabled={!subActive}
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
                       aria-label={t("training.editExercise")}
                     >
                       <Pencil className="h-[18px] w-[18px]" strokeWidth={2.5} />
                     </button>
                     <button
                       onClick={() => setDeletingExerciseId(ex.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
+                      disabled={!subActive}
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
                       aria-label={t("training.deleteTraining")}
                     >
                       <Trash className="h-[18px] w-[18px]" strokeWidth={2.5} />

@@ -15,7 +15,11 @@ function isAuthOnlyRoute(pathname: string) {
 }
 
 function isPublicRoute(pathname: string) {
-  return isAuthOnlyRoute(pathname) || pathname.startsWith("/checkout")
+  return (
+    isAuthOnlyRoute(pathname) ||
+    pathname.startsWith("/checkout") ||
+    pathname === "/trial-activated"
+  )
 }
 
 function LoadingScreen() {
@@ -36,9 +40,9 @@ export function AuthGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoading) return
 
-    const onAuthRoute = isPublicRoute(pathname)
+    const onPublicRoute = isPublicRoute(pathname)
 
-    if (!user && !onAuthRoute) {
+    if (!user && !onPublicRoute) {
       router.replace(SIGN_IN_PATH)
       return
     }

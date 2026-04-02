@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const client = new MercadoPagoConfig({ accessToken })
     const preference = new Preference(client)
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+    const baseUrl = process.env.MERCADOPAGO_CALLBACK_URL ?? "http://localhost:3000"
     const isHttps = baseUrl.startsWith("https://")
 
     const result = await preference.create({
