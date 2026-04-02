@@ -10,6 +10,7 @@ interface PhoneInputProps {
   onPhoneNumberChange: (number: string) => void
   disabled?: boolean
   id?: string
+  lockedCountryCode?: boolean
 }
 
 export function PhoneInput({
@@ -19,21 +20,28 @@ export function PhoneInput({
   onPhoneNumberChange,
   disabled,
   id = "phone",
+  lockedCountryCode = false,
 }: PhoneInputProps) {
   return (
-    <div className="flex h-12 overflow-hidden rounded-2xl border border-border/60 bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
-      <select
-        value={countryCode}
-        onChange={(e) => onCountryCodeChange(e.target.value)}
-        className="flex h-12 items-center border-0 bg-muted/50 px-4 text-sm font-medium text-foreground outline-none [&>option]:bg-card"
-        aria-label="Código de país"
-      >
-        {COUNTRY_CODES.map(({ code, label, flag }) => (
-          <option key={code} value={code}>
-            {flag} {code} {label}
-          </option>
-        ))}
-      </select>
+    <div className="flex h-12 overflow-hidden rounded-2xl border border-border/60 bg-background shadow-xs focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 focus-within:ring-offset-0">
+      {lockedCountryCode ? (
+        <div className="flex h-12 items-center border-0 bg-muted/50 px-4 text-sm font-medium text-foreground">
+          🇦🇷 {countryCode}
+        </div>
+      ) : (
+        <select
+          value={countryCode}
+          onChange={(e) => onCountryCodeChange(e.target.value)}
+          className="flex h-12 items-center border-0 bg-muted/50 px-4 text-sm font-medium text-foreground outline-none [&>option]:bg-card"
+          aria-label="Código de país"
+        >
+          {COUNTRY_CODES.map(({ code, label, flag }) => (
+            <option key={code} value={code}>
+              {flag} {code} {label}
+            </option>
+          ))}
+        </select>
+      )}
       <Input
         id={id}
         type="tel"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useI18n } from "@/lib/i18n"
@@ -26,6 +26,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useForceLightMode } from "@/lib/hooks/use-force-light-mode"
+import { useDefaultSpanishLocale } from "@/lib/hooks/use-default-spanish-locale"
 
 const STEPS = 5
 
@@ -44,6 +45,11 @@ const GOAL_OPTIONS: { id: Goal; labelKey: "register.loseFat" | "register.maintai
 ]
 
 const WEEKLY_RATE_OPTIONS = [0.25, 0.5, 0.75, 1] as const
+const AGE_OPTIONS = Array.from({ length: 119 }, (_, index) => index + 1)
+const WEIGHT_OPTIONS = Array.from({ length: 300 }, (_, index) => index + 1)
+const HEIGHT_OPTIONS = Array.from({ length: 201 }, (_, index) => index + 50)
+const WHEEL_ITEM_HEIGHT = 52
+const WHEEL_VISIBLE_ROWS = 5
 
 type OpenField =
   | "age"
@@ -108,11 +114,88 @@ function FieldRow({
   )
 }
 
+function WheelPicker<T extends string | number>({
+  options,
+  value,
+  onChange,
+  formatOption,
+}: {
+  options: readonly T[]
+  value: T
+  onChange: (value: T) => void
+  formatOption?: (value: T) => string
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const spacerHeight = ((WHEEL_VISIBLE_ROWS - 1) / 2) * WHEEL_ITEM_HEIGHT
+
+  useLayoutEffect(() => {
+    const index = Math.max(0, options.findIndex((option) => option === value))
+    const node = scrollRef.current
+    if (!node) return
+    node.scrollTo({ top: index * WHEEL_ITEM_HEIGHT, behavior: "auto" })
+  }, [options, value])
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    }
+  }, [])
+
+  const commitSelection = useCallback(() => {
+    const node = scrollRef.current
+    if (!node) return
+    const rawIndex = Math.round(node.scrollTop / WHEEL_ITEM_HEIGHT)
+    const nextIndex = Math.min(options.length - 1, Math.max(0, rawIndex))
+    const nextValue = options[nextIndex]
+    if (nextValue !== value) onChange(nextValue)
+    node.scrollTo({ top: nextIndex * WHEEL_ITEM_HEIGHT, behavior: "smooth" })
+  }, [onChange, options, value])
+
+  return (
+    <div className="relative mx-auto w-full max-w-[14rem]">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-1/2 z-10 -translate-y-1/2 rounded-2xl border border-border/70 bg-secondary/70"
+        style={{ height: `${WHEEL_ITEM_HEIGHT}px` }}
+      />
+      <div
+        ref={scrollRef}
+        className="no-scrollbar h-[260px] overflow-y-auto overscroll-contain px-1"
+        style={{ scrollSnapType: "y mandatory" }}
+        onScroll={() => {
+          if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+          scrollTimeoutRef.current = setTimeout(commitSelection, 80)
+        }}
+      >
+        <div style={{ height: spacerHeight }} />
+        {options.map((option) => {
+          const isSelected = option === value
+          return (
+            <button
+              key={String(option)}
+              type="button"
+              onClick={() => onChange(option)}
+              className="flex w-full items-center justify-center rounded-2xl px-4 text-center transition-colors"
+              style={{ height: `${WHEEL_ITEM_HEIGHT}px`, scrollSnapAlign: "center" }}
+            >
+              <span className={cn("text-lg font-semibold tracking-tight", isSelected ? "text-foreground" : "text-muted-foreground")}>
+                {formatOption ? formatOption(option) : String(option)}
+              </span>
+            </button>
+          )
+        })}
+        <div style={{ height: spacerHeight }} />
+      </div>
+    </div>
+  )
+}
+
 export default function SignUpPage() {
   const { t } = useI18n()
   const { register: registerApi, login: loginApi } = useAuth()
   const router = useRouter()
   useForceLightMode()
+  useDefaultSpanishLocale()
 
   const [step, setStep] = useState(1)
   const [profile, setProfile] = useState<RegisterProfile>({ ...defaultForm })
@@ -159,6 +242,14 @@ export default function SignUpPage() {
     setModalError(null)
     setErrorShake(false)
     setHasTouchedCurrentField(false)
+    if (!openField) return
+    setProfile((prev) => {
+      if (openField === "age" && prev.age <= 0) return { ...prev, age: 25 }
+      if (openField === "weight" && prev.weight <= 0) return { ...prev, weight: 70 }
+      if (openField === "height" && prev.height <= 0) return { ...prev, height: 175 }
+      if (openField === "weeklyRateKg" && prev.weeklyRateKg <= 0) return { ...prev, weeklyRateKg: 0.5 }
+      return prev
+    })
   }, [openField])
 
   useEffect(() => {
@@ -232,9 +323,19 @@ export default function SignUpPage() {
       activityLevel: profile.activityLevel as ActivityLevel,
       goal: profile.goal as Goal,
     })
-    // Navigate first, then auto-login (avoids AuthGuard redirecting /sign-up → / before we reach /checkout)
-    router.push("/checkout")
-    await loginApi(fullPhone, password)
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("rulo-post-signup-redirect", "/gift")
+    }
+    const loginResult = await loginApi(fullPhone, password)
+    if (!loginResult.ok) {
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("rulo-post-signup-redirect")
+      }
+      setIsSubmitting(false)
+      setRegisterError(loginResult.error ?? t("register.createAccountError"))
+      return
+    }
+    router.push("/gift")
   }
 
   const canNextStep1 =
@@ -286,8 +387,6 @@ export default function SignUpPage() {
     closeModal()
   }
 
-  const stepTitles = [t("register.step1"), t("register.step2"), t("register.step3"), t("register.step4"), t("register.createAccountTitle")] as const
-
   const mascotMessage = done
     ? t("register.mascotMessage")
     : isAccountStep
@@ -295,7 +394,10 @@ export default function SignUpPage() {
       : t(`register.mascotStep${step}` as "register.mascotStep1" | "register.mascotStep2" | "register.mascotStep3" | "register.mascotStep4")
 
   return (
-    <main className="relative flex min-h-dvh flex-col text-foreground md:flex-row">
+    <main
+      className="relative flex h-[100lvh] min-h-[100lvh] flex-col overflow-hidden overflow-x-hidden text-foreground md:min-h-dvh md:h-auto md:flex-row"
+      style={{ touchAction: "pan-y" }}
+    >
       {/* Background */}
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
@@ -305,14 +407,14 @@ export default function SignUpPage() {
 
       {/* Mobile: mascot + bubble */}
       <div
-        className="relative z-10 flex min-h-0 flex-shrink-0 items-end justify-start pb-0 pt-16 md:hidden"
+        className="relative z-20 flex min-h-0 flex-shrink-0 items-end justify-center pb-0 pt-7 md:hidden"
       >
-        <div className="-mt-4 flex items-end gap-0 pl-2 pr-4">
-          <div className="flex shrink-0 animate-float">
-            <img src="/rulo-mascot.webp" alt="Rulo" className="h-28 w-auto object-contain" />
+        <div className="flex items-end justify-center gap-0 px-4">
+          <div className="relative z-20 flex shrink-0 translate-y-5 animate-float-soft">
+            <img src="/rulo-mascot.webp" alt="Rulo" className="h-22 w-auto object-contain" />
           </div>
-          <div className="relative -ml-1 rounded-3xl rounded-bl-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="max-w-[200px] text-left text-sm font-medium text-foreground">
+          <div className="relative -ml-1 -translate-y-7 rounded-[28px] rounded-bl-lg border border-border bg-card px-4 py-3 shadow-sm">
+            <p className="max-w-[210px] text-left text-[13px] font-medium leading-5 text-foreground">
               {mascotMessage}
             </p>
             <div
@@ -325,11 +427,14 @@ export default function SignUpPage() {
       </div>
 
       {/* Form card — left side; 50% on desktop */}
-      <div className="relative z-10 mt-2 flex min-h-0 flex-1 flex-col px-0 pt-2 md:mt-0 md:min-h-dvh md:w-[50%] md:flex-none md:px-3 md:pt-3 md:pb-0 md:pr-0 lg:px-4 lg:pt-4 lg:pb-0 lg:pr-0">
+      <div
+        className="relative z-10 -mt-5 flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden px-0 pt-1 md:mt-0 md:min-h-dvh md:w-[48%] md:max-w-[760px] md:flex-none md:px-3 md:pt-3 md:pb-0 md:pr-0 lg:w-[46%] lg:px-4 lg:pt-4 lg:pb-0 lg:pr-0"
+        style={{ touchAction: "pan-y" }}
+      >
         <div
-          className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto rounded-t-[2rem] rounded-b-none border border-border bg-card px-4 py-6 shadow-xl md:rounded-t-3xl md:rounded-b-none md:px-8 md:py-9"
+          className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-hidden rounded-t-[2rem] rounded-b-none border border-border bg-card px-5 py-7 shadow-xl md:overflow-y-auto md:rounded-t-[2rem] md:rounded-b-none md:px-9 md:py-10 lg:px-10"
         >
-          <div className="mx-auto w-full max-w-[340px] md:max-w-[400px]">
+          <div className="mx-auto flex w-full max-w-[360px] flex-1 flex-col justify-center md:max-w-[420px] md:justify-center">
             {done ? (
               <div className="flex flex-col items-center justify-center py-6 text-center">
                 <p className="text-sm text-muted-foreground">{t("register.done")}</p>
@@ -360,29 +465,26 @@ export default function SignUpPage() {
                       />
                     </div>
                   </div>
-                  <h1 className="mt-5 text-center text-2xl font-bold tracking-tight text-foreground">
-                    {t("register.createAccountTitle")}
-                  </h1>
                 </header>
-                <div className="flex h-[420px] w-full max-w-md shrink-0 flex-col items-stretch justify-start overflow-y-auto overflow-x-hidden">
-                  <form id="register-create-account-form" onSubmit={handleCreateAccount} noValidate className="flex w-full flex-col gap-4 py-2">
+                <div className="flex h-[380px] w-full max-w-md shrink-0 flex-col items-stretch justify-center overflow-visible pt-8 md:h-[400px]">
+                  <form id="register-create-account-form" onSubmit={handleCreateAccount} noValidate className="flex w-full flex-col gap-5 py-3">
                     {registerError && (
                       <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">{registerError}</p>
                     )}
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label htmlFor="register-name">{t("profile.name")}</Label>
                       <Input
                         id="register-name"
                         type="text"
-                        placeholder="Tu nombre"
+                        placeholder={t("register.createAccountNamePlaceholder")}
                         value={profile.name}
                         onChange={(e) => update("name", e.target.value)}
                         autoComplete="given-name"
                         disabled={isSubmitting}
-                        className="h-12 rounded-2xl border-border/60 md:rounded-xl md:border-input"
+                        className="h-12 rounded-2xl border-border/60 bg-background shadow-xs focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl md:border-input"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label htmlFor="register-phone">{t("register.createAccountPhone")}</Label>
                       <PhoneInput
                         id="register-phone"
@@ -391,9 +493,10 @@ export default function SignUpPage() {
                         phoneNumber={phoneNumber}
                         onPhoneNumberChange={setPhoneNumber}
                         disabled={isSubmitting}
+                        lockedCountryCode
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label htmlFor="register-password">{t("register.createAccountPassword")}</Label>
                       <div className="relative">
                         <Input
@@ -404,7 +507,7 @@ export default function SignUpPage() {
                           onChange={(e) => setPassword(e.target.value)}
                           autoComplete="new-password"
                           disabled={isSubmitting}
-                          className="h-12 rounded-2xl border-border/60 pr-10 md:rounded-xl md:border-input"
+                          className="h-12 rounded-2xl border-border/60 bg-background pr-10 shadow-xs focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl md:border-input"
                         />
                         <button
                           type="button"
@@ -416,7 +519,7 @@ export default function SignUpPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <Label htmlFor="register-confirm">{t("register.createAccountConfirmPassword")}</Label>
                       <Input
                         id="register-confirm"
@@ -426,18 +529,12 @@ export default function SignUpPage() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         autoComplete="new-password"
                         disabled={isSubmitting}
-                        className="h-12 rounded-2xl border-border/60 md:rounded-xl md:border-input"
+                        className="h-12 rounded-2xl border-border/60 bg-background shadow-xs focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl md:border-input"
                       />
                     </div>
-                    <p className="text-center text-sm text-muted-foreground">
-                      ¿Ya tenés cuenta?{" "}
-                      <Link href="/sign-in" className="font-medium text-primary hover:underline">
-                        Iniciar sesión
-                      </Link>
-                    </p>
                   </form>
                 </div>
-                <div className="flex w-full max-w-md shrink-0 justify-center pt-3">
+                <div className="flex w-full max-w-md shrink-0 justify-center pt-6">
                   <Button
                     type="button"
                     onClick={(e) => {
@@ -447,7 +544,7 @@ export default function SignUpPage() {
                       if (form) form.requestSubmit()
                     }}
                     disabled={isSubmitting}
-                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 md:h-14 md:rounded-3xl"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 md:h-[54px] md:rounded-full"
                   >
                     {isSubmitting ? t("register.createAccountSubmitting") : t("register.createAccountSubmit")}
                     <ChevronRight className="h-4 w-4" />
@@ -485,21 +582,17 @@ export default function SignUpPage() {
                 />
               </div>
             </div>
-            <h1 className="mt-5 text-center text-2xl font-bold tracking-tight text-foreground">
-              {stepTitles[step - 1]}
-            </h1>
           </header>
 
           <div
             className={cn(
-              "flex h-[360px] w-full max-w-md shrink-0 flex-col items-stretch overflow-y-auto overflow-x-hidden",
-              step === 1 ? "justify-start" : "justify-center"
+              "flex h-[380px] w-full max-w-md shrink-0 flex-col items-stretch justify-center overflow-y-hidden overflow-x-hidden pt-8 md:h-[400px]"
             )}
           >
             <div
               key={step}
               className={cn(
-                "flex w-full flex-col items-stretch space-y-10",
+                "flex w-full flex-col items-stretch space-y-8 md:space-y-9",
                 slideDirection === "forward" ? "animate-register-slide-right" : "animate-register-slide-left"
               )}
             >
@@ -585,12 +678,12 @@ export default function SignUpPage() {
           </div>
 
           {/* Nav buttons */}
-          <div className="flex w-full max-w-md shrink-0 justify-center pt-3">
+                <div className="flex w-full max-w-md shrink-0 justify-center pt-10">
             <Button
               type="button"
               onClick={handleNext}
               disabled={!canNext}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 md:h-14 md:rounded-3xl"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 disabled:opacity-50 md:h-[54px] md:rounded-full"
             >
               {step === 4 ? t("register.finish") : t("register.next")}
               <ChevronRight className="h-4 w-4" />
@@ -604,11 +697,11 @@ export default function SignUpPage() {
 
       {/* Desktop right side: mascot */}
       <div
-        className="relative z-10 hidden min-h-[280px] flex-1 md:flex md:min-w-0 md:flex-col md:justify-center md:px-12 lg:px-20"
+        className="relative z-10 hidden min-h-[280px] flex-1 md:flex md:min-w-0 md:flex-col md:justify-center md:px-10 lg:px-16 xl:px-20"
       >
-        <div className="relative flex flex-col items-center justify-center gap-4 py-12">
-          <div className="relative rounded-3xl rounded-b-lg border border-border bg-card px-5 py-4 shadow-lg md:px-6 md:py-5">
-            <p className="max-w-[260px] text-left text-sm font-medium text-foreground md:max-w-[280px] md:text-base">
+        <div className="relative flex flex-col items-center justify-center gap-5 py-10 lg:gap-6 lg:py-12">
+          <div className="relative rounded-[30px] rounded-b-lg border border-border bg-card px-5 py-4 shadow-lg md:px-6 md:py-5">
+            <p className="max-w-[280px] text-left text-[15px] font-medium leading-6 text-foreground md:max-w-[320px] md:text-base">
               {mascotMessage}
             </p>
             <div
@@ -621,7 +714,7 @@ export default function SignUpPage() {
             <img
               src="/rulo-mascot.webp"
               alt="Rulo"
-              className="h-52 w-auto object-contain md:h-64 lg:h-72"
+              className="h-56 w-auto object-contain md:h-72 lg:h-[20rem] xl:h-[22rem]"
             />
           </div>
         </div>
@@ -664,20 +757,14 @@ export default function SignUpPage() {
                   <div className="mx-auto w-full max-w-xs flex-1">
                   {openField === "age" && (
                     <div className="w-full">
-                      <div className="mx-auto w-full max-w-[5.5rem]">
-                        <Input
-                          type="number"
-                          inputMode="numeric"
-                          min={1}
-                          max={120}
-                          placeholder=""
-                          value={profile.age || ""}
-                          onChange={(e) => update("age", parseInt(e.target.value) || 0)}
-                          onFocus={() => setHasTouchedCurrentField(true)}
-                          className="h-12 border-border/40 text-center text-base [appearance:textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
-                          autoFocus
-                        />
-                      </div>
+                      <WheelPicker
+                        options={AGE_OPTIONS}
+                        value={profile.age || 25}
+                        onChange={(value) => {
+                          update("age", value)
+                          setHasTouchedCurrentField(true)
+                        }}
+                      />
                       <div className="mt-1.5 flex min-h-5 w-full items-center justify-center">
                           {modalError && (
                             <p className={cn("text-xs font-bold text-destructive whitespace-nowrap", errorShake && "animate-modal-error-shake")}>{modalError}</p>
@@ -709,21 +796,15 @@ export default function SignUpPage() {
                   )}
                   {openField === "weight" && (
                     <div className="w-full">
-                      <div className="mx-auto w-full max-w-[5.5rem]">
-                        <Input
-                          type="number"
-                          inputMode="decimal"
-                          min={1}
-                          max={300}
-                          step={0.5}
-                          placeholder=""
-                          value={profile.weight || ""}
-                          onChange={(e) => update("weight", parseFloat(e.target.value) || 0)}
-                          onFocus={() => setHasTouchedCurrentField(true)}
-                          className="h-12 border-border/40 text-center text-base [appearance:textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
-                          autoFocus
-                        />
-                      </div>
+                      <WheelPicker
+                        options={WEIGHT_OPTIONS}
+                        value={profile.weight || 70}
+                        onChange={(value) => {
+                          update("weight", value)
+                          setHasTouchedCurrentField(true)
+                        }}
+                        formatOption={(value) => `${value} kg`}
+                      />
                       <div className="mt-1.5 flex min-h-5 w-full items-center justify-center">
                           {modalError && (
                             <p className={cn("text-xs font-bold text-destructive whitespace-nowrap", errorShake && "animate-modal-error-shake")}>{modalError}</p>
@@ -733,20 +814,15 @@ export default function SignUpPage() {
                   )}
                   {openField === "height" && (
                     <div className="w-full">
-                      <div className="mx-auto w-full max-w-[5.5rem]">
-                        <Input
-                          type="number"
-                          inputMode="numeric"
-                          min={50}
-                          max={250}
-                          placeholder=""
-                          value={profile.height || ""}
-                          onChange={(e) => update("height", parseInt(e.target.value) || 0)}
-                          onFocus={() => setHasTouchedCurrentField(true)}
-                          className="h-12 border-border/40 text-center text-base [appearance:textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
-                          autoFocus
-                        />
-                      </div>
+                      <WheelPicker
+                        options={HEIGHT_OPTIONS}
+                        value={profile.height || 175}
+                        onChange={(value) => {
+                          update("height", value)
+                          setHasTouchedCurrentField(true)
+                        }}
+                        formatOption={(value) => `${value} cm`}
+                      />
                       <div className="mt-1.5 flex min-h-5 w-full items-center justify-center">
                           {modalError && (
                             <p className={cn("text-xs font-bold text-destructive whitespace-nowrap", errorShake && "animate-modal-error-shake")}>{modalError}</p>

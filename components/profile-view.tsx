@@ -192,6 +192,7 @@ export function ProfileView({
     fatGoal: 65,
   })
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [openPicker, setOpenPicker] = useState<SettingsPicker>(null)
   const [openField, setOpenField] = useState<ProfileFieldKey>(null)
   const [fieldValue, setFieldValue] = useState("")
@@ -203,8 +204,8 @@ export function ProfileView({
   }, [])
 
   useEffect(() => {
-    onOverlayChange?.(Boolean(openPicker || openField || openInstall || showClearConfirm))
-  }, [onOverlayChange, openPicker, openField, openInstall, showClearConfirm])
+    onOverlayChange?.(Boolean(openPicker || openField || openInstall || showClearConfirm || showLogoutConfirm))
+  }, [onOverlayChange, openPicker, openField, openInstall, showClearConfirm, showLogoutConfirm])
 
   function getFieldLabel(field: Exclude<ProfileFieldKey, null>) {
     if (field === "name") return t("profile.name")
@@ -479,7 +480,7 @@ export function ProfileView({
             icon={<LogOut className="h-5 w-5 text-destructive" strokeWidth={2.2} />}
             label={t("profile.logout")}
             destructive
-            onClick={handleLogout}
+            onClick={() => setShowLogoutConfirm(true)}
           />
 
           <SettingsRow
@@ -492,6 +493,61 @@ export function ProfileView({
       </div>
 
       <AppSignature className="pt-6" />
+
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: showLogoutConfirm ? "auto" : "none",
+          visibility: showLogoutConfirm ? "visible" : "hidden",
+        }}
+        aria-hidden={!showLogoutConfirm}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
+          style={{ opacity: showLogoutConfirm ? 1 : 0 }}
+          onClick={() => setShowLogoutConfirm(false)}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-md max-h-[85dvh] flex-col rounded-t-[32px] bg-card shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: showLogoutConfirm ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between px-6 py-5">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{t("profile.logout")}</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLogoutConfirm(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-4 w-4" strokeWidth={2.2} />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-6 pb-8">
+            <p className="text-[14px] text-center text-muted-foreground">
+              {t("profile.logoutConfirm")}
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 rounded-2xl bg-secondary py-3 text-[15px] font-bold text-foreground active:opacity-75"
+              >
+                {t("profile.cancel")}
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex-1 rounded-2xl bg-destructive py-3 text-[15px] font-bold text-white active:opacity-75"
+              >
+                {t("profile.confirmLogout")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div
         className="fixed inset-0 z-50 flex flex-col justify-end"

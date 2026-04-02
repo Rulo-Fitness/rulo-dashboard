@@ -10,8 +10,7 @@ export const metadata: Metadata = {
   title: 'Dashboard | Rulo Fitness',
   description: 'Track your gym training sessions and meals with macros.',
   icons: {
-    icon: '/logo.png',
-    apple: '/logo.png',
+    icon: '/rulo-isotipo.webp',
   },
 }
 
@@ -33,9 +32,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/logo.png" />
-      </head>
       <body className={`${outfit.className} antialiased bg-background`}>
         <Providers>
           {children}

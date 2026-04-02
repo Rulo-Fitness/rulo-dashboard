@@ -169,7 +169,7 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <main className="mx-auto min-h-dvh max-w-lg bg-background pb-20 pt-8">
+      <main className="mx-auto min-h-[100lvh] max-w-lg bg-background pb-14 pt-3">
         <div className="flex flex-col gap-6 px-4 pb-6 animate-pulse">
           <div className="flex flex-col gap-1">
             <div className="h-8 w-48 rounded-md bg-secondary" />
@@ -189,7 +189,7 @@ export default function Home() {
     <>
       <TrainingSync onSynced={handleTrainingSynced} />
       <MealsSync onSynced={handleTrainingSynced} />
-      <main className="mx-auto flex min-h-dvh max-w-md flex-1 flex-col bg-background pb-32 pt-12 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
+      <main className="mx-auto flex min-h-[100lvh] max-w-md flex-1 flex-col bg-background pb-16 pt-3 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
         <SubscriptionBanner />
         <div className="flex min-h-0 flex-1 flex-col overflow-visible pointer-events-auto" style={{ touchAction: "pan-y" }}>
           {activeTab === "analytics" && (

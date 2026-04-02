@@ -9,13 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PhoneInput } from "@/components/phone-input"
 import { Eye, EyeOff, ChevronRight } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useForceLightMode } from "@/lib/hooks/use-force-light-mode"
+import { useDefaultSpanishLocale } from "@/lib/hooks/use-default-spanish-locale"
 
 export default function SignInPage() {
   const router = useRouter()
   const { login } = useAuth()
   useForceLightMode()
+  useDefaultSpanishLocale()
 
   const [countryCode, setCountryCode] = useState("+54")
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -41,7 +42,10 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="relative flex min-h-dvh flex-col text-foreground md:flex-row">
+    <main
+      className="relative flex h-[100lvh] min-h-[100lvh] flex-col overflow-hidden overflow-x-hidden text-foreground md:min-h-dvh md:h-auto md:flex-row"
+      style={{ touchAction: "pan-y" }}
+    >
       <div
         className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url(/login-bg.webp)" }}
@@ -62,14 +66,14 @@ export default function SignInPage() {
 
       {/* Mobile: mascot + bubble */}
       <div
-        className="relative z-10 flex min-h-0 flex-shrink-0 items-end justify-start pb-0 pt-16 md:hidden"
+        className="relative z-20 flex min-h-0 flex-shrink-0 items-end justify-center pb-0 pt-10 md:hidden"
       >
-        <div className="-mt-4 flex items-end gap-0 pl-2 pr-4">
-          <div className="flex shrink-0 animate-float">
-            <img src="/rulo-mascot.webp" alt="Rulo" className="h-28 w-auto object-contain" />
+        <div className="flex items-end justify-center gap-0 px-4">
+          <div className="relative z-20 flex shrink-0 translate-y-5 animate-float-soft">
+            <img src="/rulo-mascot.webp" alt="Rulo" className="h-24 w-auto object-contain" />
           </div>
-          <div className="relative -ml-1 rounded-3xl rounded-bl-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="max-w-[200px] text-left text-sm font-medium text-foreground">
+          <div className="relative -ml-1 -translate-y-7 rounded-[28px] rounded-bl-lg border border-border bg-card px-4 py-3 shadow-sm">
+            <p className="max-w-[210px] text-left text-[13px] font-medium leading-5 text-foreground">
               ¡Hola otra vez! Sigue tus entrenamientos y comidas. ¿Listo para retomarlo?
             </p>
             <div
@@ -82,26 +86,30 @@ export default function SignInPage() {
       </div>
 
       {/* Form card */}
-      <div className="relative z-10 mt-2 flex min-h-0 flex-1 flex-col px-0 pt-2 md:mt-0 md:min-h-dvh md:w-[50%] md:flex-none md:px-3 md:pt-3 md:pb-0 md:pr-0 lg:px-4 lg:pt-4 lg:pb-0 lg:pr-0">
+      <div
+        className="relative z-10 -mt-5 flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden px-0 pt-1 md:mt-0 md:min-h-dvh md:w-[48%] md:max-w-[760px] md:flex-none md:px-3 md:pt-3 md:pb-0 md:pr-0 lg:w-[46%] lg:px-4 lg:pt-4 lg:pb-0 lg:pr-0"
+        style={{ touchAction: "pan-y" }}
+      >
         <div
-          className="flex min-h-0 flex-1 flex-col items-center justify-center rounded-t-[2rem] rounded-b-none border border-border bg-card px-4 py-6 shadow-xl md:rounded-t-3xl md:rounded-b-none md:px-8 md:py-9"
+          className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-hidden overflow-x-hidden rounded-t-[2rem] rounded-b-none border border-border bg-card px-5 py-7 shadow-xl md:overflow-y-auto md:rounded-t-[2rem] md:rounded-b-none md:px-9 md:py-10 lg:px-10"
+          style={{ touchAction: "pan-y" }}
         >
-          <div className="mx-auto w-full max-w-[340px] md:max-w-[400px]">
-            <h1 className="text-center text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          <div className="mx-auto flex w-full max-w-[360px] flex-1 flex-col justify-center md:max-w-[420px] md:justify-center">
+            <h1 className="text-center text-[2rem] font-bold tracking-tight text-foreground md:text-[2.35rem]">
               Bienvenido de nuevo
             </h1>
-            <p className="mt-8 text-center text-sm text-muted-foreground md:text-base">
+            <p className="mt-4 text-center text-sm leading-6 text-muted-foreground md:mt-5 md:text-[15px]">
               Ingresa tus datos para acceder a tu cuenta
             </p>
 
-            <form onSubmit={handleSubmit} className="mt-16 space-y-[3.25rem]">
+            <form onSubmit={handleSubmit} className="mt-10 space-y-8 md:mt-12 md:space-y-9">
               {error && (
                 <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">
                   {error}
                 </p>
               )}
 
-              <div className="space-y-5">
+              <div className="space-y-3.5">
                 <Label htmlFor="phone">Número de teléfono</Label>
                 <PhoneInput
                   id="phone"
@@ -110,10 +118,11 @@ export default function SignInPage() {
                   phoneNumber={phoneNumber}
                   onPhoneNumberChange={setPhoneNumber}
                   disabled={isSubmitting}
+                  lockedCountryCode
                 />
               </div>
 
-              <div className="space-y-5">
+              <div className="space-y-3.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Contraseña</Label>
                   <Link
@@ -132,7 +141,7 @@ export default function SignInPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     disabled={isSubmitting}
-                    className="h-12 rounded-2xl border-border/60 text-base md:rounded-xl md:border-input"
+                    className="h-12 rounded-2xl border-border/60 text-base md:h-[52px] md:rounded-2xl md:border-input"
                   />
                   <button
                     type="button"
@@ -148,14 +157,14 @@ export default function SignInPage() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-12 w-full max-w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 md:h-14 md:rounded-3xl"
+                className="h-12 w-full max-w-full rounded-full bg-primary py-6 text-base font-semibold text-primary-foreground shadow-md hover:bg-primary/90 md:h-[54px] md:rounded-full"
               >
                 {isSubmitting ? "Entrando…" : "Iniciar sesión"}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </form>
 
-            <p className="mt-4 text-center text-sm text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-muted-foreground md:mt-7">
               ¿No tienes una cuenta?{" "}
               <Link href="/sign-up" className="font-medium text-primary hover:underline">
                 Regístrate
@@ -167,11 +176,11 @@ export default function SignInPage() {
 
       {/* Desktop: mascot right side */}
       <div
-        className="relative z-10 hidden min-h-[280px] flex-1 md:flex md:min-w-0 md:flex-col md:justify-center md:px-12 lg:px-20"
+        className="relative z-10 hidden min-h-[280px] flex-1 md:flex md:min-w-0 md:flex-col md:justify-center md:px-10 lg:px-16 xl:px-20"
       >
-        <div className="relative flex flex-col items-center justify-center gap-4 py-12">
-          <div className="relative rounded-3xl rounded-b-lg border border-border bg-card px-5 py-4 shadow-lg md:px-6 md:py-5">
-            <p className="max-w-[260px] text-left text-sm font-medium text-foreground md:max-w-[280px] md:text-base">
+        <div className="relative flex flex-col items-center justify-center gap-5 py-10 lg:gap-6 lg:py-12">
+          <div className="relative rounded-[30px] rounded-b-lg border border-border bg-card px-5 py-4 shadow-lg md:px-6 md:py-5">
+            <p className="max-w-[280px] text-left text-[15px] font-medium leading-6 text-foreground md:max-w-[320px] md:text-base">
               ¡Hola otra vez! Sigue tus entrenamientos y comidas. ¿Listo para retomarlo?
             </p>
             <div
@@ -184,7 +193,7 @@ export default function SignInPage() {
             <img
               src="/rulo-mascot.webp"
               alt="Rulo"
-              className="h-52 w-auto object-contain md:h-64 lg:h-72"
+              className="h-56 w-auto object-contain md:h-72 lg:h-[20rem] xl:h-[22rem]"
             />
           </div>
         </div>

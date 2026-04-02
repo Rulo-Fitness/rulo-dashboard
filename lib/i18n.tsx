@@ -194,6 +194,11 @@ const translations = {
   "profile.loggedOut": { en: "Logged out", es: "Sesión cerrada" },
   "profile.cancel": { en: "Cancel", es: "Cancelar" },
   "profile.confirmDelete": { en: "Confirm Delete", es: "Confirmar" },
+  "profile.logoutConfirm": {
+    en: "Are you sure you want to log out?",
+    es: "¿Seguro que querés cerrar sesión?",
+  },
+  "profile.confirmLogout": { en: "Log out", es: "Cerrar sesión" },
 
   // Settings
   "settings.title": { en: "Settings", es: "Ajustes" },
@@ -209,13 +214,24 @@ const translations = {
   "settings.contactSupport": { en: "Contact support", es: "Contactar soporte" },
   "settings.contactSupportHint": { en: "Get help or send feedback", es: "Obtén ayuda o envía comentarios" },
 
+  // Gift
+  "gift.title": { en: "Rulo has a gift for you", es: "Rulo tiene un regalo para vos" },
+  "gift.subtitle": { en: "We activated 7 free days so you can try everything without limits. Train, track, and take your progress to the next level from today.", es: "Activamos 7 dias gratis para que pruebes todo sin limites. Entrena, registra y lleva tu progreso al siguiente nivel desde hoy." },
+  "gift.cta": { en: "Accept gift", es: "Aceptar regalo" },
+  "gift.activating": { en: "Activating your gift...", es: "Activando tu regalo..." },
+  "gift.error": { en: "We couldn't activate your free trial.", es: "No pudimos activar tu prueba gratis." },
+  "gift.noPaymentNow": { en: "No payment due now", es: "Sin pago por ahora" },
+  "gift.allFeatures": { en: "All features included", es: "Todas las funcionalidades incluidas" },
+  "gift.terms": { en: "Terms and Conditions", es: "Terminos y condiciones" },
+  "gift.privacy": { en: "Privacy Policy", es: "Politicas de privacidad" },
+
   // Register (onboarding)
   "register.title": { en: "Create your profile", es: "Creá tu perfil" },
   "register.mascotMessage": { en: "Let's go! Tell me a bit about you and I'll set up your plan.", es: "¡Vamos! Contáme un poco de vos y armo tu plan." },
-  "register.mascotStep1": { en: "Age, sex, weight and height — I use these to calculate your daily needs.", es: "Edad, sexo, peso y altura — los uso para calcular tu gasto diario." },
-  "register.mascotStep2": { en: "How active you are during the week — from sedentary to very active.", es: "Qué tan activo sos en la semana — de sedentario a muy activo." },
-  "register.mascotStep3": { en: "Your goal: lose fat, maintain, or gain mass. I'll adjust your plan.", es: "Tu objetivo: bajar grasa, mantener o subir masa. Ajusto tu plan." },
-  "register.mascotStep4": { en: "How many kilos per week you want to change — e.g. 0.25 or 0.5.", es: "Cuántos kilos por semana querés cambiar — ej. 0,25 o 0,5." },
+  "register.mascotStep1": { en: "Let's start with your basics", es: "Vamos con tus datos básicos" },
+  "register.mascotStep2": { en: "Let's define your activity level", es: "Definamos tu nivel de actividad" },
+  "register.mascotStep3": { en: "Now let's define your goal", es: "Ahora definamos tu objetivo" },
+  "register.mascotStep4": { en: "Choose the pace you want to follow", es: "Elegí el ritmo que querés llevar" },
   "register.mascotCreateAccount": { en: "Almost there! Phone and password to create your account.", es: "Casi listo. Teléfono y contraseña para crear tu cuenta." },
   "register.step1": { en: "Basic data", es: "Datos básicos" },
   "register.step2": { en: "Activity", es: "Actividad" },
@@ -253,6 +269,7 @@ const translations = {
   "register.validationHeight": { en: "Height between 50 and 250 cm", es: "Altura entre 50 y 250 cm" },
   "register.validationWeeklyRate": { en: "Weekly rate between 0.25 and 2 kg/week", es: "Ritmo entre 0,25 y 2 kg/semana" },
   "register.createAccountTitle": { en: "Create your account", es: "Crear tu cuenta" },
+  "register.createAccountNamePlaceholder": { en: "Your name", es: "Tu nombre" },
   "register.createAccountPhone": { en: "Phone number", es: "Número de teléfono" },
   "register.createAccountPassword": { en: "Password", es: "Contraseña" },
   "register.createAccountPasswordPlaceholder": { en: "At least 4 characters", es: "Mínimo 4 caracteres" },

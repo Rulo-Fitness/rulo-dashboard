@@ -41,6 +41,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     if (isLoading) return
 
     const onPublicRoute = isPublicRoute(pathname)
+    const postSignupRedirect =
+      typeof window !== "undefined" ? sessionStorage.getItem("rulo-post-signup-redirect") : null
 
     if (!user && !onPublicRoute) {
       router.replace(SIGN_IN_PATH)
@@ -48,6 +50,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     }
 
     if (user && isAuthOnlyRoute(pathname)) {
+      if (postSignupRedirect) {
+        sessionStorage.removeItem("rulo-post-signup-redirect")
+        router.replace(postSignupRedirect)
+        return
+      }
       router.replace("/")
       return
     }
