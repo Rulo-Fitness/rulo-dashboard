@@ -6,8 +6,8 @@ export async function POST(request: Request) {
     const xSignature = request.headers.get("x-signature")
     const xRequestId = request.headers.get("x-request-id")
     const body = await request.json()
-
-    const { id, type } = body
+    const id = body?.data?.id ?? body?.id
+    const type = body?.type
 
     console.log("[mp-webhook] Received:", { type, id, xRequestId })
 
@@ -36,6 +36,11 @@ export async function POST(request: Request) {
       const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN
       if (!accessToken) {
         console.error("[mp-webhook] MERCADOPAGO_ACCESS_TOKEN not set")
+        return NextResponse.json({ status: "ok" })
+      }
+
+      if (!id) {
+        console.warn("[mp-webhook] Missing payment id in payload", body)
         return NextResponse.json({ status: "ok" })
       }
 

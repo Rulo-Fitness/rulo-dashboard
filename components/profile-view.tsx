@@ -7,6 +7,7 @@ import { useTheme } from "next-themes"
 import { useI18n } from "@/lib/i18n"
 import { useAuth } from "@/lib/auth-context"
 import { useSubscription } from "@/lib/hooks/use-subscription"
+import { useCurrentPlan } from "@/lib/hooks/use-current-plan"
 import {
   getProfile,
   saveProfile,
@@ -33,6 +34,7 @@ import {
   Check,
   Smartphone,
   Trophy,
+  Crown,
   Share,
   X,
 } from "lucide-react"
@@ -59,7 +61,7 @@ function isIOS(): boolean {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-muted-foreground text-[13px] font-semibold tracking-wide pl-5 pt-5 pb-2 select-none">
+    <p className="text-muted-foreground text-[13px] font-semibold tracking-wide pl-5 pt-3 pb-1 select-none">
       {children}
     </p>
   )
@@ -162,17 +164,19 @@ function FieldRow({
 
 export function ProfileView({
   onOverlayChange,
+  onOpenSubscription,
   onOpenRecap,
   recapOpen,
   recapSource,
 }: {
   onOverlayChange?: (open: boolean) => void
+  onOpenSubscription: () => void
   onOpenRecap: () => void
   recapOpen: boolean
   recapSource: "analytics" | "settings" | null
 }) {
   const router = useRouter()
-  const { user, logout } = useAuth()
+  const { user, logout, deleteAccount } = useAuth()
   const { isActive: subActive } = useSubscription()
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -197,6 +201,8 @@ export function ProfileView({
   const [openField, setOpenField] = useState<ProfileFieldKey>(null)
   const [fieldValue, setFieldValue] = useState("")
   const [openInstall, setOpenInstall] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
+  const [deletingAccount, setDeletingAccount] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -247,23 +253,21 @@ export function ProfileView({
     router.replace("/sign-in")
   }
 
-  function handleClearData() {
+  async function handleDeleteAccount() {
+    if (deletingAccount) return
+
+    setDeletingAccount(true)
+    setDeleteError("")
+    const result = await deleteAccount()
+
+    if (!result.ok) {
+      setDeleteError(result.error ?? t("gift.error"))
+      setDeletingAccount(false)
+      return
+    }
+
     clearAllData()
-    setProfile({
-      name: "",
-      age: 0,
-      sex: "male",
-      weight: 0,
-      height: 0,
-      activityLevel: "moderate",
-      goal: "maintain",
-      weeklyRateKg: 0.25,
-      calorieGoal: 2000,
-      proteinGoal: 150,
-      carbsGoal: 250,
-      fatGoal: 65,
-    })
-    setShowClearConfirm(false)
+    router.replace("/sign-in")
   }
 
   function updateField<K extends keyof UserProfile>(key: K, value: UserProfile[K]) {
@@ -280,11 +284,26 @@ export function ProfileView({
     { id: "dark" as const, label: t("settings.dark"), icon: Moon },
     { id: "system" as const, label: t("settings.system"), icon: Monitor },
   ]
+  const languageOptions = [
+    { id: "es" as const, label: t("settings.spanish"), flag: "🇦🇷" },
+    { id: "en" as const, label: t("settings.english"), flag: "🇺🇸" },
+  ]
 
   const supportEmail = "soporte@rulo.ai"
   const supportSubject = encodeURIComponent("Rulo Fitness - Soporte")
   const supportMailto = `mailto:${supportEmail}?subject=${supportSubject}`
   const recapMorphEnabled = recapSource === "settings" || (recapOpen && recapSource === "settings")
+  const hasActiveAccess = Boolean(user?.subscription_active_until && new Date(user.subscription_active_until) > new Date())
+  const { planName } = useCurrentPlan(user?.id, user?.current_plan)
+  const subscriptionStatusLabel = hasActiveAccess && planName
+    ? planName
+    : hasActiveAccess && user?.trial_used
+      ? t("subscription.trialName")
+      : hasActiveAccess
+        ? t("subscription.statusActive")
+        : user?.trial_used
+          ? t("subscription.statusExpired")
+          : t("subscription.statusAvailable")
 
   return (
     <div className="flex flex-col gap-4 pb-10 px-6">
@@ -294,20 +313,28 @@ export function ProfileView({
         </h1>
       </div>
 
-      {/* ── Profile header ── */}
-      <div className="pt-2">
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border border-border/60 bg-card shadow-sm">
-            <User className="h-10 w-10 text-foreground" strokeWidth={2.2} />
+      <button
+        type="button"
+        onClick={onOpenSubscription}
+        className="flex items-center gap-4 rounded-[32px] bg-card px-5 py-5 text-left card-shadow transition-colors active:bg-secondary/60"
+      >
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-secondary">
+          <User className="h-6 w-6 text-foreground" strokeWidth={2.2} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-3 inline-flex items-center gap-2">
+            <Crown className="h-3.5 w-3.5 text-[#D4A017]" strokeWidth={2.2} />
+            <span className="text-[12px] font-medium text-foreground">{subscriptionStatusLabel}</span>
           </div>
-          <p className="mt-4 text-[24px] font-bold tracking-tight text-foreground">
+          <p className="truncate text-[18px] font-bold tracking-tight text-foreground">
             {profile.name || user?.name || t("profile.yourProfile")}
           </p>
           {user?.phone && (
-            <p className="mt-1 text-[14px] text-muted-foreground">{user.phone}</p>
+            <p className="mt-1 truncate text-[13px] text-muted-foreground">{user.phone}</p>
           )}
         </div>
-      </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+      </button>
 
       {/* ── Preferences ── */}
       <SectionLabel>{t("settings.preferences")}</SectionLabel>
@@ -468,7 +495,7 @@ export function ProfileView({
             <IconBox>
               <HelpCircle className="h-5 w-5 text-foreground" strokeWidth={2.2} />
             </IconBox>
-            <span className="flex-1 text-[15px] font-bold text-foreground">{t("settings.contactSupport")}</span>
+            <span className="flex-1 text-[15px] font-medium text-foreground">{t("settings.contactSupport")}</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
           </a>
 
@@ -580,20 +607,30 @@ export function ProfileView({
             <p className="text-[14px] text-center text-muted-foreground">
               {t("profile.clearConfirm")}
             </p>
+            {deleteError && (
+              <p className="mt-4 text-center text-[13px] text-destructive">
+                {deleteError}
+              </p>
+            )}
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={() => setShowClearConfirm(false)}
+                onClick={() => {
+                  setShowClearConfirm(false)
+                  setDeleteError("")
+                }}
+                disabled={deletingAccount}
                 className="flex-1 rounded-2xl bg-secondary py-3 text-[15px] font-bold text-foreground active:opacity-75"
               >
                 {t("profile.cancel")}
               </button>
               <button
                 type="button"
-                onClick={handleClearData}
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
                 className="flex-1 rounded-2xl bg-destructive py-3 text-[15px] font-bold text-white active:opacity-75"
               >
-                {t("profile.confirmDelete")}
+                {deletingAccount ? `${t("profile.confirmDelete")}...` : t("profile.confirmDelete")}
               </button>
             </div>
           </div>
@@ -696,7 +733,7 @@ export function ProfileView({
           <div className="flex-1 overflow-y-auto px-6 pb-8">
             <div className="overflow-hidden">
               {openPicker === "language" &&
-                ([{ id: "es" as const, label: t("settings.spanish") }, { id: "en" as const, label: t("settings.english") }]).map((opt, i) => (
+                languageOptions.map((opt, i) => (
                   <div key={opt.id}>
                     {i > 0 && <div className="ml-[68px] mr-5 h-px bg-border" />}
                     <button
@@ -707,8 +744,8 @@ export function ProfileView({
                       }}
                       className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors active:bg-secondary/60"
                     >
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card">
-                        <Languages className="h-5 w-5 text-foreground" strokeWidth={2.2} />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-[20px]">
+                        <span aria-hidden>{opt.flag}</span>
                       </div>
                       <span className="flex-1 text-[15px] font-medium text-foreground">{opt.label}</span>
                       {locale === opt.id && <Check className="h-5 w-5 text-foreground shrink-0" strokeWidth={2.2} />}

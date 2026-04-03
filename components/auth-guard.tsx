@@ -55,7 +55,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
         router.replace(postSignupRedirect)
         return
       }
-      router.replace("/")
+      router.replace("/app")
       return
     }
   }, [user, isLoading, pathname, router])

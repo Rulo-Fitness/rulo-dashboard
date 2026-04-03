@@ -11,6 +11,7 @@ interface PhoneInputProps {
   disabled?: boolean
   id?: string
   lockedCountryCode?: boolean
+  placeholder?: string
 }
 
 export function PhoneInput({
@@ -21,9 +22,10 @@ export function PhoneInput({
   disabled,
   id = "phone",
   lockedCountryCode = false,
+  placeholder,
 }: PhoneInputProps) {
   return (
-    <div className="flex h-12 overflow-hidden rounded-2xl border border-border/60 bg-background shadow-xs focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 focus-within:ring-offset-0">
+    <div className="flex h-12 overflow-hidden rounded-2xl border border-border/60 bg-background shadow-xs transition-colors focus-within:border-white focus-within:ring-[1.5px] focus-within:ring-white/80">
       {lockedCountryCode ? (
         <div className="flex h-12 items-center border-0 bg-muted/50 px-4 text-sm font-medium text-foreground">
           🇦🇷 {countryCode}
@@ -50,7 +52,8 @@ export function PhoneInput({
         onChange={(e) => onPhoneNumberChange(e.target.value.replace(/\D/g, "").slice(0, 15))}
         autoComplete="tel"
         disabled={disabled}
-        className="h-12 min-w-0 flex-1 rounded-none border-0 border-l bg-transparent px-4 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
+        placeholder={placeholder}
+        className="h-12 min-w-0 flex-1 rounded-none border-0 border-l bg-transparent px-4 text-base focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0"
       />
     </div>
   )

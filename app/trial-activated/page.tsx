@@ -32,7 +32,7 @@ export default function TrialActivatedPage() {
           </p>
         )}
         <Button asChild className="h-12 w-full rounded-full text-base font-semibold">
-          <Link href="/">Ir al dashboard</Link>
+          <Link href="/app">Ir al dashboard</Link>
         </Button>
       </div>
     </main>

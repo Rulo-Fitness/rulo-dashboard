@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { PhoneInput } from "@/components/phone-input"
 import { Eye, EyeOff, ChevronRight } from "lucide-react"
 import { useForceLightMode } from "@/lib/hooks/use-force-light-mode"
@@ -33,7 +32,7 @@ export default function SignInPage() {
     setIsSubmitting(true)
     const result = await login(fullPhone, password)
     if (result.ok) {
-      router.replace("/")
+      router.replace("/app")
       router.refresh()
     } else {
       setIsSubmitting(false)
@@ -99,7 +98,7 @@ export default function SignInPage() {
               Bienvenido de nuevo
             </h1>
             <p className="mt-4 text-center text-sm leading-6 text-muted-foreground md:mt-5 md:text-[15px]">
-              Ingresa tus datos para acceder a tu cuenta
+              Ingresa tus datos para acceder a Rulo Dashboard
             </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-8 md:mt-12 md:space-y-9">
@@ -110,7 +109,6 @@ export default function SignInPage() {
               )}
 
               <div className="space-y-3.5">
-                <Label htmlFor="phone">Número de teléfono</Label>
                 <PhoneInput
                   id="phone"
                   countryCode={countryCode}
@@ -119,29 +117,21 @@ export default function SignInPage() {
                   onPhoneNumberChange={setPhoneNumber}
                   disabled={isSubmitting}
                   lockedCountryCode
+                  placeholder="Número de teléfono"
                 />
               </div>
 
               <div className="space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Link
-                    href="/sign-in/forgot"
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Ingresa tu contraseña"
+                    placeholder="Contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     disabled={isSubmitting}
-                    className="h-12 rounded-2xl border-border/60 text-base md:h-[52px] md:rounded-2xl md:border-input"
+                    className="h-12 rounded-2xl border-border/60 text-base shadow-xs focus-visible:border-white focus-visible:ring-[1.5px] focus-visible:ring-white/80 md:h-[52px] md:rounded-2xl"
                   />
                   <button
                     type="button"
@@ -151,6 +141,14 @@ export default function SignInPage() {
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
+                </div>
+                <div className="flex justify-end">
+                  <Link
+                    href="/sign-in/forgot"
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
                 </div>
               </div>
 

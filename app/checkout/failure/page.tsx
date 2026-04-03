@@ -17,7 +17,7 @@ export default function CheckoutFailurePage() {
             <Link href="/checkout">Reintentar</Link>
           </Button>
           <Button asChild variant="ghost" className="h-12 w-full rounded-full text-base">
-            <Link href="/">Volver al dashboard</Link>
+            <Link href="/app">Volver al dashboard</Link>
           </Button>
         </div>
       </div>

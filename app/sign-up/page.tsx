@@ -9,7 +9,6 @@ import type { UserProfile, Sex, ActivityLevel, Goal } from "@/lib/storage"
 import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { PhoneInput } from "@/components/phone-input"
 import {
   ChevronLeft,
@@ -23,6 +22,8 @@ import {
   TrendingUp,
   Eye,
   EyeOff,
+  Check,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useForceLightMode } from "@/lib/hooks/use-force-light-mode"
@@ -110,6 +111,27 @@ function FieldRow({
         {value || emptyLabel}
       </span>
       <ChevronRight className="h-5 w-5 shrink-0 text-primary" />
+    </button>
+  )
+}
+
+function PickerOptionRow({
+  label,
+  selected,
+  onClick,
+}: {
+  label: string
+  selected: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 px-5 py-4 text-left"
+    >
+      <span className="flex-1 text-[15px] font-medium text-foreground">{label}</span>
+      {selected && <Check className="h-5 w-5 shrink-0 text-foreground" strokeWidth={2.2} />}
     </button>
   )
 }
@@ -247,7 +269,6 @@ export default function SignUpPage() {
       if (openField === "age" && prev.age <= 0) return { ...prev, age: 25 }
       if (openField === "weight" && prev.weight <= 0) return { ...prev, weight: 70 }
       if (openField === "height" && prev.height <= 0) return { ...prev, height: 175 }
-      if (openField === "weeklyRateKg" && prev.weeklyRateKg <= 0) return { ...prev, weeklyRateKg: 0.5 }
       return prev
     })
   }, [openField])
@@ -297,8 +318,13 @@ export default function SignUpPage() {
   async function handleCreateAccount(e: React.FormEvent) {
     e.preventDefault()
     setRegisterError("")
-    const fullPhone = `${countryCode}${phoneNumber.replace(/\s/g, "").replace(/\D/g, "")}`
-    if (fullPhone.replace(/\D/g, "").length < 9) {
+    const digits = phoneNumber.replace(/\s/g, "").replace(/\D/g, "")
+    if (!digits.startsWith("9")) {
+      setRegisterError(t("register.createAccountPhoneMustStartWith9"))
+      return
+    }
+    const fullPhone = `${countryCode}${digits}`
+    if (fullPhone.replace(/\D/g, "").length < 10) {
       setRegisterError(t("register.createAccountInvalidPhone"))
       return
     }
@@ -395,7 +421,7 @@ export default function SignUpPage() {
 
   return (
     <main
-      className="relative flex h-[100lvh] min-h-[100lvh] flex-col overflow-hidden overflow-x-hidden text-foreground md:min-h-dvh md:h-auto md:flex-row"
+      className="relative flex h-[100lvh] min-h-[100lvh] flex-col overflow-hidden overflow-x-hidden text-foreground md:min-h-dvh md:h-auto md:flex-row-reverse"
       style={{ touchAction: "pan-y" }}
     >
       {/* Background */}
@@ -428,7 +454,7 @@ export default function SignUpPage() {
 
       {/* Form card — left side; 50% on desktop */}
       <div
-        className="relative z-10 -mt-5 flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden px-0 pt-1 md:mt-0 md:min-h-dvh md:w-[48%] md:max-w-[760px] md:flex-none md:px-3 md:pt-3 md:pb-0 md:pr-0 lg:w-[46%] lg:px-4 lg:pt-4 lg:pb-0 lg:pr-0"
+        className="relative z-10 -mt-5 flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden px-0 pt-1 md:mt-0 md:min-h-dvh md:w-[48%] md:max-w-[760px] md:flex-none md:px-3 md:pt-3 md:pb-0 md:pr-0 md:animate-[register-card-enter_520ms_cubic-bezier(0.2,0.8,0.2,1)_both] lg:w-[46%] lg:px-4 lg:pt-4 lg:pb-0 lg:pr-0"
         style={{ touchAction: "pan-y" }}
       >
         <div
@@ -446,7 +472,7 @@ export default function SignUpPage() {
                 </Button>
               </div>
             ) : isAccountStep ? (
-              <div className="flex min-h-0 w-full flex-1 flex-col items-center">
+              <div className="flex min-h-0 w-full flex-1 flex-col items-center md:justify-center">
                 <header className="-mx-2 w-full shrink-0 self-stretch">
                   <div className="flex w-full items-center justify-center gap-3 rounded-xl px-3 py-2">
                     <button
@@ -472,20 +498,6 @@ export default function SignUpPage() {
                       <p className="rounded-lg bg-destructive/15 px-3 py-2 text-sm text-destructive">{registerError}</p>
                     )}
                     <div className="space-y-3">
-                      <Label htmlFor="register-name">{t("profile.name")}</Label>
-                      <Input
-                        id="register-name"
-                        type="text"
-                        placeholder={t("register.createAccountNamePlaceholder")}
-                        value={profile.name}
-                        onChange={(e) => update("name", e.target.value)}
-                        autoComplete="given-name"
-                        disabled={isSubmitting}
-                        className="h-12 rounded-2xl border-border/60 bg-background shadow-xs focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl md:border-input"
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="register-phone">{t("register.createAccountPhone")}</Label>
                       <PhoneInput
                         id="register-phone"
                         countryCode={countryCode}
@@ -494,20 +506,32 @@ export default function SignUpPage() {
                         onPhoneNumberChange={setPhoneNumber}
                         disabled={isSubmitting}
                         lockedCountryCode
+                        placeholder="9 11 2345 6789"
                       />
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="register-password">{t("register.createAccountPassword")}</Label>
+                      <Input
+                        id="register-name"
+                        type="text"
+                        placeholder={t("register.createAccountNamePlaceholder")}
+                        value={profile.name}
+                        onChange={(e) => update("name", e.target.value)}
+                        autoComplete="given-name"
+                        disabled={isSubmitting}
+                        className="h-12 rounded-2xl border-border/60 bg-background shadow-xs focus-visible:border-white focus-visible:ring-[1.5px] focus-visible:ring-white/80 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl"
+                      />
+                    </div>
+                    <div className="space-y-3">
                       <div className="relative">
                         <Input
                           id="register-password"
                           type={showPassword ? "text" : "password"}
-                          placeholder={t("register.createAccountPasswordPlaceholder")}
+                          placeholder={t("register.createAccountPassword")}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           autoComplete="new-password"
                           disabled={isSubmitting}
-                          className="h-12 rounded-2xl border-border/60 bg-background pr-10 shadow-xs focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl md:border-input"
+                          className="h-12 rounded-2xl border-border/60 bg-background pr-10 shadow-xs focus-visible:border-white focus-visible:ring-[1.5px] focus-visible:ring-white/80 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl"
                         />
                         <button
                           type="button"
@@ -520,17 +544,26 @@ export default function SignUpPage() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <Label htmlFor="register-confirm">{t("register.createAccountConfirmPassword")}</Label>
-                      <Input
-                        id="register-confirm"
-                        type={showPassword ? "text" : "password"}
-                        placeholder={t("register.createAccountConfirmPlaceholder")}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        autoComplete="new-password"
-                        disabled={isSubmitting}
-                        className="h-12 rounded-2xl border-border/60 bg-background shadow-xs focus-visible:ring-2 focus-visible:ring-ring/20 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl md:border-input"
-                      />
+                      <div className="relative">
+                        <Input
+                          id="register-confirm"
+                          type={showPassword ? "text" : "password"}
+                          placeholder={t("register.createAccountConfirmPlaceholder")}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          autoComplete="new-password"
+                          disabled={isSubmitting}
+                          className="h-12 rounded-2xl border-border/60 bg-background pr-10 shadow-xs focus-visible:border-white focus-visible:ring-[1.5px] focus-visible:ring-white/80 focus-visible:ring-offset-0 md:h-[52px] md:rounded-2xl"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>
@@ -552,7 +585,7 @@ export default function SignUpPage() {
                 </div>
               </div>
             ) : (
-        <div className="flex min-h-0 w-full flex-1 flex-col items-center">
+        <div className="flex min-h-0 w-full flex-1 flex-col items-center md:justify-center">
           {/* Header: back arrow + progress bar */}
           <header className="-mx-2 w-full shrink-0 self-stretch">
             <div className="flex w-full items-center justify-center gap-3 rounded-xl px-3 py-2">
@@ -593,7 +626,11 @@ export default function SignUpPage() {
               key={step}
               className={cn(
                 "flex w-full flex-col items-stretch space-y-8 md:space-y-9",
-                slideDirection === "forward" ? "animate-register-slide-right" : "animate-register-slide-left"
+                step === 1
+                  ? "animate-register-slide-right md:animate-none"
+                  : slideDirection === "forward"
+                    ? "animate-register-slide-right"
+                    : "animate-register-slide-left"
               )}
             >
           {/* Step 1: Physical data */}
@@ -736,14 +773,18 @@ export default function SignUpPage() {
               onClick={handleBackdropClick}
               aria-hidden
             />
-            <div className="pointer-events-none relative flex flex-col items-center justify-end md:absolute md:left-0 md:top-0 md:h-full md:w-[50%] md:justify-end">
-              <div
-                className="pointer-events-auto relative mx-auto flex w-full max-w-lg max-h-[85dvh] flex-col rounded-t-[32px] bg-card shadow-xl transition-transform duration-300 ease-out md:max-w-[400px]"
-                style={{ transform: openField && !isClosing ? "translateY(0)" : "translateY(100%)" }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <header className="flex shrink-0 justify-center px-6 py-4">
-                  <h2 className="text-center text-xl font-bold text-foreground">
+            <div className="flex w-full md:ml-auto md:w-[48%] md:max-w-[760px] md:px-3 lg:w-[46%] lg:px-4">
+            <div
+              className="relative mx-auto flex w-full max-w-md max-h-[85dvh] flex-col rounded-t-[32px] rounded-b-none bg-card shadow-xl transition-transform duration-300 ease-out md:rounded-t-[32px] md:rounded-b-none"
+              style={{
+                transform: openField && !isClosing ? "translateY(0)" : "translateY(100%)",
+                opacity: openField && !isClosing ? 1 : 0,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+                <header className="flex shrink-0 items-center justify-between px-6 py-5">
+                  <div>
+                    <h2 className="text-xl font-bold text-foreground">
                     {openField === "age" && t("register.age")}
                     {openField === "sex" && t("register.sex")}
                     {openField === "weight" && `${t("register.weight")} (kg)`}
@@ -751,9 +792,18 @@ export default function SignUpPage() {
                     {openField === "activityLevel" && t("register.activityLevel")}
                     {openField === "goal" && t("register.goal")}
                     {openField === "weeklyRateKg" && t("register.weeklyRate")}
-                  </h2>
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleBackdropClick}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground active:scale-95"
+                    aria-label={t("profile.cancel")}
+                  >
+                    <X className="h-4 w-4" strokeWidth={2.2} />
+                  </button>
                 </header>
-                <div className="flex flex-1 flex-col overflow-y-auto overflow-x-visible px-6 pb-8">
+                <div className="flex flex-1 flex-col overflow-y-auto px-6 pb-8">
                   <div className="mx-auto w-full max-w-xs flex-1">
                   {openField === "age" && (
                     <div className="w-full">
@@ -773,24 +823,19 @@ export default function SignUpPage() {
                     </div>
                   )}
                   {openField === "sex" && (
-                    <div className="flex gap-2">
+                    <div className="overflow-hidden">
                       {(["male", "female"] as const).map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => {
-                            update("sex", s)
-                            closeModal()
-                          }}
-                          className={cn(
-                            "flex flex-1 items-center justify-center rounded-xl px-4 py-4 text-sm font-medium transition-colors",
-                            profile.sex === s
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card"
-                          )}
-                        >
-                          {t(s === "male" ? "register.male" : "register.female")}
-                        </button>
+                        <div key={s}>
+                          {s !== "male" && <div className="mx-5 h-px bg-border" />}
+                          <PickerOptionRow
+                            label={t(s === "male" ? "register.male" : "register.female")}
+                            selected={profile.sex === s}
+                            onClick={() => {
+                              update("sex", s)
+                              closeModal()
+                            }}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
@@ -831,86 +876,71 @@ export default function SignUpPage() {
                     </div>
                   )}
                   {openField === "activityLevel" && (
-                    <div className="flex flex-col gap-2">
-                      {ACTIVITY_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => {
-                            update("activityLevel", opt.id)
-                            closeModal()
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-medium transition-colors",
-                            profile.activityLevel === opt.id
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card"
-                          )}
-                        >
-                          {t(opt.labelKey)}
-                        </button>
+                    <div className="overflow-hidden">
+                      {ACTIVITY_OPTIONS.map((opt, index) => (
+                        <div key={opt.id}>
+                          {index > 0 && <div className="mx-5 h-px bg-border" />}
+                          <PickerOptionRow
+                            label={t(opt.labelKey)}
+                            selected={profile.activityLevel === opt.id}
+                            onClick={() => {
+                              update("activityLevel", opt.id)
+                              closeModal()
+                            }}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
                   {openField === "goal" && (
-                    <div className="flex flex-col gap-2">
-                      {GOAL_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => {
-                            update("goal", opt.id)
-                            closeModal()
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-medium transition-colors",
-                            profile.goal === opt.id
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card"
-                          )}
-                        >
-                          {t(opt.labelKey)}
-                        </button>
+                    <div className="overflow-hidden">
+                      {GOAL_OPTIONS.map((opt, index) => (
+                        <div key={opt.id}>
+                          {index > 0 && <div className="mx-5 h-px bg-border" />}
+                          <PickerOptionRow
+                            label={t(opt.labelKey)}
+                            selected={profile.goal === opt.id}
+                            onClick={() => {
+                              update("goal", opt.id)
+                              closeModal()
+                            }}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
                   {openField === "weeklyRateKg" && (
-                    <div className="flex flex-col gap-2">
-                      {WEEKLY_RATE_OPTIONS.map((rate) => (
-                        <button
-                          key={rate}
-                          type="button"
-                          onClick={() => {
-                            update("weeklyRateKg", rate)
-                            closeModal()
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-center rounded-xl px-4 py-4 text-sm font-medium transition-colors",
-                            profile.weeklyRateKg === rate
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-card"
-                          )}
-                        >
-                          {rate} kg/sem
-                        </button>
+                    <div className="overflow-hidden">
+                      {WEEKLY_RATE_OPTIONS.map((rate, index) => (
+                        <div key={rate}>
+                          {index > 0 && <div className="mx-5 h-px bg-border" />}
+                          <PickerOptionRow
+                            label={`${rate} kg/sem`}
+                            selected={profile.weeklyRateKg === rate}
+                            onClick={() => {
+                              update("weeklyRateKg", rate)
+                              closeModal()
+                            }}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
                 </div>
                 {openField !== "sex" && openField !== "activityLevel" && openField !== "goal" && openField !== "weeklyRateKg" && (
-                  <div className="mt-10 flex justify-center px-2">
+                  <div className="mt-10">
                     <button
                       type="button"
                       onClick={handleModalSave}
                       disabled={!!modalError}
-                      className="flex h-14 w-full items-center justify-center rounded-xl bg-primary px-5 py-5 text-base font-semibold text-primary-foreground transition-colors active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none"
+                      className="flex h-12 w-full items-center justify-center rounded-full bg-primary px-4 text-[15px] font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 active:scale-[0.99] active:opacity-85 disabled:pointer-events-none disabled:opacity-50"
                     >
                       {t("register.save")}
                     </button>
                   </div>
                 )}
               </div>
-              </div>
+            </div>
             </div>
           </div>
         )}

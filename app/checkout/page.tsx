@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { DASHBOARD_PLANS } from "@/lib/plans"
 import {
   Mic, Camera, BarChart3, TrendingUp, Bell, Target,
   Activity, Calendar, Zap, Smartphone, Lock, ArrowRight, Check,
@@ -11,41 +12,7 @@ import {
 const PLAN_CARD_WIDTH_MOBILE = 280
 const PLAN_GAP = 24
 
-const plans = [
-  {
-    name: "Máquina",
-    price: 4999,
-    originalPrice: 5999,
-    desc: "Para arrancar a trackear sin excusas.",
-    highlights: ["Registro por voz", "Historial de entrenos", "Correcciones por chat"],
-    featureIndices: [0, 6, 8, 9],
-    popular: false,
-    image: "/images/rulo-maquina.webp",
-    glow: "rgba(56, 189, 248, 0.25)",
-  },
-  {
-    name: "Fiera",
-    price: 9999,
-    originalPrice: 10999,
-    desc: "Todo lo que necesitás para progresar en serio.",
-    highlights: ["Todo de Máquina", "Foto → macros", "Dashboard completo", "Nudging inteligente", "Progresión automática"],
-    featureIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-    popular: true,
-    image: "/images/rulo-fiera.webp",
-    glow: "rgba(59, 130, 246, 0.25)",
-  },
-  {
-    name: "Bestia",
-    price: 19999,
-    originalPrice: 21999,
-    desc: "Para los que van por todo. Sin límites.",
-    highlights: ["Todo de Fiera", "Análisis avanzado", "Export PDF/CSV", "Soporte prioritario"],
-    featureIndices: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    popular: false,
-    image: "/images/rulo-bestia.webp",
-    glow: "rgba(234, 179, 8, 0.25)",
-  },
-]
+const plans = DASHBOARD_PLANS
 
 const allFeatures = [
   { icon: Mic, label: "Voice-to-Data ilimitado" },
@@ -161,6 +128,7 @@ export default function CheckoutPage() {
       if (data.success) {
         updateUser({
           subscription_active_until: data.result.subscription_active_until,
+          current_plan: data.result.current_plan,
           trial_used: true,
         })
         router.push("/trial-activated")

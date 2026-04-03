@@ -13,7 +13,7 @@ export default function CheckoutPendingPage() {
           Tu pago está siendo procesado. Te notificaremos cuando se confirme.
         </p>
         <Button asChild className="h-12 w-full rounded-full text-base font-semibold">
-          <Link href="/">Ir al dashboard</Link>
+          <Link href="/app">Ir al dashboard</Link>
         </Button>
       </div>
     </main>

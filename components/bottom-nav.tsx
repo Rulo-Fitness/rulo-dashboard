@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import Link from "next/link"
 import { motion } from "motion/react"
-import { ChevronLeft, MessageCircle } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
 import { useI18n, type TranslationKey } from "@/lib/i18n"
 import { SettingsIcon, type SettingsIconHandle } from "@/components/ui/settings-icon"
 import { TrendingIcon, type TrendingIconHandle } from "@/components/ui/trending-icon"
@@ -66,7 +66,16 @@ export function BottomNav({ activeTab, onTabChange, hidden = false }: BottomNavP
                 : "max-w-0 px-0 py-3 opacity-0 translate-x-4 pointer-events-none"
             }`}
           >
-            <MessageCircle className="h-4 w-4 shrink-0" />
+            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden="true">
+              <path
+                d="M12 2.5c-5.11 0-9.25 4.03-9.25 9 0 1.72.51 3.33 1.39 4.7L2.5 21.5l5.5-1.52c1.22.65 2.62 1.02 4 1.02 5.11 0 9.25-4.03 9.25-9s-4.14-9-9.25-9Z"
+                fill="#4CAF50"
+              />
+              <path
+                d="M8.7 7.75c-.16-.35-.33-.36-.48-.37h-.4c-.15 0-.38.06-.58.26-.2.21-.76.75-.76 1.84s.78 2.13.9 2.28c.1.14 1.5 2.38 3.7 3.23 1.82.71 2.2.58 2.6.53.4-.04 1.26-.5 1.44-1 .18-.5.18-.92.13-1-.06-.09-.21-.14-.44-.26-.23-.12-1.36-.67-1.57-.74-.21-.07-.37-.12-.52.12-.15.23-.58.73-.71.89-.13.15-.27.17-.5.06-.23-.12-.96-.35-1.83-1.11-.68-.61-1.14-1.35-1.27-1.58-.13-.23-.02-.34.09-.46.1-.1.23-.27.34-.4.11-.13.15-.23.23-.38.08-.15.04-.29-.02-.4-.05-.12-.52-1.39-.72-1.91Z"
+                fill="#fff"
+              />
+            </svg>
             <span>{t("nav.chatRulo")}</span>
           </Link>
           <button

@@ -17,6 +17,7 @@ export type AuthUser = {
   phone: string
   name?: string
   subscription_active_until?: string | null
+  current_plan?: string | null
   trial_used?: boolean
 }
 
@@ -27,6 +28,7 @@ type AuthContextValue = {
   register: (phone: string, password: string, name?: string) => Promise<{ ok: boolean; error?: string }>
   updateUser: (updates: Partial<AuthUser>) => void
   logout: () => void
+  deleteAccount: () => Promise<{ ok: boolean; error?: string }>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -84,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const text = await res.text()
         let data: {
           success?: boolean
-          result?: { id: string; phone: string | null; name: string | null; subscription_active_until: string | null; trial_used: boolean }
+          result?: { id: string; phone: string | null; name: string | null; subscription_active_until: string | null; current_plan: string | null; trial_used: boolean }
           errors?: { message: string }[]
         }
         try {
@@ -107,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: r.phone ?? body.phone,
           name: r.name || undefined,
           subscription_active_until: r.subscription_active_until ?? undefined,
+          current_plan: r.current_plan ?? undefined,
           trial_used: r.trial_used ?? false,
         }
         setUser(newUser)
@@ -184,6 +187,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveUser(null)
   }, [])
 
+  const deleteAccount = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    const currentUser = loadStoredUser()
+    const userId = currentUser?.id
+
+    if (!userId) {
+      setUser(null)
+      saveUser(null)
+      return { ok: false, error: "No se encontro la cuenta actual" }
+    }
+
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: "DELETE",
+      })
+      const text = await res.text()
+      let data: { success?: boolean; errors?: { message: string }[] } = {}
+      try {
+        data = text ? JSON.parse(text) : {}
+      } catch {
+        // ignore invalid json
+      }
+
+      if (!res.ok) {
+        return {
+          ok: false,
+          error: data.errors?.[0]?.message ?? "No se pudo eliminar la cuenta",
+        }
+      }
+
+      setUser(null)
+      saveUser(null)
+      return { ok: true }
+    } catch (err) {
+      console.error("[Rulo Auth] deleteAccount error:", err)
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Error de conexion.",
+      }
+    }
+  }, [])
+
   const value: AuthContextValue = {
     user,
     isLoading,
@@ -191,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register,
     updateUser,
     logout,
+    deleteAccount,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

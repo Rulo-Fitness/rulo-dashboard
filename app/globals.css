@@ -571,6 +571,17 @@ input[type="time"]::-webkit-date-and-time-value {
   animation: float-soft 4.8s ease-in-out infinite;
 }
 
+@keyframes register-card-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(32px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
 @keyframes gift-confetti-left {
   0% {
     opacity: 0;
