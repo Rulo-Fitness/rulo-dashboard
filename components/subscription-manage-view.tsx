@@ -54,11 +54,11 @@ export function SubscriptionManageView({
       ? planName
       : state === "active" && user?.trial_used
         ? t("subscription.trialName")
-        : state === "expired" && planName
-          ? planName
-          : state === "available"
-            ? t("subscription.trialName")
-            : null
+      : state === "expired" && planName
+        ? planName
+        : state === "available"
+          ? t("subscription.trialName")
+        : null
 
   const effectivePlan = useMemo(() => {
     if (effectivePlanName === t("subscription.trialName")) return CHEAPEST_DASHBOARD_PLAN

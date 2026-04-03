@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
@@ -39,6 +40,8 @@ import {
   X,
 } from "lucide-react"
 import { AppSignature } from "@/components/app-signature"
+
+const WHATSAPP_RULO_URL = "https://wa.me/5492236660910"
 
 type SettingsPicker = "language" | "theme" | null
 type ProfileFieldKey =
@@ -295,6 +298,11 @@ export function ProfileView({
   const recapMorphEnabled = recapSource === "settings" || (recapOpen && recapSource === "settings")
   const hasActiveAccess = Boolean(user?.subscription_active_until && new Date(user.subscription_active_until) > new Date())
   const { planName } = useCurrentPlan(user?.id, user?.current_plan)
+  const rawCurrentPlan = user?.current_plan?.trim().toLowerCase()
+  const showChatWithRulo =
+    rawCurrentPlan === "prueba gratis" ||
+    (!planName && !user?.trial_used) ||
+    (hasActiveAccess && user?.trial_used && !planName)
   const subscriptionStatusLabel = hasActiveAccess && planName
     ? planName
     : hasActiveAccess && user?.trial_used
@@ -335,6 +343,26 @@ export function ProfileView({
         </div>
         <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/40" />
       </button>
+
+      {showChatWithRulo && (
+        <Link
+          href={WHATSAPP_RULO_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="group flex items-center gap-4 rounded-[24px] border border-border bg-card px-5 py-4 text-left card-shadow transition-colors active:bg-secondary/60"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-secondary">
+            <img src="/whatsapp-outline.webp" alt="" className="h-6 w-6 shrink-0 object-contain" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              WhatsApp
+            </p>
+            <p className="mt-0.5 truncate text-[15px] font-semibold text-foreground">{t("nav.chatRulo")}</p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform duration-200 group-hover:translate-x-0.5" />
+        </Link>
+      )}
 
       {/* ── Preferences ── */}
       <SectionLabel>{t("settings.preferences")}</SectionLabel>
