@@ -41,10 +41,12 @@ export function SubscriptionManageView({
   onCloseComplete,
   onOpenUpgrade,
 }: SubscriptionManageViewProps) {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const { t, locale } = useI18n()
   const [showCancelInfo, setShowCancelInfo] = useState(false)
   const [isEntered, setIsEntered] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState("")
 
   const state = getSubscriptionState(user)
   const activeUntilLabel = formatActiveUntil(user?.subscription_active_until, locale)
@@ -208,7 +210,40 @@ export function SubscriptionManageView({
             <p className="text-[14px] text-center text-muted-foreground">
               {t("subscription.cancelPlaceholder")}
             </p>
-            <div className="mt-6">
+            {cancelError && (
+              <p className="mt-3 text-center text-[13px] text-destructive">{cancelError}</p>
+            )}
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                disabled={isCancelling}
+                onClick={async () => {
+                  if (!user?.id) return
+                  setIsCancelling(true)
+                  setCancelError("")
+                  try {
+                    const res = await fetch("/api/subscription-cancel", {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ user_id: user.id }),
+                    })
+                    const data = await res.json()
+                    if (!res.ok || !data.success) {
+                      setCancelError(data.error ?? "No se pudo cancelar")
+                    } else {
+                      updateUser({ subscription_status: "cancelled" })
+                      setShowCancelInfo(false)
+                    }
+                  } catch {
+                    setCancelError("Error de conexión")
+                  } finally {
+                    setIsCancelling(false)
+                  }
+                }}
+                className="flex h-12 w-full items-center justify-center rounded-full bg-destructive px-4 text-[15px] font-semibold text-destructive-foreground active:scale-[0.99]"
+              >
+                {isCancelling ? "Cancelando..." : t("subscription.cancel")}
+              </button>
               <button
                 type="button"
                 onClick={() => setShowCancelInfo(false)}

@@ -6,12 +6,13 @@ import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } 
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { useI18n } from "@/lib/i18n"
 import type { TrainingSession } from "@/lib/storage"
-import { TrendingUp, BarChart3, Flame, Calendar, Trophy, ChevronDown } from "lucide-react"
+import { TrendingUp, BarChart3, Flame, Calendar, Trophy, Lock, ChevronDown } from "lucide-react"
 
 interface TrainingAnalyticsProps {
   sessions: TrainingSession[]
   onOpenRecap: () => void
   recapMorphEnabled?: boolean
+  recapLocked?: boolean
 }
 
 type Range = "1M" | "3M" | "all"
@@ -75,7 +76,7 @@ function getMondayOfWeek(date: Date): Date {
   return d
 }
 
-export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = true }: TrainingAnalyticsProps) {
+export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = true, recapLocked = false }: TrainingAnalyticsProps) {
   const { t } = useI18n()
   const [range, setRange] = useState<Range>("3M")
   const [selectedExercise, setSelectedExercise] = useState<string>("")
@@ -301,7 +302,7 @@ export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = t
               </p>
             </div>
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition-transform duration-300 group-hover:scale-105">
-              <Trophy className="h-5 w-5" strokeWidth={2.2} />
+              {recapLocked ? <Lock className="h-5 w-5" strokeWidth={2.2} /> : <Trophy className="h-5 w-5" strokeWidth={2.2} />}
             </div>
           </div>
         </button>

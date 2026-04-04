@@ -11,7 +11,13 @@ import { TrainingAnalytics } from "@/components/analytics/training-analytics"
 import { MealsAnalytics } from "@/components/analytics/meals-analytics"
 import { AppSignature } from "@/components/app-signature"
 
+function isBestiaPlan(plan: string | null | undefined): boolean {
+  if (!plan) return false
+  return plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "bestia"
+}
+
 interface AnalyticsViewProps {
+  onUpgrade?: () => void
   refreshKey: number
   onNavigate?: (tab: string) => void
   onOpenRecap: () => void
@@ -19,9 +25,10 @@ interface AnalyticsViewProps {
   recapSource: "analytics" | "settings" | null
 }
 
-export function AnalyticsView({ refreshKey, onOpenRecap, recapOpen, recapSource }: AnalyticsViewProps) {
+export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, recapSource }: AnalyticsViewProps) {
   const { t } = useI18n()
   const { user } = useAuth()
+  const hasBestia = isBestiaPlan(user?.current_plan)
   const [mounted, setMounted] = useState(false)
   const [activeSubTab, setActiveSubTab] = useState<"training" | "meals">("training")
   const [sessions, setSessions] = useState<TrainingSession[]>([])
@@ -38,7 +45,9 @@ export function AnalyticsView({ refreshKey, onOpenRecap, recapOpen, recapSource 
     if (user) {
       const today = new Date().toISOString().slice(0, 10)
       fetchWorkoutLogsByRange(user.id, "2020-01-01", today).then(setSessions)
-      fetchMealsByRange(user.id, "2020-01-01", today).then(setMeals)
+      if (hasBestia) {
+        fetchMealsByRange(user.id, "2020-01-01", today).then(setMeals)
+      }
     }
   }, [mounted, refreshKey, user])
 
@@ -102,9 +111,29 @@ export function AnalyticsView({ refreshKey, onOpenRecap, recapOpen, recapSource 
           sessions={sessions}
           onOpenRecap={onOpenRecap}
           recapMorphEnabled={recapSource === "analytics" || (recapOpen && recapSource === "analytics")}
+          recapLocked={!hasBestia}
         />
       )}
-      {activeSubTab === "meals" && <MealsAnalytics meals={meals} profile={profile} />}
+      {activeSubTab === "meals" && (
+        hasBestia ? (
+          <MealsAnalytics meals={meals} profile={profile} />
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+            <span className="text-4xl">🍌</span>
+            <h2 className="text-xl font-bold text-foreground">{t("gate.mealsTitle")}</h2>
+            <p className="text-sm text-muted-foreground max-w-xs">{t("gate.mealsDescription")}</p>
+            {onUpgrade && (
+              <button
+                type="button"
+                onClick={onUpgrade}
+                className="mt-2 h-12 rounded-full bg-primary px-8 text-[15px] font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 active:scale-[0.99]"
+              >
+                {t("gate.mealsCta")}
+              </button>
+            )}
+          </div>
+        )
+      )}
       <AppSignature />
     </div>
   )

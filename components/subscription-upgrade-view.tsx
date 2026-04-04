@@ -21,6 +21,7 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
   const [isEntered, setIsEntered] = useState(false)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const [error, setError] = useState("")
+  const [payerEmail, setPayerEmail] = useState("")
 
   const isActivePaidPlan = useMemo(() => {
     const hasActiveAccess = Boolean(user?.subscription_active_until && new Date(user.subscription_active_until) > new Date())
@@ -45,6 +46,11 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
       return
     }
 
+    if (!payerEmail || !payerEmail.includes("@")) {
+      setError("Ingresá tu email para continuar")
+      return
+    }
+
     setLoadingPlan(plan.name)
     setError("")
 
@@ -52,7 +58,7 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.id, plan: plan.name }),
+        body: JSON.stringify({ user_id: user.id, plan: plan.name, payer_email: payerEmail }),
       })
       const data = await res.json()
       if (!res.ok || !data.init_point) {
@@ -97,6 +103,20 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
           <p className="mt-3 text-[15px] leading-6 text-muted-foreground">
             {t("subscription.upgradeSubtitle")}
           </p>
+        </div>
+
+        <div className="mt-5">
+          <label htmlFor="payer-email" className="text-[12px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Email
+          </label>
+          <input
+            id="payer-email"
+            type="email"
+            value={payerEmail}
+            onChange={(e) => setPayerEmail(e.target.value)}
+            placeholder="tu@email.com"
+            className="mt-2 flex h-12 w-full rounded-2xl border border-border bg-background px-4 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
         </div>
 
         <div className="mt-6 space-y-4">

@@ -35,6 +35,7 @@ import {
   Check,
   Smartphone,
   Trophy,
+  Lock,
   Crown,
   Share,
   X,
@@ -181,6 +182,7 @@ export function ProfileView({
   const router = useRouter()
   const { user, logout, deleteAccount } = useAuth()
   const { isActive: subActive } = useSubscription()
+  const hasBestia = user?.current_plan?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "bestia"
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -434,7 +436,7 @@ export function ProfileView({
             )}
             <div className="relative z-10 flex w-full items-center gap-4">
               <IconBox>
-                <Trophy className="h-5 w-5 text-foreground" strokeWidth={2.2} />
+                {hasBestia ? <Trophy className="h-5 w-5 text-foreground" strokeWidth={2.2} /> : <Lock className="h-5 w-5 text-muted-foreground" strokeWidth={2.2} />}
               </IconBox>
               <span className="flex-1 text-[15px] font-medium text-foreground">{t("analytics.recapMockCta")}</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />

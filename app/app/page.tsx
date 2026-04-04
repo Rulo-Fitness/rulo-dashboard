@@ -12,8 +12,19 @@ import { SubscriptionUpgradeView } from "@/components/subscription-upgrade-view"
 import { TrainingSync } from "@/components/training-sync"
 import { MealsSync } from "@/components/meals-sync"
 import { SubscriptionBanner } from "@/components/subscription-banner"
+import { useAuth } from "@/lib/auth-context"
+import { useI18n } from "@/lib/i18n"
+import { AppSignature } from "@/components/app-signature"
+
+function isBestiaPlan(plan: string | null | undefined): boolean {
+  if (!plan) return false
+  return plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "bestia"
+}
 
 export default function AppDashboardPage() {
+  const { user } = useAuth()
+  const { t } = useI18n()
+  const hasBestia = isBestiaPlan(user?.current_plan)
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("analytics")
   const [refreshKey, setRefreshKey] = useState(0)
@@ -23,6 +34,7 @@ export default function AppDashboardPage() {
   const [recapSource, setRecapSource] = useState<"analytics" | "settings" | null>(null)
   const [settingsOverlayOpen, setSettingsOverlayOpen] = useState(false)
   const [navHiddenByScroll, setNavHiddenByScroll] = useState(false)
+  const [gateOverlay, setGateOverlay] = useState<"recap" | null>(null)
   const [subscriptionViewOpen, setSubscriptionViewOpen] = useState(false)
   const [subscriptionViewVisible, setSubscriptionViewVisible] = useState(false)
   const [upgradeViewOpen, setUpgradeViewOpen] = useState(false)
@@ -178,7 +190,7 @@ export default function AppDashboardPage() {
   return (
     <>
       <TrainingSync onSynced={handleTrainingSynced} />
-      <MealsSync onSynced={handleTrainingSynced} />
+      {hasBestia && <MealsSync onSynced={handleTrainingSynced} />}
       <main className="mx-auto flex min-h-[100lvh] max-w-md flex-1 flex-col bg-background pb-16 pt-3 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
         <SubscriptionBanner />
         <div className="flex min-h-0 flex-1 flex-col overflow-visible pointer-events-auto" style={{ touchAction: "pan-y" }}>
@@ -187,8 +199,16 @@ export default function AppDashboardPage() {
               refreshKey={refreshKey}
               onNavigate={handleTabChange}
               onOpenRecap={() => {
-                setRecapSource("analytics")
-                setRecapOpen(true)
+                if (hasBestia) {
+                  setRecapSource("analytics")
+                  setRecapOpen(true)
+                } else {
+                  setGateOverlay("recap")
+                }
+              }}
+              onUpgrade={() => {
+                setUpgradeViewVisible(true)
+                setUpgradeViewOpen(true)
               }}
               recapOpen={recapOpen}
               recapSource={recapSource}
@@ -198,7 +218,28 @@ export default function AppDashboardPage() {
             <TrainingView onUpdate={triggerRefresh} onAddPanelChange={setTrainingAddPanelOpen} />
           )}
           {activeTab === "meals" && (
-            <MealsView onUpdate={triggerRefresh} onMealPanelChange={setMealsPanelOpen} />
+            hasBestia ? (
+              <MealsView onUpdate={triggerRefresh} onMealPanelChange={setMealsPanelOpen} />
+            ) : (
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+                <span className="text-4xl">🍌</span>
+                <h2 className="text-xl font-bold text-foreground">{t("gate.mealsTitle")}</h2>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  {t("gate.mealsDescription")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUpgradeViewVisible(true)
+                    setUpgradeViewOpen(true)
+                  }}
+                  className="mt-2 h-12 rounded-full bg-primary px-8 text-[15px] font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 active:scale-[0.99]"
+                >
+                  {t("gate.mealsCta")}
+                </button>
+                <AppSignature />
+              </div>
+            )
           )}
           {activeTab === "settings" && (
             <ProfileView
@@ -208,8 +249,12 @@ export default function AppDashboardPage() {
                 setSubscriptionViewOpen(true)
               }}
               onOpenRecap={() => {
-                setRecapSource("settings")
-                setRecapOpen(true)
+                if (hasBestia) {
+                  setRecapSource("settings")
+                  setRecapOpen(true)
+                } else {
+                  setGateOverlay("recap")
+                }
               }}
               recapOpen={recapOpen}
               recapSource={recapSource}
@@ -240,6 +285,35 @@ export default function AppDashboardPage() {
         />
       )}
       {recapOpen && <TrainingRecapMock onClose={() => setRecapOpen(false)} />}
+      {gateOverlay === "recap" && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm px-6">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+            <span className="text-5xl">🏆</span>
+            <h2 className="text-2xl font-bold text-foreground">{t("gate.recapTitle")}</h2>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              {t("gate.recapDescription")}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setGateOverlay(null)
+                setUpgradeViewVisible(true)
+                setUpgradeViewOpen(true)
+              }}
+              className="mt-2 h-12 rounded-full bg-primary px-8 text-[15px] font-semibold text-primary-foreground shadow-md transition-colors hover:bg-primary/90 active:scale-[0.99]"
+            >
+              {t("gate.recapCta")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setGateOverlay(null)}
+              className="mt-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t("profile.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
       <BottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
