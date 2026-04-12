@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { useI18n } from "@/lib/i18n"
+import { useSubscription } from "@/lib/hooks/use-subscription"
 import { DASHBOARD_PLANS } from "@/lib/plans"
 import {
   Mic, Camera, BarChart3, TrendingUp, Bell, Target,
@@ -38,6 +40,8 @@ export default function CheckoutPage() {
   const plansScrollRef = useRef<HTMLDivElement>(null)
   const [isMobile, setIsMobile] = useState(false)
   const { user, updateUser } = useAuth()
+  const { t } = useI18n()
+  const { isActive } = useSubscription()
   const router = useRouter()
 
   useEffect(() => {
@@ -205,17 +209,17 @@ export default function CheckoutPage() {
             {isAnnual && <p className="text-xs text-slate-500 line-through">${plan.price.toLocaleString("es-AR")}/mes</p>}
             {!isAnnual && <p className="text-xs text-slate-500 line-through">${plan.originalPrice.toLocaleString("es-AR")}/mes</p>}
           </div>
-          <p className="text-sm text-slate-400">{plan.desc}</p>
+          <p className="text-sm text-slate-400">{t(plan.descKey)}</p>
           <button
             onClick={() => handleCheckout(i)}
-            disabled={isLoading}
+            disabled={isLoading || isActive}
             className={`w-full flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-60 ${
               plan.popular
                 ? "bg-gradient-to-r from-[#FF6B00] to-[#CC5500] text-white shadow-lg shadow-[#FF6B00]/30 hover:shadow-xl hover:shadow-[#FF6B00]/40 border border-[#FF6B00]/30"
                 : "bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 text-white shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 border border-white/20"
             }`}
           >
-            {isLoading ? "Redirigiendo..." : "Suscribirse"} <ArrowRight className="w-4 h-4" />
+            {isActive ? "Ya estás suscripta" : isLoading ? "Redirigiendo..." : "Suscribirse"} {!isActive && <ArrowRight className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -266,8 +270,20 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {/* Active subscription banner */}
+        {isActive && (
+          <div className="max-w-md mx-auto mb-10 md:mb-12">
+            <div className="relative rounded-2xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-sm p-6 text-center">
+              <h3 className="text-lg font-bold text-white mb-2">Ya tenés una suscripción activa</h3>
+              <p className="text-sm text-slate-300">
+                Para cambiar de plan, cancelá tu suscripción actual desde Ajustes y esperá a que venza.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Trial banner */}
-        {user && !user.trial_used && (
+        {user && !user.trial_used && !isActive && (
           <div className="max-w-md mx-auto mb-10 md:mb-12">
             <div className="relative rounded-2xl border border-green-500/30 bg-green-500/10 backdrop-blur-sm p-6 text-center">
               <h3 className="text-lg font-bold text-white mb-2">Probá Rulo 7 días gratis</h3>

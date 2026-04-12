@@ -18,7 +18,7 @@ export default function CheckoutSuccessPage() {
         const res = await fetch(`/api/subscription-status?user_id=${user.id}`)
         const data = await res.json()
 
-        if (data.result?.subscription_status === "active") {
+        if (data.result?.subscription_active_until && new Date(data.result.subscription_active_until) > new Date()) {
           updateUser({
             subscription_active_until: data.result.subscription_active_until,
             current_plan: data.result.current_plan,

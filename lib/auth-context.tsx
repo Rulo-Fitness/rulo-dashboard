@@ -19,7 +19,6 @@ export type AuthUser = {
   subscription_active_until?: string | null
   current_plan?: string | null
   trial_used?: boolean
-  subscription_status?: string | null
   mp_subscription_id?: string | null
 }
 
@@ -75,7 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const updates: Partial<AuthUser> = {}
           if (r.subscription_active_until !== undefined) updates.subscription_active_until = r.subscription_active_until
           if (r.current_plan !== undefined) updates.current_plan = r.current_plan
-          if (r.subscription_status !== undefined) updates.subscription_status = r.subscription_status
           if (Object.keys(updates).length > 0) {
             setUser((prev) => {
               if (!prev) return prev

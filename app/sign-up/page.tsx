@@ -583,6 +583,16 @@ export default function SignUpPage() {
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
+                <p className="mt-4 max-w-md text-center text-[11px] leading-4 text-muted-foreground">
+                  {t("register.legalConsent")}{" "}
+                  <a href="https://www.rulofitness.com/terms" target="_blank" rel="noreferrer" className="underline hover:text-foreground">
+                    {t("register.termsAndConditions")}
+                  </a>{" "}
+                  {t("register.and")}{" "}
+                  <a href="https://www.rulofitness.com/privacy" target="_blank" rel="noreferrer" className="underline hover:text-foreground">
+                    {t("register.privacyPolicy")}
+                  </a>.
+                </p>
               </div>
             ) : (
         <div className="flex min-h-0 w-full flex-1 flex-col items-center md:justify-center">

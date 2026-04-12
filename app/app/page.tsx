@@ -18,7 +18,13 @@ import { AppSignature } from "@/components/app-signature"
 
 function isBestiaPlan(plan: string | null | undefined): boolean {
   if (!plan) return false
-  return plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "bestia"
+  const normalized = plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return normalized === "bestia" || normalized === "free_trial" || normalized === "prueba gratis"
+}
+
+function isFieraPlan(plan: string | null | undefined): boolean {
+  if (!plan) return false
+  return plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "fiera"
 }
 
 export default function AppDashboardPage() {
@@ -34,7 +40,7 @@ export default function AppDashboardPage() {
   const [recapSource, setRecapSource] = useState<"analytics" | "settings" | null>(null)
   const [settingsOverlayOpen, setSettingsOverlayOpen] = useState(false)
   const [navHiddenByScroll, setNavHiddenByScroll] = useState(false)
-  const [gateOverlay, setGateOverlay] = useState<"recap" | null>(null)
+  const [gateOverlay, setGateOverlay] = useState<"recap" | "recapComingSoon" | null>(null)
   const [subscriptionViewOpen, setSubscriptionViewOpen] = useState(false)
   const [subscriptionViewVisible, setSubscriptionViewVisible] = useState(false)
   const [upgradeViewOpen, setUpgradeViewOpen] = useState(false)
@@ -69,11 +75,11 @@ export default function AppDashboardPage() {
     if (activeTab !== "settings") setSubscriptionViewVisible(false)
   }, [activeTab])
   useEffect(() => {
-    if (activeTab !== "settings") setUpgradeViewOpen(false)
-  }, [activeTab])
+    if (activeTab !== "settings" && !upgradeViewVisible) setUpgradeViewOpen(false)
+  }, [activeTab, upgradeViewVisible])
   useEffect(() => {
-    if (activeTab !== "settings") setUpgradeViewVisible(false)
-  }, [activeTab])
+    if (activeTab !== "settings" && !upgradeViewVisible) setUpgradeViewVisible(false)
+  }, [activeTab, upgradeViewVisible])
 
   useEffect(() => {
     const shouldLockBodyScroll = subscriptionViewVisible || upgradeViewVisible
@@ -192,18 +198,17 @@ export default function AppDashboardPage() {
       <TrainingSync onSynced={handleTrainingSynced} />
       {hasBestia && <MealsSync onSynced={handleTrainingSynced} />}
       <main className="mx-auto flex min-h-[100lvh] max-w-md flex-1 flex-col bg-background pb-16 pt-3 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
-        <SubscriptionBanner />
+        <SubscriptionBanner onUpgrade={() => { setUpgradeViewVisible(true); setUpgradeViewOpen(true) }} />
         <div className="flex min-h-0 flex-1 flex-col overflow-visible pointer-events-auto" style={{ touchAction: "pan-y" }}>
           {activeTab === "analytics" && (
             <AnalyticsView
               refreshKey={refreshKey}
               onNavigate={handleTabChange}
               onOpenRecap={() => {
-                if (hasBestia) {
-                  setRecapSource("analytics")
-                  setRecapOpen(true)
-                } else {
+                if (isFieraPlan(user?.current_plan)) {
                   setGateOverlay("recap")
+                } else {
+                  setGateOverlay("recapComingSoon")
                 }
               }}
               onUpgrade={() => {
@@ -249,11 +254,10 @@ export default function AppDashboardPage() {
                 setSubscriptionViewOpen(true)
               }}
               onOpenRecap={() => {
-                if (hasBestia) {
-                  setRecapSource("settings")
-                  setRecapOpen(true)
-                } else {
+                if (isFieraPlan(user?.current_plan)) {
                   setGateOverlay("recap")
+                } else {
+                  setGateOverlay("recapComingSoon")
                 }
               }}
               recapOpen={recapOpen}
@@ -308,6 +312,24 @@ export default function AppDashboardPage() {
               type="button"
               onClick={() => setGateOverlay(null)}
               className="mt-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t("profile.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+      {gateOverlay === "recapComingSoon" && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/95 backdrop-blur-sm px-6">
+          <div className="flex flex-col items-center gap-4 text-center max-w-sm">
+            <span className="text-5xl">🚀</span>
+            <h2 className="text-2xl font-bold text-foreground">{t("gate.recapComingSoonTitle")}</h2>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              {t("gate.recapComingSoonDescription")}
+            </p>
+            <button
+              type="button"
+              onClick={() => setGateOverlay(null)}
+              className="mt-2 h-12 rounded-full bg-secondary px-8 text-[15px] font-semibold text-foreground shadow-md transition-colors hover:bg-secondary/90 active:scale-[0.99]"
             >
               {t("profile.cancel")}
             </button>

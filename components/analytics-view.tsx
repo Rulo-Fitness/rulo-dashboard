@@ -13,7 +13,13 @@ import { AppSignature } from "@/components/app-signature"
 
 function isBestiaPlan(plan: string | null | undefined): boolean {
   if (!plan) return false
-  return plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "bestia"
+  const normalized = plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return normalized === "bestia" || normalized === "free_trial" || normalized === "prueba gratis"
+}
+
+function isFieraPlan(plan: string | null | undefined): boolean {
+  if (!plan) return false
+  return plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "fiera"
 }
 
 interface AnalyticsViewProps {
@@ -111,7 +117,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
           sessions={sessions}
           onOpenRecap={onOpenRecap}
           recapMorphEnabled={recapSource === "analytics" || (recapOpen && recapSource === "analytics")}
-          recapLocked={!hasBestia}
+          recapLocked={isFieraPlan(user?.current_plan)}
         />
       )}
       {activeSubTab === "meals" && (

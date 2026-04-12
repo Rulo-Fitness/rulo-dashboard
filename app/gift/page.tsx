@@ -222,7 +222,7 @@ export default function GiftPage() {
 
             <div className="mt-4 flex items-center gap-2 text-[12px] text-slate-500">
               <a
-                href="https://www.rulofitness.com/#/terms"
+                href="https://www.rulofitness.com/terms"
                 target="_blank"
                 rel="noreferrer"
                 className="transition-colors hover:text-slate-950"
@@ -231,7 +231,7 @@ export default function GiftPage() {
               </a>
               <span>•</span>
               <a
-                href="https://www.rulofitness.com/#/privacy"
+                href="https://www.rulofitness.com/privacy"
                 target="_blank"
                 rel="noreferrer"
                 className="transition-colors hover:text-slate-950"

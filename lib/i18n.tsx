@@ -57,6 +57,8 @@ const translations = {
   "gate.recapTitle": { en: "Wrapped is Bestia", es: "Wrapped es Bestia" },
   "gate.recapDescription": { en: "The weekly wrapped is available on the Bestia plan.", es: "El wrapped semanal está disponible en el plan Bestia." },
   "gate.recapCta": { en: "See Bestia plan", es: "Ver plan Bestia" },
+  "gate.recapComingSoonTitle": { en: "Coming soon", es: "Próximamente" },
+  "gate.recapComingSoonDescription": { en: "We're working on the weekly wrapped. It will be available soon!", es: "Estamos trabajando en el wrapped semanal. ¡Estará disponible pronto!" },
   "dashboard.boxPlan": { en: "Beast plan", es: "Plan Bestia" },
   "dashboard.boxPlanHint": { en: "Daily goals", es: "Tus metas diarias" },
   "dashboard.boxInstall": { en: "Download the app", es: "Descarga la app" },
@@ -247,12 +249,40 @@ const translations = {
   "subscription.upgradeEyebrow": { en: "Upgrade", es: "Upgrade" },
   "subscription.upgradeTitle": { en: "Choose how you want to keep progressing", es: "Elegí cómo querés seguir progresando" },
   "subscription.upgradeSubtitle": { en: "Pick the plan that best fits your training rhythm and unlock the next level inside Rulo.", es: "Elegí el plan que mejor se adapta a tu ritmo de entrenamiento y desbloqueá el siguiente nivel dentro de Rulo." },
-  "subscription.upgradeCurrentPlan": { en: "Current plan", es: "Plan actual" },
+  "subscription.upgradeCurrentPlan": { en: "Your plan", es: "Tu plan" },
+  "subscription.upgradeLowerPlan": { en: "Lower plan", es: "Plan inferior" },
+  "subscription.upgradeYourPlanBadge": { en: "Your plan", es: "Tu plan" },
   "subscription.upgradeChoosePlan": { en: "Choose plan", es: "Elegir plan" },
   "subscription.upgradeRedirecting": { en: "Redirecting...", es: "Redirigiendo..." },
   "subscription.upgrade": { en: "Upgrade plan", es: "Mejorar plan" },
+
+  // Plan descriptions
+  "plan.fiera.desc": { en: "Start tracking for real.", es: "Para arrancar a trackear en serio." },
+  "plan.bestia.desc": { en: "For those who go all in. No limits.", es: "Para los que van por todo. Sin límites." },
+
+  // Plan highlights — Fiera
+  "plan.fiera.h1": { en: "Voice workout logging", es: "Registro de entrenamiento por voz" },
+  "plan.fiera.h2": { en: "Full workout history", es: "Historial completo de entrenos" },
+  "plan.fiera.h3": { en: "Progress chart per exercise", es: "Gráfico de progreso por ejercicio" },
+  "plan.fiera.h4": { en: "Training dashboard", es: "Dashboard de entrenamiento" },
+  "plan.fiera.h5": { en: "Unlimited messages per day", es: "Mensajes ilimitados por día" },
+  "plan.fiera.h6": { en: "Priority support", es: "Soporte prioritario" },
+
+  // Plan highlights — Bestia
+  "plan.bestia.h1": { en: "Everything in Fiera", es: "Todo lo de Fiera" },
+  "plan.bestia.h2": { en: "Food photo → calculated macros", es: "Foto de comida → macros calculados" },
+  "plan.bestia.h3": { en: "Menu photo → calories (coming soon)", es: "Foto de menú → calorías (próximamente)" },
+  "plan.bestia.h4": { en: "Calories vs. daily goal balance", es: "Balance calorías vs. objetivo del día" },
+  "plan.bestia.h5": { en: "Nutrition dashboard", es: "Dashboard de nutrición" },
+  "plan.bestia.h6": { en: "Weekly WhatsApp recap (Mondays)", es: "Recap semanal por WhatsApp (lunes)" },
+  "subscription.emailTitle": { en: "Almost there", es: "Ya casi" },
+  "subscription.emailSubtitle": { en: "Enter your Mercado Pago email to continue with the payment.", es: "Ingresá el email de tu cuenta de Mercado Pago para continuar con el pago." },
+  "subscription.emailLabel": { en: "Mercado Pago email", es: "Email de Mercado Pago" },
+  "subscription.emailRequired": { en: "Enter your email to continue", es: "Ingresá tu email para continuar" },
+  "subscription.continueToPayment": { en: "Continue to payment", es: "Continuar al pago" },
+  "subscription.connectionError": { en: "Connection error", es: "Error de conexión" },
   "subscription.cancel": { en: "Cancel subscription", es: "Cancelar suscripción" },
-  "subscription.cancelPlaceholder": { en: "This action will be available soon from the dashboard. For now, subscription cancellation is not yet enabled here.", es: "Esta acción va a estar disponible pronto desde el dashboard. Por ahora, la cancelación todavía no está habilitada acá." },
+  "subscription.cancelConfirm": { en: "Are you sure you want to cancel? You'll keep access until the end of the current period, but it won't renew.", es: "¿Seguro querés cancelar? Vas a mantener el acceso hasta que termine el período actual, pero no se va a renovar." },
 
   // Register (onboarding)
   "register.title": { en: "Create your profile", es: "Creá tu perfil" },
@@ -311,6 +341,10 @@ const translations = {
   "register.createAccountPasswordShort": { en: "Password must be at least 4 characters", es: "La contraseña debe tener al menos 4 caracteres" },
   "register.createAccountPasswordMismatch": { en: "Passwords do not match", es: "Las contraseñas no coinciden" },
   "register.createAccountError": { en: "Could not create account. Try again.", es: "No se pudo crear la cuenta. Intentá de nuevo." },
+  "register.legalConsent": { en: "By creating your account, you agree to the", es: "Al crear tu cuenta, aceptás los" },
+  "register.termsAndConditions": { en: "Terms and Conditions", es: "Términos y Condiciones" },
+  "register.and": { en: "and the", es: "y la" },
+  "register.privacyPolicy": { en: "Privacy Policy", es: "Política de Privacidad" },
 
   // Update prompt
   "update.title": { en: "New version available", es: "Nueva versión disponible" },
@@ -353,7 +387,7 @@ const translations = {
   "analytics.weekLabel": { en: "W", es: "S" },
   "analytics.recapMockEyebrow": { en: "Weekly Recap", es: "Recap semanal" },
   "analytics.recapMockCta": { en: "See your wrapped", es: "Ver tu wrapped" },
-  "analytics.recapMockCtaHint": { en: "A premium mockup of your week, built to validate the vibe before real data.", es: "Un mockup premium de tu semana para validar la experiencia antes de conectar datos reales." },
+  "analytics.recapMockCtaHint": { en: "Your weekly training summary is coming soon.", es: "Tu resumen semanal de entrenamiento llega pronto." },
   "analytics.recapMockWeek": { en: "Week 18 - Mock edition", es: "Semana 18 - Edicion mock" },
   "analytics.recapMockTitle": { en: "You trained with intention this week.", es: "Esta semana entrenaste con intencion." },
   "analytics.recapMockSubtitle": { en: "A first look at how Rulo could turn your weekly training into a premium recap experience.", es: "Una primera mirada a como Rulo podria convertir tu semana de entrenamiento en un recap premium." },

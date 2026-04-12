@@ -9,6 +9,7 @@ import { useI18n } from "@/lib/i18n"
 import { useAuth } from "@/lib/auth-context"
 import { useSubscription } from "@/lib/hooks/use-subscription"
 import { useCurrentPlan } from "@/lib/hooks/use-current-plan"
+import { displayPlanName } from "@/lib/plans"
 import {
   getProfile,
   saveProfile,
@@ -118,7 +119,7 @@ function SettingsRow({
       onClick={onClick}
     >
       <IconBox>{icon}</IconBox>
-      <span className="flex-1 text-[15px] font-medium text-foreground">
+      <span className="flex-1 text-[15px] text-foreground">
         {label}
       </span>
       {children}
@@ -153,7 +154,7 @@ function FieldRow({
       className={`flex w-full items-center gap-4 px-5 min-h-[56px] py-3 bg-card text-left transition-colors active:bg-secondary/60 ${disabled ? "opacity-50 pointer-events-none" : ""}`}
     >
       <IconBox>{icon}</IconBox>
-      <span className="w-32 shrink-0 text-[15px] font-medium leading-tight text-foreground">{label}</span>
+      <span className="w-32 shrink-0 text-[15px] leading-tight text-foreground">{label}</span>
       <div className="ml-auto w-[96px] shrink-0">
         <span className="block w-full text-[15px] text-right text-muted-foreground">
           {value}
@@ -182,7 +183,8 @@ export function ProfileView({
   const router = useRouter()
   const { user, logout, deleteAccount } = useAuth()
   const { isActive: subActive } = useSubscription()
-  const hasBestia = user?.current_plan?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "bestia"
+  const normalizedPlan = user?.current_plan?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  const hasBestia = normalizedPlan === "bestia" || normalizedPlan === "free_trial" || normalizedPlan === "prueba gratis"
   const { t, locale, setLocale } = useI18n()
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -301,12 +303,9 @@ export function ProfileView({
   const hasActiveAccess = Boolean(user?.subscription_active_until && new Date(user.subscription_active_until) > new Date())
   const { planName } = useCurrentPlan(user?.id, user?.current_plan)
   const rawCurrentPlan = user?.current_plan?.trim().toLowerCase()
-  const showChatWithRulo =
-    rawCurrentPlan === "prueba gratis" ||
-    (!planName && !user?.trial_used) ||
-    (hasActiveAccess && user?.trial_used && !planName)
+  const showChatWithRulo = true
   const subscriptionStatusLabel = hasActiveAccess && planName
-    ? planName
+    ? displayPlanName(planName, t)
     : hasActiveAccess && user?.trial_used
       ? t("subscription.trialName")
       : hasActiveAccess
@@ -438,7 +437,7 @@ export function ProfileView({
               <IconBox>
                 {hasBestia ? <Trophy className="h-5 w-5 text-foreground" strokeWidth={2.2} /> : <Lock className="h-5 w-5 text-muted-foreground" strokeWidth={2.2} />}
               </IconBox>
-              <span className="flex-1 text-[15px] font-medium text-foreground">{t("analytics.recapMockCta")}</span>
+              <span className="flex-1 text-[15px] text-foreground">{t("analytics.recapMockCta")}</span>
               <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
             </div>
           </button>
@@ -525,7 +524,7 @@ export function ProfileView({
             <IconBox>
               <HelpCircle className="h-5 w-5 text-foreground" strokeWidth={2.2} />
             </IconBox>
-            <span className="flex-1 text-[15px] font-medium text-foreground">{t("settings.contactSupport")}</span>
+            <span className="flex-1 text-[15px] text-foreground">{t("settings.contactSupport")}</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
           </a>
 
@@ -777,7 +776,7 @@ export function ProfileView({
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card text-[20px]">
                         <span aria-hidden>{opt.flag}</span>
                       </div>
-                      <span className="flex-1 text-[15px] font-medium text-foreground">{opt.label}</span>
+                      <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
                       {locale === opt.id && <Check className="h-5 w-5 text-foreground shrink-0" strokeWidth={2.2} />}
                     </button>
                   </div>
@@ -798,7 +797,7 @@ export function ProfileView({
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-card">
                         <opt.icon className="h-5 w-5 text-foreground" />
                       </div>
-                      <span className="flex-1 text-[15px] font-medium text-foreground">{opt.label}</span>
+                      <span className="flex-1 text-[15px] text-foreground">{opt.label}</span>
                       {mounted && theme === opt.id && <Check className="h-5 w-5 text-foreground shrink-0" strokeWidth={2.2} />}
                     </button>
                   </div>

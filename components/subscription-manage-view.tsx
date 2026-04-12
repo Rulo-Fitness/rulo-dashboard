@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Check, Clock3, Crown, Sparkles, X } from "lu
 import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n"
 import { useCurrentPlan } from "@/lib/hooks/use-current-plan"
-import { CHEAPEST_DASHBOARD_PLAN, getDashboardPlanByName } from "@/lib/plans"
+import { CHEAPEST_DASHBOARD_PLAN, getDashboardPlanByName, displayPlanName } from "@/lib/plans"
 
 type SubscriptionManageViewProps = {
   isOpen: boolean
@@ -51,13 +51,14 @@ export function SubscriptionManageView({
   const state = getSubscriptionState(user)
   const activeUntilLabel = formatActiveUntil(user?.subscription_active_until, locale)
   const { planName } = useCurrentPlan(user?.id, user?.current_plan)
+  const displayName = displayPlanName(planName, t)
   const effectivePlanName =
-    state === "active" && planName
-      ? planName
+    state === "active" && displayName
+      ? displayName
       : state === "active" && user?.trial_used
         ? t("subscription.trialName")
-      : state === "expired" && planName
-        ? planName
+      : state === "expired" && displayName
+        ? displayName
         : state === "available"
           ? t("subscription.trialName")
         : null
@@ -67,7 +68,7 @@ export function SubscriptionManageView({
     return getDashboardPlanByName(effectivePlanName)
   }, [effectivePlanName, t])
 
-  const planHighlights = (effectivePlan?.highlights ?? CHEAPEST_DASHBOARD_PLAN.highlights).slice(0, 3)
+  const planHighlights = (effectivePlan?.highlightKeys ?? CHEAPEST_DASHBOARD_PLAN.highlightKeys).slice(0, 3)
 
   const summaryText = useMemo(() => {
     if (state === "active") {
@@ -143,12 +144,12 @@ export function SubscriptionManageView({
               {t("subscription.manageBenefitsLabel")}
             </p>
             <div className="mt-3 space-y-3">
-              {planHighlights.map((highlight) => (
-                <div key={highlight} className="flex items-start gap-3">
+              {planHighlights.map((highlightKey) => (
+                <div key={highlightKey} className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary">
                     <Check className="h-3.5 w-3.5 text-foreground" strokeWidth={2.4} />
                   </div>
-                  <p className="text-[14px] leading-5 text-foreground">{highlight}</p>
+                  <p className="text-[14px] leading-5 text-foreground">{t(highlightKey)}</p>
                 </div>
               ))}
             </div>
@@ -165,13 +166,15 @@ export function SubscriptionManageView({
             <ChevronRight className="h-4 w-4" />
           </button>
 
-          <button
-            type="button"
-            onClick={() => setShowCancelInfo(true)}
-            className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-secondary px-4 text-[15px] font-semibold text-foreground transition-colors active:scale-[0.99]"
-          >
-            {t("subscription.cancel")}
-          </button>
+          {planName !== "free_trial" && (
+            <button
+              type="button"
+              onClick={() => setShowCancelInfo(true)}
+              className="mt-3 flex h-12 w-full items-center justify-center rounded-full bg-secondary px-4 text-[15px] font-semibold text-foreground transition-colors active:scale-[0.99]"
+            >
+              {t("subscription.cancel")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -208,7 +211,7 @@ export function SubscriptionManageView({
           </header>
           <div className="flex-1 overflow-y-auto px-6 pb-8">
             <p className="text-[14px] text-center text-muted-foreground">
-              {t("subscription.cancelPlaceholder")}
+              {t("subscription.cancelConfirm")}
             </p>
             {cancelError && (
               <p className="mt-3 text-center text-[13px] text-destructive">{cancelError}</p>
@@ -231,7 +234,7 @@ export function SubscriptionManageView({
                     if (!res.ok || !data.success) {
                       setCancelError(data.error ?? "No se pudo cancelar")
                     } else {
-                      updateUser({ subscription_status: "cancelled" })
+                      updateUser({ mp_subscription_id: null })
                       setShowCancelInfo(false)
                     }
                   } catch {
