@@ -333,18 +333,16 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                     <BicepStatic className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex min-w-0 items-center justify-between gap-3">
-                      <p className="min-w-0 flex-1 truncate text-[17px] font-medium leading-tight text-foreground">
-                        {ex.name}
-                      </p>
-                      <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
-                        {ex.weight}{t("unit.kg")}
-                      </span>
-                    </div>
+                    <p className="min-w-0 truncate text-[17px] font-medium leading-tight text-foreground">
+                      {ex.name}
+                    </p>
                     <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
                       {ex.sets} {t("training.sets")} · {ex.reps} {t("training.reps")}
                     </p>
                   </div>
+                  <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
+                    {ex.weight}{t("unit.kg")}
+                  </span>
                 </div>
               </SwipeActionRow>
             </div>

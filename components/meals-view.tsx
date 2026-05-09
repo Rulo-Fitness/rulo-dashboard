@@ -456,14 +456,9 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
                     <BananaStatic className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex min-w-0 items-center justify-between gap-3">
-                      <h4 className="min-w-0 flex-1 truncate text-[17px] font-medium leading-tight text-foreground">
-                        {meal.name}
-                      </h4>
-                      <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
-                        {meal.calories} {t("unit.cal")}
-                      </span>
-                    </div>
+                    <h4 className="min-w-0 truncate text-[17px] font-medium leading-tight text-foreground">
+                      {meal.name}
+                    </h4>
                     <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-medium leading-5 text-muted-foreground">
                       <span className="flex shrink-0 items-center gap-1.5" aria-label={`${t("macro.protein")} ${meal.protein}g`}>
                         <Zap size={13} strokeWidth={2.5} aria-hidden="true" />
@@ -479,6 +474,9 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
                       </span>
                     </div>
                   </div>
+                  <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
+                    {meal.calories} {t("unit.cal")}
+                  </span>
                 </div>
               </SwipeActionRow>
             </div>

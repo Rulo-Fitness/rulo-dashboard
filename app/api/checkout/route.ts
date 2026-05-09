@@ -27,16 +27,43 @@ export async function POST(request: Request) {
       body: JSON.stringify({ user_id, plan, payer_email, back_url: backUrl }),
     })
 
-    const data = await res.json()
+    const text = await res.text()
+    let data: Record<string, unknown> = {}
+    if (text.length > 0) {
+      try {
+        data = JSON.parse(text) as Record<string, unknown>
+      } catch {
+        console.error("[checkout] Non-JSON response from rulo-api:", res.status, text.slice(0, 500))
+        return NextResponse.json(
+          { error: `Respuesta inválida del backend (status ${res.status})` },
+          { status: 502 },
+        )
+      }
+    }
 
     if (!res.ok || !data.success) {
+      const errorText =
+        typeof data.error === "string"
+          ? data.error
+          : typeof data.mp_message === "string"
+            ? data.mp_message
+            : "Error al crear suscripción"
+      console.error("[checkout] rulo-api error:", res.status, JSON.stringify(data))
       return NextResponse.json(
-        { error: data.error ?? "Error al crear suscripción" },
+        { error: errorText, details: data },
         { status: res.status },
       )
     }
 
-    return NextResponse.json({ init_point: data.result.init_point })
+    const result = data.result as { init_point?: string } | undefined
+    if (!result?.init_point) {
+      return NextResponse.json(
+        { error: "El backend no devolvió init_point" },
+        { status: 502 },
+      )
+    }
+
+    return NextResponse.json({ init_point: result.init_point })
   } catch (error) {
     console.error("[checkout] Error:", error)
     const message = error instanceof Error ? error.message : "Error desconocido"

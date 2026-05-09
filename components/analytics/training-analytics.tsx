@@ -333,7 +333,7 @@ export function TrainingAnalytics({
                 <select
                   value={range}
                   onChange={(e) => setRange(e.target.value as Range)}
-                  className="h-10 w-full appearance-none rounded-full bg-secondary pl-4 pr-9 text-left text-[13px] font-semibold text-foreground outline-none"
+                  className="h-10 w-full appearance-none rounded-full bg-secondary pl-4 pr-9 text-left text-[13px] font-semibold leading-[40px] text-foreground outline-none"
                 >
                   {rangeOptions.map((option) => (
                     <option key={option.key} value={option.key}>
@@ -347,7 +347,7 @@ export function TrainingAnalytics({
                 <select
                   value={activeExercise}
                   onChange={(e) => setSelectedExercise(e.target.value)}
-                  className="h-10 w-full appearance-none rounded-full bg-secondary pl-4 pr-9 text-left text-[13px] font-semibold text-foreground outline-none"
+                  className="h-10 w-full appearance-none rounded-full bg-secondary pl-4 pr-9 text-left text-[13px] font-semibold leading-[40px] text-foreground outline-none"
                 >
                   {exerciseNames.map((ex) => (
                     <option key={ex.key} value={ex.key}>
@@ -463,7 +463,7 @@ export function TrainingAnalytics({
                     <span className="text-muted-foreground text-xs font-bold w-5">#{i + 1}</span>
                     <span className="text-sm font-semibold text-foreground">{ex.display}</span>
                   </div>
-                  <span className="text-sm font-bold text-muted-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  <span className="flex items-center self-stretch text-sm font-bold leading-none text-muted-foreground" style={{ fontVariantNumeric: "tabular-nums" }}>
                     {ex.volume.toLocaleString()} kg
                   </span>
                 </div>

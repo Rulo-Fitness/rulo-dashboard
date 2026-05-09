@@ -69,7 +69,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
   }
 
   return (
-    <div className="relative flex flex-col gap-0 pb-6">
+    <div className="relative flex min-h-[calc(100lvh-170px)] flex-col gap-0 pb-6">
       {/* Sub-tabs */}
       <div className="px-6 animate-slide-up" style={{ animationDelay: "0.03s" }}>
         <div className="flex items-center gap-2 px-3 py-2 rounded-full nav-glass w-fit mx-auto">
@@ -118,7 +118,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
         hasBestia ? (
           <MealsAnalytics meals={meals} profile={profile} />
         ) : (
-          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
             <span className="text-4xl">🍌</span>
             <h2 className="text-xl font-bold text-foreground">{t("gate.mealsTitle")}</h2>
             <p className="text-sm text-muted-foreground max-w-xs">{t("gate.mealsDescription")}</p>

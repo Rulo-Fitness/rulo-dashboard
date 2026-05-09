@@ -53,7 +53,7 @@ const translations = {
   "dashboard.totalExercises": { en: "exercises", es: "ejercicios" },
   "dashboard.eaten": { en: "eaten", es: "ingeridas" },
   "dashboard.goalLabel": { en: "goal", es: "meta" },
-  "gate.mealsTitle": { en: "Nutrition is Bestia", es: "Nutrición es Bestia" },
+  "gate.mealsTitle": { en: "Meals is Bestia", es: "Comidas es Bestia" },
   "gate.mealsDescription": { en: "Meal tracking, macros, and calorie analysis are available on the Bestia plan.", es: "El seguimiento de comidas, macros y calorías está disponible en el plan Bestia." },
   "gate.mealsCta": { en: "See Bestia plan", es: "Ver plan Bestia" },
   "gate.recapTitle": { en: "Wrapped is Bestia", es: "Wrapped es Bestia" },
