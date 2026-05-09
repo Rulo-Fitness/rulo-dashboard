@@ -72,12 +72,19 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
         body: JSON.stringify({ user_id: user.id, plan: selectedPlan.name, payer_email: payerEmail }),
       })
       const data = await res.json()
-      if (!res.ok || !data.init_point) {
-        setError(data.error ?? "Error al iniciar el pago")
+      const initPoint = data?.result?.init_point as string | undefined
+      if (!res.ok || !data?.success || !initPoint) {
+        const message =
+          typeof data?.error === "string"
+            ? data.error
+            : typeof data?.mp_message === "string"
+              ? data.mp_message
+              : "Error al iniciar el pago"
+        setError(message)
         setLoadingPlan(null)
         return
       }
-      window.location.href = data.init_point
+      window.location.href = initPoint
     } catch {
       setError(t("subscription.connectionError"))
       setLoadingPlan(null)
