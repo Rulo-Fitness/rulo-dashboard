@@ -27,15 +27,24 @@ export function BottomNav({ activeTab, onTabChange, hidden = false }: BottomNavP
   const bicepsRef = useRef<BicepsFlexedIconHandle>(null)
   const bananaRef = useRef<BananaIconHandle>(null)
   const settingsRef = useRef<SettingsIconHandle>(null)
+  const animationLocks = useRef<Record<string, number | undefined>>({})
 
-  const handleTabClick = async (tabId: string) => {
-    onTabChange(tabId)
+  const runTabAnimation = (tabId: string) => {
+    const now = window.performance.now()
+    const lockedUntil = animationLocks.current[tabId] ?? 0
+    if (now < lockedUntil) return
+
+    animationLocks.current[tabId] = now + 700
     if (tabId === "analytics") trendingRef.current?.startAnimation()
     if (tabId === "training") bicepsRef.current?.startAnimation()
     if (tabId === "meals") bananaRef.current?.startAnimation()
-    if (tabId === "settings") {
-      settingsRef.current?.resetAndAnimate()
-    }
+    if (tabId === "settings") settingsRef.current?.resetAndAnimate()
+  }
+
+  const handleTabClick = async (tabId: string) => {
+    if (tabId === activeTab) return
+    onTabChange(tabId)
+    runTabAnimation(tabId)
   }
 
   return (

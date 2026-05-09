@@ -13,8 +13,8 @@ import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsForDate, createWorkoutLog, updateWorkoutLog, deleteWorkoutLog } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { useSubscription } from "@/lib/hooks/use-subscription"
-import { Plus, Trash, ChevronLeft, ChevronRight, Pencil, CircleCheck, CircleX, ArrowLeft } from "lucide-react"
-import { AppSignature } from "@/components/app-signature"
+import { Plus, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
+import { DeleteConfirmSheet, SwipeActionRow } from "@/components/swipe-action-row"
 
 function BicepStatic({ className }: { className?: string }) {
   return (
@@ -47,6 +47,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const [showForm, setShowForm] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
   const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null)
+  const [openSwipeExerciseId, setOpenSwipeExerciseId] = useState<string | null>(null)
   const [addFormKey, setAddFormKey] = useState(0)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
@@ -106,6 +107,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
 
   const handleDeleteConfirm = async (exId: string) => {
     setDeletingExerciseId(null)
+    setOpenSwipeExerciseId(null)
     if (user?.id) {
       const previous = exercises.filter((e) => e.id !== exId)
       setExercises(previous)
@@ -126,6 +128,9 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const isYesterday = selectedDate === yesterdayStr
   const emptyTitle = isToday ? t("training.emptyTodayTitle") : t("training.emptyPastTitle")
   const emptySubtitle = isToday ? t("training.emptyTodaySubtitle") : t("training.emptyPastSubtitle")
+  const pendingDeleteExercise = deletingExerciseId
+    ? exercises.find((ex) => ex.id === deletingExerciseId) ?? null
+    : null
   const dateLabel = isToday
     ? t("date.today")
     : isYesterday
@@ -307,63 +312,59 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           {exercises.map((ex, idx) => (
             <div key={ex.id}>
               {idx > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
-              <div className="px-5 py-3 min-h-[56px] flex items-center gap-4">
-                <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
-                  <BicepStatic className="h-5 w-5" />
+              <SwipeActionRow
+                isOpen={openSwipeExerciseId === ex.id}
+                disabled={!subActive}
+                editLabel={t("actions.edit")}
+                deleteLabel={t("actions.delete")}
+                onOpen={() => setOpenSwipeExerciseId(ex.id)}
+                onClose={() => setOpenSwipeExerciseId(null)}
+                onEdit={() => {
+                  setOpenSwipeExerciseId(null)
+                  openForm(ex)
+                }}
+                onDelete={() => {
+                  setOpenSwipeExerciseId(null)
+                  setDeletingExerciseId(ex.id)
+                }}
+              >
+                <div className="px-5 py-4 min-h-[68px] flex items-center gap-4">
+                  <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
+                    <BicepStatic className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <p className="min-w-0 flex-1 truncate text-[17px] font-medium leading-tight text-foreground">
+                        {ex.name}
+                      </p>
+                      <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
+                        {ex.weight}{t("unit.kg")}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
+                      {ex.sets} {t("training.sets")} · {ex.reps} {t("training.reps")}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-[15px] text-foreground truncate">{ex.name}</p>
-                  <p className="text-muted-foreground text-xs font-medium">
-                    {ex.sets} {t("training.sets")} · {ex.reps} {t("training.reps")} · {ex.weight}{t("unit.kg")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                {deletingExerciseId === ex.id ? (
-                  <>
-                    <button
-                      onClick={() => handleDeleteConfirm(ex.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
-                      aria-label={t("profile.confirmDelete")}
-                    >
-                      <CircleCheck className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                    <button
-                      onClick={() => setDeletingExerciseId(null)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
-                      aria-label={t("profile.cancel")}
-                    >
-                      <CircleX className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => openForm(ex)}
-                      disabled={!subActive}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
-                      aria-label={t("training.editExercise")}
-                    >
-                      <Pencil className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                    <button
-                      onClick={() => setDeletingExerciseId(ex.id)}
-                      disabled={!subActive}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
-                      aria-label={t("training.deleteTraining")}
-                    >
-                      <Trash className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                  </>
-                )}
-                </div>
-              </div>
+              </SwipeActionRow>
             </div>
           ))}
         </div>
         )}
       </div>
 
-      <AppSignature className="px-0" />
+      <DeleteConfirmSheet
+        open={Boolean(pendingDeleteExercise)}
+        title={t("training.deleteExerciseConfirm")}
+        itemName={pendingDeleteExercise?.name ?? ""}
+        cancelLabel={t("profile.cancel")}
+        confirmLabel={t("actions.delete")}
+        onCancel={() => setDeletingExerciseId(null)}
+        onConfirm={() => {
+          if (pendingDeleteExercise) void handleDeleteConfirm(pendingDeleteExercise.id)
+        }}
+      />
+
     </div>
   )
 }
@@ -374,6 +375,18 @@ export type ExercisePayload = {
   sets: number
   reps: number
   weight: number
+}
+
+function parseDecimalInput(value: string) {
+  const normalized = value.trim().replace(",", ".")
+  if (!normalized) return 0
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function parseIntegerInput(value: string) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
 function ExerciseForm({
@@ -417,9 +430,9 @@ function ExerciseForm({
     const payload: ExercisePayload = {
       ...(isEdit && initial ? { id: initial.id } : {}),
       name: name.trim(),
-      sets: Number(sets) || 0,
-      reps: Number(reps) || 0,
-      weight: Number(weight) || 0,
+      sets: parseIntegerInput(sets),
+      reps: parseIntegerInput(reps),
+      weight: parseDecimalInput(weight),
     }
     onSave(payload)
   }
@@ -445,7 +458,7 @@ function ExerciseForm({
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.sets")}</label>
             <input
               type="number"
-              inputMode="decimal"
+              inputMode="numeric"
               placeholder="0"
               value={sets}
               onChange={(e) => setSets(e.target.value)}
@@ -457,7 +470,7 @@ function ExerciseForm({
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.reps")}</label>
             <input
               type="number"
-              inputMode="decimal"
+              inputMode="numeric"
               placeholder="0"
               value={reps}
               onChange={(e) => setReps(e.target.value)}
@@ -468,13 +481,11 @@ function ExerciseForm({
           <div>
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.weightKg")}</label>
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
               placeholder="0"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              min="0"
-              step="0.5"
               className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>

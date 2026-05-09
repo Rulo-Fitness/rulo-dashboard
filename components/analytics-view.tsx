@@ -9,17 +9,11 @@ import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsByRange, fetchMealsByRange } from "@/lib/api"
 import { TrainingAnalytics } from "@/components/analytics/training-analytics"
 import { MealsAnalytics } from "@/components/analytics/meals-analytics"
-import { AppSignature } from "@/components/app-signature"
 
 function isBestiaPlan(plan: string | null | undefined): boolean {
   if (!plan) return false
   const normalized = plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   return normalized === "bestia" || normalized === "free_trial" || normalized === "prueba gratis"
-}
-
-function isFieraPlan(plan: string | null | undefined): boolean {
-  if (!plan) return false
-  return plan.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") === "fiera"
 }
 
 interface AnalyticsViewProps {
@@ -55,7 +49,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
         fetchMealsByRange(user.id, "2020-01-01", today).then(setMeals)
       }
     }
-  }, [mounted, refreshKey, user])
+  }, [hasBestia, mounted, refreshKey, user])
 
   if (!mounted || !profile) {
     return (
@@ -117,7 +111,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
           sessions={sessions}
           onOpenRecap={onOpenRecap}
           recapMorphEnabled={recapSource === "analytics" || (recapOpen && recapSource === "analytics")}
-          recapLocked={isFieraPlan(user?.current_plan)}
+          recapAvailable={hasBestia}
         />
       )}
       {activeSubTab === "meals" && (
@@ -140,7 +134,6 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
           </div>
         )
       )}
-      <AppSignature />
     </div>
   )
 }

@@ -154,9 +154,9 @@ function FieldRow({
       className={`flex w-full items-center gap-4 px-5 min-h-[56px] py-3 bg-card text-left transition-colors active:bg-secondary/60 ${disabled ? "opacity-50 pointer-events-none" : ""}`}
     >
       <IconBox>{icon}</IconBox>
-      <span className="w-32 shrink-0 text-[15px] leading-tight text-foreground">{label}</span>
-      <div className="ml-auto w-[96px] shrink-0">
-        <span className="block w-full text-[15px] text-right text-muted-foreground">
+      <span className="min-w-0 flex-1 truncate text-[15px] leading-tight text-foreground">{label}</span>
+      <div className="ml-auto min-w-[44px] max-w-[112px] shrink text-right">
+        <span className="block w-full truncate text-[15px] text-muted-foreground">
           {value}
         </span>
       </div>
@@ -296,8 +296,8 @@ export function ProfileView({
     { id: "en" as const, label: t("settings.english"), flag: "🇺🇸" },
   ]
 
-  const supportEmail = "soporte@rulo.ai"
-  const supportSubject = encodeURIComponent("Rulo Fitness - Soporte")
+  const supportEmail = "rulofitness.ai@gmail.com"
+  const supportSubject = encodeURIComponent("Rulo AI - Soporte")
   const supportMailto = `mailto:${supportEmail}?subject=${supportSubject}`
   const recapMorphEnabled = recapSource === "settings" || (recapOpen && recapSource === "settings")
   const hasActiveAccess = Boolean(user?.subscription_active_until && new Date(user.subscription_active_until) > new Date())
@@ -437,7 +437,12 @@ export function ProfileView({
               <IconBox>
                 {hasBestia ? <Trophy className="h-5 w-5 text-foreground" strokeWidth={2.2} /> : <Lock className="h-5 w-5 text-muted-foreground" strokeWidth={2.2} />}
               </IconBox>
-              <span className="flex-1 text-[15px] text-foreground">{t("analytics.recapMockCta")}</span>
+              <span className="min-w-0 flex-1 truncate text-[15px] text-foreground">{t("analytics.recapMockCta")}</span>
+              {hasBestia && (
+                <span className="shrink-0 rounded-full bg-foreground px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-background">
+                  {t("gate.recapComingSoonTitle")}
+                </span>
+              )}
               <ChevronRight className="h-4 w-4 text-muted-foreground/40 shrink-0" />
             </div>
           </button>

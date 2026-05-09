@@ -6,6 +6,8 @@ export type Locale = "en" | "es"
 
 const translations = {
   // Bottom Nav
+  "actions.edit": { en: "Edit", es: "Editar" },
+  "actions.delete": { en: "Delete", es: "Eliminar" },
   "nav.home": { en: "Home", es: "Inicio" },
   "nav.training": { en: "Training", es: "Entreno" },
   "nav.meals": { en: "Meals", es: "Comidas" },
@@ -169,6 +171,7 @@ const translations = {
   "meals.emptyPastSubtitle": { en: "There are no meals saved for this day.", es: "No hay comidas guardadas para este dia." },
   "meals.logMeal": { en: "Log Meal", es: "Registrar comida" },
   "meals.editMeal": { en: "Edit meal", es: "Editar comida" },
+  "meals.deleteMealConfirm": { en: "Delete this meal?", es: "¿Eliminar esta comida?" },
   "meals.mealName": { en: "Meal name (e.g., Grilled Chicken)", es: "Nombre (ej., Pollo a la plancha)" },
   "meals.macrosGrams": { en: "Macros (grams)", es: "Macros (gramos)" },
   "meals.saveMeal": { en: "Save Meal", es: "Guardar comida" },
@@ -359,8 +362,8 @@ const translations = {
   "analytics.exercise": { en: "Exercise", es: "Ejercicio" },
   "analytics.selectExercise": { en: "Select exercise", es: "Seleccionar ejercicio" },
   "analytics.weight": { en: "Max weight (kg)", es: "Peso máx. (kg)" },
-  "analytics.1month": { en: "1M", es: "1M" },
-  "analytics.3months": { en: "3M", es: "3M" },
+  "analytics.1month": { en: "1 Month", es: "1 Mes" },
+  "analytics.3months": { en: "3 Months", es: "3 Meses" },
   "analytics.allTime": { en: "All", es: "Todo" },
   "analytics.noData": { en: "No training data yet", es: "Sin datos de entreno aún" },
   "analytics.startTraining": { en: "Start training to see your stats", es: "Empezá a entrenar para ver tus estadísticas" },
@@ -385,9 +388,10 @@ const translations = {
   "analytics.topExercises": { en: "Top Exercises", es: "Top ejercicios" },
   "analytics.daysShort": { en: "days", es: "días" },
   "analytics.weekLabel": { en: "W", es: "S" },
-  "analytics.recapMockEyebrow": { en: "Weekly Recap", es: "Recap semanal" },
-  "analytics.recapMockCta": { en: "See your wrapped", es: "Ver tu wrapped" },
-  "analytics.recapMockCtaHint": { en: "Your weekly training summary is coming soon.", es: "Tu resumen semanal de entrenamiento llega pronto." },
+  "analytics.recapMockEyebrow": { en: "Coming soon", es: "Próximamente" },
+  "analytics.recapMockCta": { en: "Your weekly wrapped", es: "Tu wrapped semanal" },
+  "analytics.recapMockAvailableHint": { en: "A visual summary of your training and nutrition week.", es: "Un resumen visual de tu semana de entrenamiento y alimentación." },
+  "analytics.recapMockLockedHint": { en: "A visual summary of your training and nutrition week.", es: "Un resumen visual de tu semana de entrenamiento y alimentación." },
   "analytics.recapMockWeek": { en: "Week 18 - Mock edition", es: "Semana 18 - Edicion mock" },
   "analytics.recapMockTitle": { en: "You trained with intention this week.", es: "Esta semana entrenaste con intencion." },
   "analytics.recapMockSubtitle": { en: "A first look at how Rulo could turn your weekly training into a premium recap experience.", es: "Una primera mirada a como Rulo podria convertir tu semana de entrenamiento en un recap premium." },
@@ -414,7 +418,7 @@ const translations = {
   "unit.kg": { en: "kg", es: "kg" },
   "unit.cm": { en: "cm", es: "cm" },
   "unit.yrs": { en: "yrs", es: "años" },
-  "unit.cal": { en: "cal", es: "cal" },
+  "unit.cal": { en: "kcal", es: "kcal" },
 } as const
 
 export type TranslationKey = keyof typeof translations

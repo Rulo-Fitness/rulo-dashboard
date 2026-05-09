@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo, useRef, useCallback } from "react"
+import { useEffect, useState, useMemo, useRef, type SVGProps } from "react"
 import {
   getMeals,
   saveMeal,
@@ -12,16 +12,41 @@ import {
 } from "@/lib/storage"
 import { useAuth } from "@/lib/auth-context"
 import { fetchMealsForDate, createMeal, updateMealApi, deleteMealApi } from "@/lib/api"
-import { useI18n, type TranslationKey } from "@/lib/i18n"
+import { useI18n } from "@/lib/i18n"
 import { useSubscription } from "@/lib/hooks/use-subscription"
-import { Plus, Trash, X, ChevronLeft, ChevronRight, Pencil, ArrowLeft, CircleCheck, CircleX, Zap, Wheat, Droplet } from "lucide-react"
-import { AppSignature } from "@/components/app-signature"
+import { Plus, ChevronLeft, ChevronRight, ArrowLeft, Zap, Wheat } from "lucide-react"
+import { DeleteConfirmSheet, SwipeActionRow } from "@/components/swipe-action-row"
 
 function BananaStatic({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 13c3.5-2 8-2 10 2a5.5 5.5 0 0 1 8 5" />
       <path d="M5.15 17.89c5.52-1.52 8.65-6.89 7-12C11.55 4 11.5 2 13 2c3.22 0 5 5.5 5 8 0 6.5-4.2 12-10.49 12C5.11 22 2 22 2 20c0-1.5 1.14-1.55 3.15-2.11Z" />
+    </svg>
+  )
+}
+
+function AvocadoIcon({
+  className,
+  size = 13,
+  strokeWidth = 2.5,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number }) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <path d="M12.2 3.2C8.8 3.2 6 6.7 6 11.1 6 16.8 9.3 21 12.2 21s6.2-4.2 6.2-9.9c0-4.4-2.8-7.9-6.2-7.9Z" />
+      <path d="M12.2 9.8a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6Z" />
     </svg>
   )
 }
@@ -46,6 +71,7 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null)
   const [deletingMealId, setDeletingMealId] = useState<string | null>(null)
+  const [openSwipeMealId, setOpenSwipeMealId] = useState<string | null>(null)
   const [apiLoading, setApiLoading] = useState(false)
 
   const openForm = (meal: Meal | null = null) => {
@@ -106,6 +132,7 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
 
   const handleDeleteConfirm = async (id: string) => {
     setDeletingMealId(null)
+    setOpenSwipeMealId(null)
     if (user?.id) {
       const previous = allMeals.filter((m) => m.id !== id)
       setAllMeals(previous)
@@ -126,6 +153,9 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
   const isYesterday = selectedDate === yesterdayStr
   const emptyTitle = isToday ? t("meals.emptyTodayTitle") : t("meals.emptyPastTitle")
   const emptySubtitle = isToday ? t("meals.emptyTodaySubtitle") : t("meals.emptyPastSubtitle")
+  const pendingDeleteMeal = deletingMealId
+    ? filteredMeals.find((meal) => meal.id === deletingMealId) ?? null
+    : null
   const dateLabel = isToday
     ? t("date.today")
     : isYesterday
@@ -303,7 +333,7 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
       {/* Nutrition Summary — arc gauge + macros */}
       <div className="rounded-[32px] bg-card pt-1 px-5 pb-10 card-shadow">
         {/* Arc gauge */}
-        <div className="relative mx-auto" style={{ width: "100%", maxWidth: "320px", height: "210px" }}>
+        <div className="relative -mt-8 mx-auto" style={{ width: "100%", maxWidth: "320px", height: "210px" }}>
           <svg viewBox="0 0 320 210" className="w-full h-full">
             <defs>
               <linearGradient id="arcFade" x1="0" y1="0" x2="1" y2="0">
@@ -367,7 +397,7 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
           <div className="grid grid-cols-2 gap-4">
             {([
               { label: t("macro.carbs"), current: totals.carbs, goal: carbsGoal, icon: Wheat },
-              { label: t("macro.fat"), current: totals.fat, goal: fatGoal, icon: Droplet },
+              { label: t("macro.fat"), current: totals.fat, goal: fatGoal, icon: AvocadoIcon },
             ] as const).map((macro) => (
               <div key={macro.label}>
                 <div className="flex items-baseline justify-between mb-1.5">
@@ -405,62 +435,69 @@ export function MealsView({ onUpdate, onMealPanelChange }: MealsViewProps) {
           {filteredMeals.map((meal, idx) => (
             <div key={meal.id}>
               {idx > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
-              <div className="px-5 py-3 min-h-[56px] flex items-center gap-4">
-                <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
-                  <BananaStatic className="h-5 w-5" />
+              <SwipeActionRow
+                isOpen={openSwipeMealId === meal.id}
+                disabled={!subActive}
+                editLabel={t("actions.edit")}
+                deleteLabel={t("actions.delete")}
+                onOpen={() => setOpenSwipeMealId(meal.id)}
+                onClose={() => setOpenSwipeMealId(null)}
+                onEdit={() => {
+                  setOpenSwipeMealId(null)
+                  openForm(meal)
+                }}
+                onDelete={() => {
+                  setOpenSwipeMealId(null)
+                  setDeletingMealId(meal.id)
+                }}
+              >
+                <div className="px-5 py-4 min-h-[68px] flex items-center gap-4">
+                  <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
+                    <BananaStatic className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex min-w-0 items-center justify-between gap-3">
+                      <h4 className="min-w-0 flex-1 truncate text-[17px] font-medium leading-tight text-foreground">
+                        {meal.name}
+                      </h4>
+                      <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
+                        {meal.calories} {t("unit.cal")}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[12px] font-medium leading-5 text-muted-foreground">
+                      <span className="flex shrink-0 items-center gap-1.5" aria-label={`${t("macro.protein")} ${meal.protein}g`}>
+                        <Zap size={13} strokeWidth={2.5} aria-hidden="true" />
+                        {meal.protein}g
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1.5" aria-label={`${t("macro.carbs")} ${meal.carbs}g`}>
+                        <Wheat size={13} strokeWidth={2.5} aria-hidden="true" />
+                        {meal.carbs}g
+                      </span>
+                      <span className="flex shrink-0 items-center gap-1.5" aria-label={`${t("macro.fat")} ${meal.fat}g`}>
+                        <AvocadoIcon size={13} strokeWidth={2.5} aria-hidden="true" />
+                        {meal.fat}g
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-[15px] text-foreground truncate">{meal.name}</h4>
-                  <p className="text-muted-foreground text-xs font-medium">
-                    {meal.time} · {meal.calories} {t("unit.cal")} · P{meal.protein} C{meal.carbs} F{meal.fat}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                {deletingMealId === meal.id ? (
-                  <>
-                    <button
-                      onClick={() => handleDeleteConfirm(meal.id)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
-                      aria-label={t("profile.confirmDelete")}
-                    >
-                      <CircleCheck className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                    <button
-                      onClick={() => setDeletingMealId(null)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
-                      aria-label={t("profile.cancel")}
-                    >
-                      <CircleX className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => openForm(meal)}
-                      disabled={!subActive}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
-                      aria-label={t("meals.editMeal")}
-                    >
-                      <Pencil className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                    <button
-                      onClick={() => setDeletingMealId(meal.id)}
-                      disabled={!subActive}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary ${!subActive ? "opacity-40 pointer-events-none" : ""}`}
-                      aria-label={`${t("training.deleteTraining")} ${meal.name}`}
-                    >
-                      <Trash className="h-[18px] w-[18px]" strokeWidth={2.5} />
-                    </button>
-                  </>
-                )}
-                </div>
-              </div>
+              </SwipeActionRow>
             </div>
           ))}
         </div>
       )}
 
-      <AppSignature className="px-0" />
+      <DeleteConfirmSheet
+        open={Boolean(pendingDeleteMeal)}
+        title={t("meals.deleteMealConfirm")}
+        itemName={pendingDeleteMeal?.name ?? ""}
+        cancelLabel={t("profile.cancel")}
+        confirmLabel={t("actions.delete")}
+        onCancel={() => setDeletingMealId(null)}
+        onConfirm={() => {
+          if (pendingDeleteMeal) void handleDeleteConfirm(pendingDeleteMeal.id)
+        }}
+      />
+
     </div>
   )
 }

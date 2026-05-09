@@ -6,13 +6,13 @@ import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } 
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { useI18n } from "@/lib/i18n"
 import type { TrainingSession } from "@/lib/storage"
-import { TrendingUp, BarChart3, Flame, Calendar, Trophy, Lock, ChevronDown } from "lucide-react"
+import { TrendingUp, BarChart3, Flame, Calendar, Trophy, Lock, ChevronDown, Sparkles } from "lucide-react"
 
 interface TrainingAnalyticsProps {
   sessions: TrainingSession[]
   onOpenRecap: () => void
   recapMorphEnabled?: boolean
-  recapLocked?: boolean
+  recapAvailable?: boolean
 }
 
 type Range = "1M" | "3M" | "all"
@@ -76,7 +76,12 @@ function getMondayOfWeek(date: Date): Date {
   return d
 }
 
-export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = true, recapLocked = false }: TrainingAnalyticsProps) {
+export function TrainingAnalytics({
+  sessions,
+  onOpenRecap,
+  recapMorphEnabled = true,
+  recapAvailable = false,
+}: TrainingAnalyticsProps) {
   const { t } = useI18n()
   const [range, setRange] = useState<Range>("3M")
   const [selectedExercise, setSelectedExercise] = useState<string>("")
@@ -112,8 +117,14 @@ export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = t
 
   // Set default exercise
   const activeExercise = selectedExercise || exerciseNames[0]?.key || ""
-
-  const displayName = exerciseNames.find((e) => e.key === activeExercise)?.display || activeExercise
+  const rangeOptions = useMemo(
+    () => ([
+      { key: "1M" as const, label: t("analytics.1month") },
+      { key: "3M" as const, label: t("analytics.3months") },
+      { key: "all" as const, label: t("analytics.allTime") },
+    ]),
+    [t],
+  )
 
   // Filter sessions by range and compute max weight per session
   const chartData = useMemo(() => {
@@ -291,18 +302,23 @@ export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = t
           )}
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80">
-                {t("analytics.recapMockEyebrow")}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2.4} />
+                {t("gate.recapComingSoonTitle")}
               </span>
               <h2 className="mt-4 text-[24px] font-black leading-[1] tracking-[-0.04em] text-white">
                 {t("analytics.recapMockCta")}
               </h2>
-              <p className="mt-2 max-w-[240px] text-sm leading-5 text-white/70">
-                {t("analytics.recapMockCtaHint")}
+              <p className="mt-3 max-w-[260px] text-sm leading-5 text-white/70">
+                {recapAvailable ? t("analytics.recapMockAvailableHint") : t("analytics.recapMockLockedHint")}
               </p>
             </div>
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white transition-transform duration-300 group-hover:scale-105">
-              {recapLocked ? <Lock className="h-5 w-5" strokeWidth={2.2} /> : <Trophy className="h-5 w-5" strokeWidth={2.2} />}
+              {recapAvailable ? (
+                <Trophy className="h-5 w-5" strokeWidth={2.2} />
+              ) : (
+                <Lock className="h-5 w-5" strokeWidth={2.2} />
+              )}
             </div>
           </div>
         </button>
@@ -310,30 +326,28 @@ export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = t
 
       {/* Chart card with controls */}
       <section className="px-6 pt-4 animate-slide-up" style={{ animationDelay: "0.07s" }}>
-        <div className="bg-card rounded-[32px] p-5 card-shadow">
+        <div className="bg-card rounded-[32px] px-5 pb-5 pt-6 card-shadow">
           {hasData && (
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-1.5">
-                {(["1M", "3M", "all"] as Range[]).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRange(r)}
-                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider transition-colors ${
-                      range === r
-                        ? "bg-foreground text-background"
-                        : "bg-secondary text-muted-foreground"
-                    }`}
-                  >
-                    {r === "1M" ? t("analytics.1month") : r === "3M" ? t("analytics.3months") : t("analytics.allTime")}
-                  </button>
-                ))}
+            <div className="mb-4 flex items-center gap-2.5">
+              <div className="relative min-w-0 basis-[40%]">
+                <select
+                  value={range}
+                  onChange={(e) => setRange(e.target.value as Range)}
+                  className="h-10 w-full appearance-none rounded-full bg-secondary pl-4 pr-9 text-left text-[13px] font-semibold text-foreground outline-none"
+                >
+                  {rangeOptions.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} strokeWidth={2.5} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-foreground" />
               </div>
-              <div className="relative">
+              <div className="relative min-w-0 basis-[60%]">
                 <select
                   value={activeExercise}
                   onChange={(e) => setSelectedExercise(e.target.value)}
-                  className="rounded-full bg-secondary pl-3 pr-8 py-1.5 text-xs font-semibold text-foreground outline-none appearance-none max-w-[165px] truncate"
+                  className="h-10 w-full appearance-none rounded-full bg-secondary pl-4 pr-9 text-left text-[13px] font-semibold text-foreground outline-none"
                 >
                   {exerciseNames.map((ex) => (
                     <option key={ex.key} value={ex.key}>
@@ -341,7 +355,7 @@ export function TrainingAnalytics({ sessions, onOpenRecap, recapMorphEnabled = t
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} strokeWidth={3} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-foreground pointer-events-none" />
+                <ChevronDown size={14} strokeWidth={2.5} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-foreground" />
               </div>
             </div>
           )}

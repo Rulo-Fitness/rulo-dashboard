@@ -14,7 +14,6 @@ import { MealsSync } from "@/components/meals-sync"
 import { SubscriptionBanner } from "@/components/subscription-banner"
 import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n"
-import { AppSignature } from "@/components/app-signature"
 
 function isBestiaPlan(plan: string | null | undefined): boolean {
   if (!plan) return false
@@ -82,7 +81,7 @@ export default function AppDashboardPage() {
   }, [activeTab, upgradeViewVisible])
 
   useEffect(() => {
-    const shouldLockBodyScroll = subscriptionViewVisible || upgradeViewVisible
+    const shouldLockBodyScroll = subscriptionViewVisible || upgradeViewVisible || Boolean(gateOverlay)
     if (!shouldLockBodyScroll) return
 
     const previousOverflow = document.body.style.overflow
@@ -91,7 +90,7 @@ export default function AppDashboardPage() {
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [subscriptionViewVisible, upgradeViewVisible])
+  }, [subscriptionViewVisible, upgradeViewVisible, gateOverlay])
 
   useEffect(() => {
     if (!mounted) return
@@ -242,7 +241,6 @@ export default function AppDashboardPage() {
                 >
                   {t("gate.mealsCta")}
                 </button>
-                <AppSignature />
               </div>
             )
           )}
@@ -329,7 +327,7 @@ export default function AppDashboardPage() {
             <button
               type="button"
               onClick={() => setGateOverlay(null)}
-              className="mt-2 h-12 rounded-full bg-secondary px-8 text-[15px] font-semibold text-foreground shadow-md transition-colors hover:bg-secondary/90 active:scale-[0.99]"
+              className="mt-2 h-12 rounded-full bg-foreground px-8 text-[15px] font-semibold text-background shadow-md transition-colors hover:bg-foreground/90 active:scale-[0.99]"
             >
               {t("profile.cancel")}
             </button>
@@ -339,7 +337,7 @@ export default function AppDashboardPage() {
       <BottomNav
         activeTab={activeTab}
         onTabChange={handleTabChange}
-        hidden={trainingAddPanelOpen || mealsPanelOpen || recapOpen || settingsOverlayOpen || subscriptionViewVisible || upgradeViewVisible || navHiddenByScroll}
+        hidden={trainingAddPanelOpen || mealsPanelOpen || recapOpen || settingsOverlayOpen || subscriptionViewVisible || upgradeViewVisible || Boolean(gateOverlay) || navHiddenByScroll}
       />
     </>
   )
