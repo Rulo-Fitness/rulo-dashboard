@@ -94,7 +94,7 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
   return (
     <>
     <main
-      className={`no-scrollbar fixed inset-0 z-50 mx-auto flex min-h-[100lvh] max-w-md flex-col overscroll-contain bg-background px-6 pb-28 pt-6 transition-transform duration-300 ease-out ${selectedPlan ? "overflow-hidden" : "overflow-y-auto"}`}
+      className={`no-scrollbar fixed inset-0 z-50 mx-auto flex min-h-[100lvh] max-w-md flex-col overscroll-contain bg-background px-6 pt-6 transition-transform duration-300 ease-out ${selectedPlan ? "overflow-hidden" : "overflow-y-auto"}`}
       style={{ transform: isEntered ? "translateX(0)" : "translateX(100%)" }}
     >
       <header className="flex items-center justify-between">
@@ -125,7 +125,7 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
               </p>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-6 space-y-4 pb-[calc(7rem+env(safe-area-inset-bottom))]">
               {DASHBOARD_PLANS.map((plan) => {
                 const isCurrentPlan = isActivePaidPlan && planName === plan.name
                 const isDowngrade = isActivePaidPlan && currentPlanData && plan.price < currentPlanData.price
@@ -230,16 +230,14 @@ export function SubscriptionUpgradeView({ isOpen, onCloseComplete }: Subscriptio
           </p>
 
           <div className="mt-5">
-            <label htmlFor="payer-email" className="text-[12px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              {t("subscription.emailLabel")}
-            </label>
             <input
               id="payer-email"
               type="email"
               value={payerEmail}
               onChange={(e) => { setPayerEmail(e.target.value); setError("") }}
               placeholder="tu@email.com"
-              className="mt-2 flex h-12 w-full rounded-2xl border border-border bg-background px-4 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label={t("subscription.emailLabel")}
+              className="flex h-12 w-full rounded-2xl border border-border bg-background px-4 text-[15px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
