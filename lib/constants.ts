@@ -1,3 +1,6 @@
+/** MVP solo-ejercicios: poner en true para reactivar el tracking de comidas/nutrición. */
+export const MEALS_ENABLED = false
+
 export const COUNTRY_CODES = [
   { code: "+34", label: "ES", country: "España", flag: "🇪🇸" },
   { code: "+52", label: "MX", country: "México", flag: "🇲🇽" },

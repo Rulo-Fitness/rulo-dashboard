@@ -14,6 +14,9 @@ import { MealsSync } from "@/components/meals-sync"
 import { SubscriptionBanner } from "@/components/subscription-banner"
 import { useAuth } from "@/lib/auth-context"
 import { useI18n } from "@/lib/i18n"
+import { useSubscription } from "@/lib/hooks/use-subscription"
+import { MEALS_ENABLED } from "@/lib/constants"
+import { Lock } from "lucide-react"
 
 function isBestiaPlan(plan: string | null | undefined): boolean {
   if (!plan) return false
@@ -29,6 +32,7 @@ function isFieraPlan(plan: string | null | undefined): boolean {
 export default function AppDashboardPage() {
   const { user } = useAuth()
   const { t } = useI18n()
+  const { isActive: subActive } = useSubscription()
   const hasBestia = isBestiaPlan(user?.current_plan)
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("analytics")
@@ -192,13 +196,32 @@ export default function AppDashboardPage() {
     )
   }
 
+  // Sub vencida: congelar (blur + candado) todas las tabs menos Ajustes.
+  const contentFrozen = !subActive && activeTab !== "settings"
+
   return (
     <>
       <TrainingSync onSynced={handleTrainingSynced} />
-      {hasBestia && <MealsSync onSynced={handleTrainingSynced} />}
+      {MEALS_ENABLED && hasBestia && <MealsSync onSynced={handleTrainingSynced} />}
       <main className="mx-auto flex min-h-[100lvh] max-w-md flex-1 flex-col bg-background pb-16 pt-3 overflow-visible touch-manipulation pointer-events-auto" style={{ touchAction: "pan-y" }}>
         <SubscriptionBanner onUpgrade={() => { setUpgradeViewVisible(true); setUpgradeViewOpen(true) }} />
-        <div className="flex min-h-0 flex-1 flex-col overflow-visible pointer-events-auto" style={{ touchAction: "pan-y" }}>
+        {contentFrozen && (
+          <div className="mx-6 my-2 flex items-center gap-3">
+            <div className="h-px flex-1 bg-foreground/15" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-foreground/10 backdrop-blur-md ring-1 ring-foreground/10">
+              <Lock className="h-5 w-5 text-foreground/70" strokeWidth={2.2} />
+            </div>
+            <div className="h-px flex-1 bg-foreground/15" />
+          </div>
+        )}
+        <div
+          className={`flex min-h-0 flex-1 flex-col overflow-visible ${
+            contentFrozen
+              ? "pointer-events-none select-none grayscale blur-[2px] opacity-80"
+              : "pointer-events-auto"
+          }`}
+          style={{ touchAction: "pan-y" }}
+        >
           {activeTab === "analytics" && (
             <AnalyticsView
               refreshKey={refreshKey}
@@ -222,7 +245,15 @@ export default function AppDashboardPage() {
             <TrainingView onUpdate={triggerRefresh} onAddPanelChange={setTrainingAddPanelOpen} />
           )}
           {activeTab === "meals" && (
-            hasBestia ? (
+            !MEALS_ENABLED ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+                <span className="text-5xl">🚀</span>
+                <h2 className="text-2xl font-bold text-foreground">{t("gate.mealsComingSoonTitle")}</h2>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  {t("gate.mealsComingSoonDescription")}
+                </p>
+              </div>
+            ) : hasBestia ? (
               <MealsView onUpdate={triggerRefresh} onMealPanelChange={setMealsPanelOpen} />
             ) : (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">

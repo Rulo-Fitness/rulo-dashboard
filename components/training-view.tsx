@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useMemo, useState, useRef } from "react"
 import {
   getExercisesForDate,
   addExerciseToDate,
@@ -32,6 +32,37 @@ function shiftDate(dateStr: string, days: number): string {
   return d.toISOString().split("T")[0]
 }
 
+type ExerciseGroup = {
+  key: string
+  displayName: string
+  variants: Exercise[]
+}
+
+function groupExercises(list: Exercise[]): ExerciseGroup[] {
+  const map = new Map<string, ExerciseGroup>()
+  for (const ex of list) {
+    const key = ex.name.trim().toLowerCase()
+    const existing = map.get(key)
+    if (existing) {
+      existing.variants.push(ex)
+    } else {
+      map.set(key, { key, displayName: ex.name.trim() || ex.name, variants: [ex] })
+    }
+  }
+  return Array.from(map.values())
+}
+
+type SwipeTarget =
+  | { type: "single"; id: string }
+  | { type: "variant"; id: string }
+  | { type: "header"; key: string }
+
+function swipeTargetEquals(a: SwipeTarget | null, b: SwipeTarget): boolean {
+  if (!a || a.type !== b.type) return false
+  if (b.type === "header") return a.type === "header" && a.key === b.key
+  return (a.type === "single" || a.type === "variant") && a.id === (b as { id: string }).id
+}
+
 interface TrainingViewProps {
   onUpdate: () => void
   onAddPanelChange?: (open: boolean) => void
@@ -46,23 +77,47 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const [apiLoading, setApiLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null)
+  const [renamingGroup, setRenamingGroup] = useState<ExerciseGroup | null>(null)
   const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(null)
-  const [openSwipeExerciseId, setOpenSwipeExerciseId] = useState<string | null>(null)
+  const [pendingDeleteGroup, setPendingDeleteGroup] = useState<ExerciseGroup | null>(null)
+  const [openSwipe, setOpenSwipe] = useState<SwipeTarget | null>(null)
+  const [detailGroupKey, setDetailGroupKey] = useState<string | null>(null)
   const [addFormKey, setAddFormKey] = useState(0)
   const dateInputRef = useRef<HTMLInputElement>(null)
+
+  const groups = useMemo(() => groupExercises(exercises), [exercises])
+  const detailGroup = detailGroupKey ? groups.find((g) => g.key === detailGroupKey) ?? null : null
+
+  // Close the detail screen once its group no longer exists (e.g. all sets deleted).
+  useEffect(() => {
+    if (detailGroupKey && !groups.some((g) => g.key === detailGroupKey)) {
+      setDetailGroupKey(null)
+    }
+  }, [detailGroupKey, groups])
 
   const openForm = (ex: Exercise | null = null) => {
     if (!ex) setAddFormKey((k) => k + 1)
     setEditingExercise(ex)
+    setRenamingGroup(null)
     setShowForm(true)
-    onAddPanelChange?.(true)
+  }
+
+  const openRenameGroup = (group: ExerciseGroup) => {
+    setRenamingGroup(group)
+    setEditingExercise(null)
+    setShowForm(true)
   }
 
   const closeForm = () => {
     setShowForm(false)
     setEditingExercise(null)
-    onAddPanelChange?.(false)
+    setRenamingGroup(null)
   }
+
+  // Hide the bottom nav whenever any full-screen panel (form or group detail) is open.
+  useEffect(() => {
+    onAddPanelChange?.(showForm || detailGroupKey !== null)
+  }, [showForm, detailGroupKey, onAddPanelChange])
 
   useEffect(() => {
     if (!user?.id) {
@@ -107,7 +162,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
 
   const handleDeleteConfirm = async (exId: string) => {
     setDeletingExerciseId(null)
-    setOpenSwipeExerciseId(null)
+    setOpenSwipe(null)
     if (user?.id) {
       const previous = exercises.filter((e) => e.id !== exId)
       setExercises(previous)
@@ -118,6 +173,57 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       }
     } else {
       deleteExercise(exId)
+      refresh()
+    }
+  }
+
+  const handleDeleteGroupConfirm = async (group: ExerciseGroup) => {
+    setPendingDeleteGroup(null)
+    setOpenSwipe(null)
+    setDetailGroupKey(null)
+    const ids = group.variants.map((v) => v.id)
+    if (user?.id) {
+      const previous = exercises.filter((e) => !ids.includes(e.id))
+      setExercises(previous)
+      onUpdate()
+      const results = await Promise.all(ids.map((id) => deleteWorkoutLog(id)))
+      if (results.some((ok) => !ok)) {
+        await refresh()
+      }
+    } else {
+      for (const id of ids) deleteExercise(id)
+      refresh()
+    }
+  }
+
+  const handleRenameGroup = async (group: ExerciseGroup, newName: string) => {
+    const trimmed = newName.trim()
+    if (!trimmed || trimmed === group.displayName) {
+      closeForm()
+      return
+    }
+    // The group key is derived from the name, so keep the open detail screen in sync.
+    if (detailGroupKey === group.key) setDetailGroupKey(trimmed.toLowerCase())
+    if (user?.id) {
+      const variantIds = new Set(group.variants.map((v) => v.id))
+      setExercises((prev) =>
+        prev.map((ex) => (variantIds.has(ex.id) ? { ...ex, name: trimmed } : ex))
+      )
+      onUpdate()
+      closeForm()
+      const results = await Promise.all(
+        group.variants.map((v) =>
+          updateWorkoutLog(v.id, { name: trimmed, sets: v.sets, reps: v.reps, weight: v.weight })
+        )
+      )
+      if (results.some((ok) => !ok)) {
+        await refresh()
+      }
+    } else {
+      for (const v of group.variants) {
+        updateExercise(selectedDate, { ...v, name: trimmed })
+      }
+      closeForm()
       refresh()
     }
   }
@@ -140,6 +246,26 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           month: "short",
           day: "numeric",
         })
+
+  const formMode: "add" | "edit" | "rename" = renamingGroup
+    ? "rename"
+    : editingExercise
+      ? "edit"
+      : "add"
+  const formInitial: Exercise | null = renamingGroup
+    ? { id: renamingGroup.key, name: renamingGroup.displayName, sets: 0, reps: 0, weight: 0 }
+    : editingExercise
+  const formKey = renamingGroup
+    ? `rename-${renamingGroup.key}`
+    : editingExercise
+      ? editingExercise.id
+      : `new-${addFormKey}`
+  const formTitle =
+    formMode === "rename"
+      ? t("training.renameExercise")
+      : formMode === "edit"
+        ? t("training.editExercise")
+        : t("training.addExercise").replace(/^\+\s*/, "")
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 px-6 pb-6">
@@ -176,18 +302,21 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <h2 className="text-lg font-semibold text-foreground">
-              {editingExercise ? t("training.editExercise") : t("training.addExercise").replace(/^\+\s*/, "")}
-            </h2>
+            <h2 className="text-lg font-semibold text-foreground">{formTitle}</h2>
           </header>
           {/* Form body */}
           <div className="flex-1 overflow-y-auto px-4 py-6">
             {showForm && (
               <ExerciseForm
-                key={editingExercise ? editingExercise.id : `new-${addFormKey}`}
-                initial={editingExercise}
+                key={formKey}
+                mode={formMode === "rename" ? "rename" : "full"}
+                initial={formInitial}
                 selectedDate={selectedDate}
                 onSave={async (data) => {
+                  if (renamingGroup) {
+                    await handleRenameGroup(renamingGroup, data.name)
+                    return
+                  }
                   if (user?.id) {
                     let ok = false
                     if (data.id) {
@@ -244,6 +373,73 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                 onCancel={closeForm}
                 hideHeader
               />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Detalle del grupo — pantalla para gestionar cada serie */}
+      <div
+        className="fixed inset-0 z-40 bg-background transition-transform duration-300 ease-out"
+        style={{
+          transform: detailGroup ? "translateX(0)" : "translateX(100%)",
+          pointerEvents: detailGroup ? "auto" : "none",
+        }}
+      >
+        <div className="mx-auto flex h-full max-w-lg flex-col">
+          <header className="flex shrink-0 items-center gap-3 px-4 pt-3 pb-3 border-b border-border">
+            <button
+              type="button"
+              onClick={() => {
+                setOpenSwipe(null)
+                setDetailGroupKey(null)
+              }}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-foreground hover:bg-secondary active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h2 className="flex-1 min-w-0 truncate text-lg font-semibold text-foreground">
+              {detailGroup?.displayName}
+            </h2>
+          </header>
+          <div className="flex-1 overflow-y-auto px-4 py-5">
+            {detailGroup && (
+              <div className="bg-card rounded-[28px] overflow-hidden card-shadow">
+                {detailGroup.variants.map((v, vIdx) => {
+                  const vTarget: SwipeTarget = { type: "variant", id: v.id }
+                  return (
+                    <div key={v.id}>
+                      {vIdx > 0 && <div className="ml-5 mr-5 h-px bg-border" />}
+                      <SwipeActionRow
+                        isOpen={swipeTargetEquals(openSwipe, vTarget)}
+                        disabled={!subActive}
+                        editLabel={t("actions.edit")}
+                        deleteLabel={t("actions.delete")}
+                        onOpen={() => setOpenSwipe(vTarget)}
+                        onClose={() => setOpenSwipe(null)}
+                        onEdit={() => {
+                          setOpenSwipe(null)
+                          openForm(v)
+                        }}
+                        onDelete={() => {
+                          setOpenSwipe(null)
+                          setDeletingExerciseId(v.id)
+                        }}
+                      >
+                        <div className="px-5 py-4 min-h-[60px] flex items-center gap-4">
+                          <p className="flex-1 min-w-0 text-[13px] font-medium text-muted-foreground">
+                            {v.sets} {t("training.sets").toLowerCase()} · {v.reps} {t("training.reps").toLowerCase()}
+                          </p>
+                          <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
+                            {v.weight}{t("unit.kg")}
+                          </span>
+                        </div>
+                      </SwipeActionRow>
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </div>
         </div>
@@ -309,44 +505,120 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
 
         {!apiLoading && exercises.length > 0 && (
         <div className="bg-card rounded-[32px] overflow-hidden card-shadow">
-          {exercises.map((ex, idx) => (
-            <div key={ex.id}>
-              {idx > 0 && <div className="ml-[76px] mr-5 h-px bg-border" />}
-              <SwipeActionRow
-                isOpen={openSwipeExerciseId === ex.id}
-                disabled={!subActive}
-                editLabel={t("actions.edit")}
-                deleteLabel={t("actions.delete")}
-                onOpen={() => setOpenSwipeExerciseId(ex.id)}
-                onClose={() => setOpenSwipeExerciseId(null)}
-                onEdit={() => {
-                  setOpenSwipeExerciseId(null)
-                  openForm(ex)
-                }}
-                onDelete={() => {
-                  setOpenSwipeExerciseId(null)
-                  setDeletingExerciseId(ex.id)
-                }}
-              >
-                <div className="px-5 py-4 min-h-[68px] flex items-center gap-4">
-                  <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
-                    <BicepStatic className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="min-w-0 truncate text-[17px] font-medium leading-tight text-foreground">
-                      {ex.name}
-                    </p>
-                    <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
-                      {ex.sets} {t("training.sets")} · {ex.reps} {t("training.reps")}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
-                    {ex.weight}{t("unit.kg")}
-                  </span>
+          {groups.map((group, gIdx) => {
+            const isSingle = group.variants.length === 1
+            // Barra completa cuando hay una subsección (este grupo o el anterior); si no, línea indentada.
+            const prevGroup = gIdx > 0 ? groups[gIdx - 1] : null
+            const fullBar = !isSingle || (prevGroup ? prevGroup.variants.length > 1 : false)
+            const separatorClass = fullBar ? "h-px bg-border" : "ml-[76px] mr-5 h-px bg-border"
+            // Redondear los extremos del card en la capa con transform (evita el sangrado de 1px en la esquina).
+            const isFirst = gIdx === 0
+            const isLast = gIdx === groups.length - 1
+            if (isSingle) {
+              const ex = group.variants[0]
+              const target: SwipeTarget = { type: "single", id: ex.id }
+              return (
+                <div key={group.key}>
+                  {gIdx > 0 && <div className={separatorClass} />}
+                  <SwipeActionRow
+                    className={`${isFirst ? "rounded-t-[32px]" : ""} ${isLast ? "rounded-b-[32px]" : ""}`}
+                    isOpen={swipeTargetEquals(openSwipe, target)}
+                    disabled={!subActive}
+                    editLabel={t("actions.edit")}
+                    deleteLabel={t("actions.delete")}
+                    onOpen={() => setOpenSwipe(target)}
+                    onClose={() => setOpenSwipe(null)}
+                    onEdit={() => {
+                      setOpenSwipe(null)
+                      openForm(ex)
+                    }}
+                    onDelete={() => {
+                      setOpenSwipe(null)
+                      setDeletingExerciseId(ex.id)
+                    }}
+                  >
+                    <div className="px-5 py-4 min-h-[68px] flex items-center gap-4">
+                      <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
+                        <BicepStatic className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="min-w-0 truncate text-[17px] font-medium leading-tight text-foreground">
+                          {ex.name}
+                        </p>
+                        <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">
+                          {ex.sets} {t("training.sets")} · {ex.reps} {t("training.reps")}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
+                        {ex.weight}{t("unit.kg")}
+                      </span>
+                    </div>
+                  </SwipeActionRow>
                 </div>
-              </SwipeActionRow>
-            </div>
-          ))}
+              )
+            }
+
+            const headerTarget: SwipeTarget = { type: "header", key: group.key }
+            return (
+              <div key={group.key}>
+                {gIdx > 0 && <div className={separatorClass} />}
+                {/* Pill principal — la única con slide: Editar, Eliminar, Ver */}
+                <SwipeActionRow
+                  className={isFirst ? "rounded-t-[32px]" : ""}
+                  mode="actions-view"
+                  isOpen={swipeTargetEquals(openSwipe, headerTarget)}
+                  disabled={!subActive}
+                  editLabel={t("actions.edit")}
+                  deleteLabel={t("actions.delete")}
+                  viewLabel={t("actions.view")}
+                  onOpen={() => setOpenSwipe(headerTarget)}
+                  onClose={() => setOpenSwipe(null)}
+                  onEdit={() => {
+                    setOpenSwipe(null)
+                    openRenameGroup(group)
+                  }}
+                  onDelete={() => {
+                    setOpenSwipe(null)
+                    setPendingDeleteGroup(group)
+                  }}
+                  onView={() => {
+                    setOpenSwipe(null)
+                    setDetailGroupKey(group.key)
+                  }}
+                >
+                  <div className="px-5 pt-4 pb-3 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-secondary rounded-md flex items-center justify-center text-foreground shrink-0">
+                      <BicepStatic className="h-5 w-5" />
+                    </div>
+                    <p className="min-w-0 flex-1 truncate text-[17px] font-medium leading-tight text-foreground">
+                      {group.displayName}
+                    </p>
+                  </div>
+                </SwipeActionRow>
+                {/* Div hundido pegado debajo — solo lectura, sin slide */}
+                <div className={`overflow-hidden border-t border-border/60 bg-secondary/50 ${isLast ? "rounded-b-[32px]" : ""}`}>
+                  {group.variants.map((v, vIdx) => (
+                    <div key={v.id}>
+                      {vIdx > 0 && <div className="mx-5 h-px bg-border/40" />}
+                      <button
+                        type="button"
+                        disabled={!subActive}
+                        onClick={() => openForm(v)}
+                        className="flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors active:bg-foreground/5 disabled:opacity-40"
+                      >
+                        <span className="flex-1 min-w-0 text-[13px] font-medium text-muted-foreground">
+                          {v.sets} {t("training.sets").toLowerCase()} · {v.reps} {t("training.reps").toLowerCase()}
+                        </span>
+                        <span className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-bold leading-5 text-background">
+                          {v.weight}{t("unit.kg")}
+                        </span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </div>
         )}
       </div>
@@ -360,6 +632,18 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
         onCancel={() => setDeletingExerciseId(null)}
         onConfirm={() => {
           if (pendingDeleteExercise) void handleDeleteConfirm(pendingDeleteExercise.id)
+        }}
+      />
+
+      <DeleteConfirmSheet
+        open={Boolean(pendingDeleteGroup)}
+        title={t("training.deleteGroupConfirm")}
+        itemName={pendingDeleteGroup?.displayName ?? ""}
+        cancelLabel={t("profile.cancel")}
+        confirmLabel={t("actions.delete")}
+        onCancel={() => setPendingDeleteGroup(null)}
+        onConfirm={() => {
+          if (pendingDeleteGroup) void handleDeleteGroupConfirm(pendingDeleteGroup)
         }}
       />
 
@@ -393,12 +677,14 @@ function ExerciseForm({
   onSave,
   onCancel,
   hideHeader = false,
+  mode = "full",
 }: {
   initial?: Exercise | null
   selectedDate: string
   onSave: (data: ExercisePayload) => void | Promise<void>
   onCancel: () => void
   hideHeader?: boolean
+  mode?: "full" | "rename"
 }) {
   const { t } = useI18n()
   const formRef = useRef<HTMLFormElement>(null)
@@ -425,6 +711,10 @@ function ExerciseForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
+    if (mode === "rename") {
+      onSave({ name: name.trim(), sets: 0, reps: 0, weight: 0 })
+      return
+    }
     const payload: ExercisePayload = {
       ...(isEdit && initial ? { id: initial.id } : {}),
       name: name.trim(),
@@ -451,43 +741,45 @@ function ExerciseForm({
           autoFocus
         />
 
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.sets")}</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder="0"
-              value={sets}
-              onChange={(e) => setSets(e.target.value)}
-              min="0"
-              className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-            />
+        {mode === "full" && (
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.sets")}</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="0"
+                value={sets}
+                onChange={(e) => setSets(e.target.value)}
+                min="0"
+                className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.reps")}</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                placeholder="0"
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+                min="0"
+                className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.weightKg")}</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              />
+            </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.reps")}</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              placeholder="0"
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-              min="0"
-              className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-muted-foreground">{t("training.weightKg")}</label>
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="0"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              className="h-12 w-full rounded-2xl bg-input px-2 text-center text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-            />
-          </div>
-        </div>
+        )}
 
         <button
           type="submit"

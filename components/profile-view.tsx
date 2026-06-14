@@ -10,6 +10,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useSubscription } from "@/lib/hooks/use-subscription"
 import { useCurrentPlan } from "@/lib/hooks/use-current-plan"
 import { displayPlanName } from "@/lib/plans"
+import { MEALS_ENABLED } from "@/lib/constants"
 import {
   getProfile,
   saveProfile,
@@ -34,7 +35,6 @@ import {
   HelpCircle,
   ChevronRight,
   Check,
-  Smartphone,
   Trophy,
   Lock,
   Crown,
@@ -391,13 +391,6 @@ export function ProfileView({
             onClick={() => setOpenPicker("theme")}
           />
 
-          {/* Install app */}
-          <SettingsRow
-            icon={<Smartphone className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
-            label={t("dashboard.boxInstall")}
-            chevron
-            onClick={() => setOpenInstall(true)}
-          />
 
           <button
             type="button"
@@ -450,6 +443,8 @@ export function ProfileView({
       </div>
 
       {/* ── Personal info ── */}
+      {MEALS_ENABLED && (
+      <>
       <SectionLabel>{t("profile.personalInfo")}</SectionLabel>
       <div>
         <SettingsGroup>
@@ -518,6 +513,8 @@ export function ProfileView({
           />
         </SettingsGroup>
       </div>
+      </>
+      )}
 
       <SectionLabel>{t("settings.account")}</SectionLabel>
       <div>

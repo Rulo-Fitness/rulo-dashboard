@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { MEALS_ENABLED } from "@/lib/constants"
 import { useForceLightMode } from "@/lib/hooks/use-force-light-mode"
 import { useDefaultSpanishLocale } from "@/lib/hooks/use-default-spanish-locale"
 
@@ -219,7 +220,8 @@ export default function SignUpPage() {
   useForceLightMode()
   useDefaultSpanishLocale()
 
-  const [step, setStep] = useState(1)
+  // MVP solo-ejercicios: si comidas está apagado, el register arranca directo en crear cuenta.
+  const [step, setStep] = useState(MEALS_ENABLED ? 1 : 5)
   const [profile, setProfile] = useState<RegisterProfile>({ ...defaultForm })
   const [done, setDone] = useState(false)
   const [openField, setOpenField] = useState<OpenField>(null)
@@ -475,21 +477,35 @@ export default function SignUpPage() {
               <div className="flex min-h-0 w-full flex-1 flex-col items-center md:justify-center">
                 <header className="-mx-2 w-full shrink-0 self-stretch">
                   <div className="flex w-full items-center justify-center gap-3 rounded-xl px-3 py-2">
-                    <button
-                      type="button"
-                      onClick={handleBack}
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors"
-                      aria-label={t("register.back")}
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <div className="relative flex-1 max-w-[300px] overflow-hidden rounded-full bg-muted" style={{ height: 6 }}>
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/30 transition-all duration-300 ease-out"
-                        style={{ width: `${(step / STEPS) * 100}%` }}
-                        aria-hidden
-                      />
-                    </div>
+                    {MEALS_ENABLED ? (
+                      <button
+                        type="button"
+                        onClick={handleBack}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors"
+                        aria-label={t("register.back")}
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                    ) : (
+                      <Link
+                        href="/sign-in"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors"
+                        aria-label={t("register.back")}
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </Link>
+                    )}
+                    {MEALS_ENABLED ? (
+                      <div className="relative flex-1 max-w-[300px] overflow-hidden rounded-full bg-muted" style={{ height: 6 }}>
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/30 transition-all duration-300 ease-out"
+                          style={{ width: `${(step / STEPS) * 100}%` }}
+                          aria-hidden
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex-1" />
+                    )}
                   </div>
                 </header>
                 <div className="flex h-[380px] w-full max-w-md shrink-0 flex-col items-stretch justify-center overflow-visible pt-8 md:h-[400px]">
