@@ -8,6 +8,7 @@ const translations = {
   // Bottom Nav
   "actions.edit": { en: "Edit", es: "Editar" },
   "actions.delete": { en: "Delete", es: "Eliminar" },
+  "actions.view": { en: "View", es: "Ver" },
   "nav.home": { en: "Home", es: "Inicio" },
   "nav.training": { en: "Training", es: "Entreno" },
   "nav.meals": { en: "Meals", es: "Comidas" },
@@ -56,6 +57,8 @@ const translations = {
   "gate.mealsTitle": { en: "Meals is Bestia", es: "Comidas es Bestia" },
   "gate.mealsDescription": { en: "Meal tracking, macros, and calorie analysis are available on the Bestia plan.", es: "El seguimiento de comidas, macros y calorías está disponible en el plan Bestia." },
   "gate.mealsCta": { en: "See Bestia plan", es: "Ver plan Bestia" },
+  "gate.mealsComingSoonTitle": { en: "Coming soon", es: "Próximamente" },
+  "gate.mealsComingSoonDescription": { en: "We're cooking up meal & macro tracking. It'll be available soon!", es: "Estamos cocinando el tracking de comidas y macros. ¡Estará disponible pronto!" },
   "gate.recapTitle": { en: "Wrapped is Bestia", es: "Wrapped es Bestia" },
   "gate.recapDescription": { en: "The weekly wrapped is available on the Bestia plan.", es: "El wrapped semanal está disponible en el plan Bestia." },
   "gate.recapCta": { en: "See Bestia plan", es: "Ver plan Bestia" },
@@ -125,6 +128,8 @@ const translations = {
   "training.editTraining": { en: "Edit Workout", es: "Editar entreno" },
   "training.deleteTraining": { en: "Delete workout", es: "Eliminar entreno" },
   "training.deleteExerciseConfirm": { en: "Delete this exercise?", es: "¿Eliminar este ejercicio?" },
+  "training.deleteGroupConfirm": { en: "Delete all sets of this exercise?", es: "¿Eliminar todas las series de este ejercicio?" },
+  "training.renameExercise": { en: "Rename exercise", es: "Renombrar ejercicio" },
   "training.trainingName": { en: "Day", es: "Día" },
   "training.dayMonday": { en: "Monday", es: "Lunes" },
   "training.dayTuesday": { en: "Tuesday", es: "Martes" },
@@ -236,6 +241,9 @@ const translations = {
   "gift.privacy": { en: "Privacy Policy", es: "Politicas de privacidad" },
 
   // Subscription
+  "subscription.bannerTitle": { en: "Your subscription expired", es: "Tu suscripción expiró" },
+  "subscription.bannerDescription": { en: "Your data is frozen. Reactivate your plan to keep tracking with Rulo.", es: "Tus datos quedaron congelados. Reactivá tu plan para seguir trackeando con Rulo." },
+  "subscription.bannerCta": { en: "Reactivate plan", es: "Reactivar plan" },
   "subscription.statusActive": { en: "Active access", es: "Acceso activo" },
   "subscription.statusExpired": { en: "Access expired", es: "Acceso vencido" },
   "subscription.statusAvailable": { en: "Free trial available", es: "Prueba disponible" },

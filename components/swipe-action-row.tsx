@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "react"
-import { Pencil, Trash, X } from "lucide-react"
+import { ChevronRight, Pencil, Trash, X } from "lucide-react"
 
-const ACTION_WIDTH = 152
+const ACTIONS_WIDTH = 152
+const VIEW_WIDTH = 92
+const ACTIONS_VIEW_WIDTH = 228
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
@@ -13,24 +15,36 @@ type SwipeActionRowProps = {
   children: ReactNode
   isOpen: boolean
   disabled?: boolean
-  editLabel: string
-  deleteLabel: string
+  className?: string
+  /**
+   * "actions" reveals Edit + Delete (default). "view" reveals a single View button.
+   * "actions-view" reveals Edit + Delete + View.
+   */
+  mode?: "actions" | "view" | "actions-view"
+  editLabel?: string
+  deleteLabel?: string
+  viewLabel?: string
   onOpen: () => void
   onClose: () => void
-  onEdit: () => void
-  onDelete: () => void
+  onEdit?: () => void
+  onDelete?: () => void
+  onView?: () => void
 }
 
 export function SwipeActionRow({
   children,
   isOpen,
   disabled,
+  className,
+  mode = "actions",
   editLabel,
   deleteLabel,
+  viewLabel,
   onOpen,
   onClose,
   onEdit,
   onDelete,
+  onView,
 }: SwipeActionRowProps) {
   const rowRef = useRef<HTMLDivElement>(null)
   const [dragOffset, setDragOffset] = useState(0)
@@ -42,7 +56,9 @@ export function SwipeActionRow({
     startOffset: 0,
   })
 
-  const restingOffset = isOpen ? -ACTION_WIDTH : 0
+  const actionWidth =
+    mode === "view" ? VIEW_WIDTH : mode === "actions-view" ? ACTIONS_VIEW_WIDTH : ACTIONS_WIDTH
+  const restingOffset = isOpen ? -actionWidth : 0
   const offset = drag.current.active && drag.current.horizontal ? dragOffset : restingOffset
 
   useEffect(() => {
@@ -84,7 +100,7 @@ export function SwipeActionRow({
     }
 
     event.preventDefault()
-    setDragOffset(clamp(drag.current.startOffset + dx, -ACTION_WIDTH, 0))
+    setDragOffset(clamp(drag.current.startOffset + dx, -actionWidth, 0))
   }
 
   function handlePointerEnd(event: PointerEvent<HTMLDivElement>) {
@@ -101,31 +117,56 @@ export function SwipeActionRow({
       return
     }
 
-    if (finalOffset < -ACTION_WIDTH / 2) onOpen()
+    if (finalOffset < -actionWidth / 2) onOpen()
     else onClose()
   }
 
   return (
-    <div ref={rowRef} className="relative overflow-hidden bg-card">
-      <div className="absolute inset-y-0 right-0 flex w-[152px]">
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onEdit}
-          className="flex w-[76px] flex-col items-center justify-center gap-1 bg-secondary text-foreground transition-colors active:brightness-95 disabled:opacity-40"
-        >
-          <Pencil className="h-5 w-5" strokeWidth={2.4} />
-          <span className="text-[11px] font-semibold">{editLabel}</span>
-        </button>
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onDelete}
-          className="flex w-[76px] flex-col items-center justify-center gap-1 bg-foreground/12 text-foreground transition-colors active:brightness-95 disabled:opacity-40 dark:bg-foreground/18"
-        >
-          <Trash className="h-5 w-5" strokeWidth={2.4} />
-          <span className="text-[11px] font-semibold">{deleteLabel}</span>
-        </button>
+    <div ref={rowRef} className={`relative overflow-hidden bg-card ${className ?? ""}`}>
+      <div className="absolute inset-y-0 right-0 flex" style={{ width: actionWidth }}>
+        {mode === "view" ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onView}
+            className="flex w-full flex-col items-center justify-center gap-1 bg-secondary text-foreground transition-colors active:brightness-95 disabled:opacity-40"
+          >
+            <ChevronRight className="h-5 w-5" strokeWidth={2.4} />
+            <span className="text-[11px] font-semibold">{viewLabel}</span>
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onEdit}
+              className="flex w-[76px] flex-col items-center justify-center gap-1 bg-secondary text-foreground transition-colors active:brightness-95 disabled:opacity-40"
+            >
+              <Pencil className="h-5 w-5" strokeWidth={2.4} />
+              <span className="text-[11px] font-semibold">{editLabel}</span>
+            </button>
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onDelete}
+              className="flex w-[76px] flex-col items-center justify-center gap-1 bg-foreground/12 text-foreground transition-colors active:brightness-95 disabled:opacity-40 dark:bg-foreground/18"
+            >
+              <Trash className="h-5 w-5" strokeWidth={2.4} />
+              <span className="text-[11px] font-semibold">{deleteLabel}</span>
+            </button>
+            {mode === "actions-view" && (
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={onView}
+                className="flex w-[76px] flex-col items-center justify-center gap-1 bg-foreground text-background transition-colors active:brightness-95 disabled:opacity-40"
+              >
+                <ChevronRight className="h-5 w-5" strokeWidth={2.4} />
+                <span className="text-[11px] font-semibold">{viewLabel}</span>
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       <div

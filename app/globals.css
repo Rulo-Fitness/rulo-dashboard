@@ -218,12 +218,12 @@ label[for] {
 }
 
 
-/* Card shadows — uniform, low blur */
+/* Card shadows — flat (sin sombra) */
 .card-shadow {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
 }
 .dark .card-shadow {
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: none;
 }
 
 /* Legacy alias */

@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth-context"
 import { fetchWorkoutLogsByRange, fetchMealsByRange } from "@/lib/api"
 import { TrainingAnalytics } from "@/components/analytics/training-analytics"
 import { MealsAnalytics } from "@/components/analytics/meals-analytics"
+import { MEALS_ENABLED } from "@/lib/constants"
 
 function isBestiaPlan(plan: string | null | undefined): boolean {
   if (!plan) return false
@@ -45,7 +46,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
     if (user) {
       const today = new Date().toISOString().slice(0, 10)
       fetchWorkoutLogsByRange(user.id, "2020-01-01", today).then(setSessions)
-      if (hasBestia) {
+      if (MEALS_ENABLED && hasBestia) {
         fetchMealsByRange(user.id, "2020-01-01", today).then(setMeals)
       }
     }
@@ -71,6 +72,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
   return (
     <div className="relative flex min-h-[calc(100lvh-170px)] flex-col gap-0 pb-6">
       {/* Sub-tabs */}
+      {MEALS_ENABLED && (
       <div className="px-6 animate-slide-up" style={{ animationDelay: "0.03s" }}>
         <div className="flex items-center gap-2 px-3 py-2 rounded-full nav-glass w-fit mx-auto">
           {(["training", "meals"] as const).map((tab) => {
@@ -105,6 +107,7 @@ export function AnalyticsView({ refreshKey, onOpenRecap, onUpgrade, recapOpen, r
           })}
         </div>
       </div>
+      )}
 
       {activeSubTab === "training" && (
         <TrainingAnalytics
