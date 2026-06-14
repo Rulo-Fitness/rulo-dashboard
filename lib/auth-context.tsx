@@ -59,33 +59,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Re-consulta plan/suscripción al servidor y actualiza el usuario cacheado.
+  const refreshFromServer = useCallback((userId: string) => {
+    fetch(`/api/subscription-status?user_id=${encodeURIComponent(userId)}`)
+      .then(async (res) => {
+        if (!res.ok) return
+        const data = await res.json()
+        if (!data.success || !data.result) return
+        const r = data.result
+        const updates: Partial<AuthUser> = {}
+        if (r.subscription_active_until !== undefined) updates.subscription_active_until = r.subscription_active_until
+        if (r.current_plan !== undefined) updates.current_plan = r.current_plan
+        if (Object.keys(updates).length > 0) {
+          setUser((prev) => {
+            if (!prev) return prev
+            const updated = { ...prev, ...updates }
+            saveUser(updated)
+            return updated
+          })
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     const stored = loadStoredUser()
     setUser(stored)
     setIsLoading(false)
+    if (stored?.id) refreshFromServer(stored.id)
+  }, [refreshFromServer])
 
-    if (stored?.id) {
-      fetch(`/api/subscription-status?user_id=${encodeURIComponent(stored.id)}`)
-        .then(async (res) => {
-          if (!res.ok) return
-          const data = await res.json()
-          if (!data.success || !data.result) return
-          const r = data.result
-          const updates: Partial<AuthUser> = {}
-          if (r.subscription_active_until !== undefined) updates.subscription_active_until = r.subscription_active_until
-          if (r.current_plan !== undefined) updates.current_plan = r.current_plan
-          if (Object.keys(updates).length > 0) {
-            setUser((prev) => {
-              if (!prev) return prev
-              const updated = { ...prev, ...updates }
-              saveUser(updated)
-              return updated
-            })
-          }
-        })
-        .catch(() => {})
+  // En PWA (sobre todo iOS) la app se "resume" sin re-montar, así que el fetch de
+  // montaje no corre. Re-consultamos cada vez que la app vuelve al foco para reflejar
+  // cambios hechos en la base (ej. plan/suscripción) sin tener que desloguear.
+  useEffect(() => {
+    const refreshIfVisible = () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return
+      const current = loadStoredUser()
+      if (current?.id) refreshFromServer(current.id)
     }
-  }, [])
+    document.addEventListener("visibilitychange", refreshIfVisible)
+    window.addEventListener("focus", refreshIfVisible)
+    return () => {
+      document.removeEventListener("visibilitychange", refreshIfVisible)
+      window.removeEventListener("focus", refreshIfVisible)
+    }
+  }, [refreshFromServer])
 
   const login = useCallback(
     async (phone: string, password: string): Promise<{ ok: boolean; error?: string }> => {
