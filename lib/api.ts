@@ -80,6 +80,35 @@ export async function fetchWorkoutLogs(userId: string): Promise<TrainingSession[
   }
 }
 
+/**
+ * Trae TODO el historial de workout logs del usuario, paginando de a 100.
+ * Pensado para exportar (no truncar a las primeras 100 filas como fetchWorkoutLogs).
+ */
+export async function fetchAllWorkoutLogs(userId: string): Promise<TrainingSession[]> {
+  const PER_PAGE = 100
+  const MAX_PAGES = 50 // tope de seguridad para evitar loops infinitos
+  const all: WorkoutLogFromApi[] = []
+  try {
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const res = await fetch(
+        `/api/workout-logs?search=${encodeURIComponent(userId)}&per_page=${PER_PAGE}&page=${page}`
+      ).catch(() => null)
+      if (!res || !res.ok) break
+      const data = (await res.json()) as { success?: boolean; result?: WorkoutLogFromApi[] }
+      if (!data.success || !Array.isArray(data.result)) {
+        console.error("[Rulo API] fetchAllWorkoutLogs invalid response:", data)
+        break
+      }
+      all.push(...data.result)
+      if (data.result.length < PER_PAGE) break // última página
+    }
+    return mapWorkoutLogsToSessions(all)
+  } catch (err) {
+    console.error("[Rulo API] fetchAllWorkoutLogs error:", err)
+    return mapWorkoutLogsToSessions(all)
+  }
+}
+
 /** Ejercicios de la API para un usuario y una fecha (YYYY-MM-DD). Carga con esta fecha. */
 export async function fetchWorkoutLogsForDate(
   userId: string,

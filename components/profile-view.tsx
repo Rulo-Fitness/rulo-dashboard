@@ -40,8 +40,12 @@ import {
   Crown,
   Share,
   X,
+  Download,
+  Copy,
 } from "lucide-react"
 import { AppSignature } from "@/components/app-signature"
+import { fetchAllWorkoutLogs } from "@/lib/api"
+import { sessionsToCsv, downloadCsv, copyToClipboard } from "@/lib/export"
 
 const WHATSAPP_RULO_URL = "https://wa.me/5492236660910"
 
@@ -83,6 +87,24 @@ function SettingsGroup({ children }: { children: React.ReactNode }) {
         </div>
       ))}
     </div>
+  )
+}
+
+function DrawnCheck() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path className="animate-check-draw" d="M20 6 9 17l-5-5" />
+    </svg>
   )
 }
 
@@ -210,6 +232,53 @@ export function ProfileView({
   const [openInstall, setOpenInstall] = useState(false)
   const [deleteError, setDeleteError] = useState("")
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const [showExportSheet, setShowExportSheet] = useState(false)
+  const [exportCsv, setExportCsv] = useState<string | null>(null)
+  const [exportLoading, setExportLoading] = useState(false)
+  const [exportEmpty, setExportEmpty] = useState(false)
+  const [exportDone, setExportDone] = useState<"" | "copied" | "downloaded">("")
+
+  function openExportSheet() {
+    setShowExportSheet(true)
+    setExportDone("")
+    setExportEmpty(false)
+    if (exportCsv !== null) return // ya cargado
+    void loadExportData()
+  }
+
+  async function loadExportData() {
+    if (!user?.id) {
+      setExportEmpty(true)
+      return
+    }
+    setExportLoading(true)
+    try {
+      const sessions = await fetchAllWorkoutLogs(user.id)
+      if (sessions.length === 0) {
+        setExportEmpty(true)
+        return
+      }
+      setExportCsv(sessionsToCsv(sessions))
+    } catch (err) {
+      console.error("[ProfileView] export error:", err)
+      setExportEmpty(true)
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  async function handleExportCopy() {
+    if (!exportCsv) return
+    await copyToClipboard(exportCsv)
+    setExportDone("copied")
+  }
+
+  function handleExportDownload() {
+    if (!exportCsv) return
+    const today = new Date().toLocaleDateString("en-CA") // YYYY-MM-DD
+    downloadCsv(`rulo-entrenos-${today}.csv`, exportCsv)
+    setExportDone("downloaded")
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -217,8 +286,8 @@ export function ProfileView({
   }, [])
 
   useEffect(() => {
-    onOverlayChange?.(Boolean(openPicker || openField || openInstall || showClearConfirm || showLogoutConfirm))
-  }, [onOverlayChange, openPicker, openField, openInstall, showClearConfirm, showLogoutConfirm])
+    onOverlayChange?.(Boolean(openPicker || openField || openInstall || showClearConfirm || showLogoutConfirm || showExportSheet))
+  }, [onOverlayChange, openPicker, openField, openInstall, showClearConfirm, showLogoutConfirm, showExportSheet])
 
   function getFieldLabel(field: Exclude<ProfileFieldKey, null>) {
     if (field === "name") return t("profile.name")
@@ -516,6 +585,18 @@ export function ProfileView({
       </>
       )}
 
+      <SectionLabel>{t("settings.data")}</SectionLabel>
+      <div>
+        <SettingsGroup>
+          <SettingsRow
+            icon={<Download className="h-5 w-5 text-foreground" strokeWidth={2.2} />}
+            label={t("export.title")}
+            chevron
+            onClick={openExportSheet}
+          />
+        </SettingsGroup>
+      </div>
+
       <SectionLabel>{t("settings.account")}</SectionLabel>
       <div>
         <SettingsGroup>
@@ -547,6 +628,98 @@ export function ProfileView({
       </div>
 
       <AppSignature className="pt-6" />
+
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end"
+        style={{
+          pointerEvents: showExportSheet ? "auto" : "none",
+          visibility: showExportSheet ? "visible" : "hidden",
+        }}
+        aria-hidden={!showExportSheet}
+      >
+        <div
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
+          style={{ opacity: showExportSheet ? 1 : 0 }}
+          onClick={() => setShowExportSheet(false)}
+          aria-hidden
+        />
+        <div
+          className="relative mx-auto flex w-full max-w-md max-h-[85dvh] flex-col rounded-t-[32px] bg-card shadow-xl transition-transform duration-300 ease-out"
+          style={{ transform: showExportSheet ? "translateY(0)" : "translateY(100%)" }}
+        >
+          <header className="flex shrink-0 items-center justify-between px-6 py-5">
+            <div>
+              <h2 className="text-xl font-bold text-foreground">{t("export.title")}</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowExportSheet(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-foreground active:scale-95"
+              aria-label={t("profile.cancel")}
+            >
+              <X className="h-4 w-4" strokeWidth={2.2} />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-6 pb-8">
+            <p className="text-[14px] text-center text-muted-foreground">
+              {t("export.sheetDesc")}
+            </p>
+
+            {exportLoading && (
+              <p className="mt-6 text-center text-[14px] text-muted-foreground">
+                {t("export.exporting")}
+              </p>
+            )}
+
+            {!exportLoading && exportEmpty && (
+              <p className="mt-6 text-center text-[14px] text-muted-foreground">
+                {t("export.empty")}
+              </p>
+            )}
+
+            {!exportLoading && !exportEmpty && exportCsv && (
+              <>
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleExportCopy}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-secondary py-3 text-[15px] font-bold text-foreground active:opacity-75"
+                  >
+                    {exportDone === "copied" ? (
+                      <>
+                        <DrawnCheck />
+                        {t("export.copied")}
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" strokeWidth={2.2} />
+                        {t("export.copy")}
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportDownload}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[15px] font-bold text-primary-foreground active:opacity-75"
+                  >
+                    {exportDone === "downloaded" ? (
+                      <>
+                        <DrawnCheck />
+                        {t("export.downloaded")}
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4" strokeWidth={2.2} />
+                        {t("export.download")}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       <div
         className="fixed inset-0 z-50 flex flex-col justify-end"
