@@ -162,6 +162,11 @@ const translations = {
   "training.fri": { en: "Fri", es: "Vie" },
   "training.sat": { en: "Sat", es: "Sáb" },
   "training.sun": { en: "Sun", es: "Dom" },
+  "training.mirrorLastWeek": { en: "Same as last {day}", es: "Igual que el {day} pasado" },
+  "training.mirrorOlder": { en: "Same as {date}", es: "Igual que el {date}" },
+  "training.mirrorHint": { en: "Tap ✓ to log it · tap the row to edit", es: "Tocá ✓ para registrar · tocá la fila para editar" },
+  "training.mirrorAddAll": { en: "Add all", es: "Agregar todo" },
+  "training.mirrorAccept": { en: "Log {name}", es: "Registrar {name}" },
 
   // Meals
   "meals.title": { en: "Meals", es: "Comidas" },
