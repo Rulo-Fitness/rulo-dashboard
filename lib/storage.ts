@@ -144,7 +144,7 @@ export function deleteMeal(id: string): void {
 }
 
 // Fecha en hora local (YYYY-MM-DD) para que "hoy" coincida con Argentina / zona del usuario
-function toLocalDateString(d: Date): string {
+export function toLocalDateString(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");

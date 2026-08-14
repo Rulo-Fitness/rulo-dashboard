@@ -887,3 +887,14 @@ input[type="time"]::-webkit-date-and-time-value {
   z-index: 0;
   pointer-events: none;
 }
+
+/* Animated "drawn" checkmark */
+@keyframes check-draw {
+  from { stroke-dashoffset: -24; }
+  to { stroke-dashoffset: 0; }
+}
+.animate-check-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: -24;
+  animation: check-draw 0.32s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}

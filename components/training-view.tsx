@@ -7,49 +7,42 @@ import {
   updateExercise,
   deleteExercise,
   getTodayString,
+  toLocalDateString,
   type Exercise,
 } from "@/lib/storage"
 import { useAuth } from "@/lib/auth-context"
-import { fetchWorkoutLogsForDate, createWorkoutLog, updateWorkoutLog, deleteWorkoutLog } from "@/lib/api"
+import {
+  fetchWorkoutLogsForDate,
+  fetchWorkoutLogsByRange,
+  createWorkoutLog,
+  updateWorkoutLog,
+  deleteWorkoutLog,
+} from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { useSubscription } from "@/lib/hooks/use-subscription"
 import { Plus, ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
 import { DeleteConfirmSheet, SwipeActionRow } from "@/components/swipe-action-row"
+import { BicepStatic } from "@/components/ui/bicep-static"
+import { groupExercises, type ExerciseGroup } from "@/lib/exercise-groups"
+import { TrainingMirrorCard } from "@/components/training-mirror-card"
 
-function BicepStatic({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12.409 13.017A5 5 0 0 1 22 15c0 3.866-4 7-9 7-4.077 0-8.153-.82-10.371-2.462-.426-.316-.631-.832-.62-1.362C2.118 12.723 2.627 2 10 2a3 3 0 0 1 3 3 2 2 0 0 1-2 2c-1.105 0-1.64-.444-2-1" />
-      <path d="M15 14a5 5 0 0 0-7.584 2" />
-      <path d="M9.964 6.825C8.019 7.977 9.5 13 8 15" />
-    </svg>
-  )
-}
+/** Días hacia atrás donde buscamos el mismo día de la semana, del más reciente al más viejo. */
+const MIRROR_OFFSETS = [-7, -14, -21, -28]
 
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T00:00:00")
   d.setDate(d.getDate() + days)
-  return d.toISOString().split("T")[0]
+  return toLocalDateString(d)
 }
 
-type ExerciseGroup = {
-  key: string
-  displayName: string
-  variants: Exercise[]
-}
-
-function groupExercises(list: Exercise[]): ExerciseGroup[] {
-  const map = new Map<string, ExerciseGroup>()
-  for (const ex of list) {
-    const key = ex.name.trim().toLowerCase()
-    const existing = map.get(key)
-    if (existing) {
-      existing.variants.push(ex)
-    } else {
-      map.set(key, { key, displayName: ex.name.trim() || ex.name, variants: [ex] })
-    }
+/** Rutina espejo desde localStorage: primer día candidato (del más reciente al más viejo) con ejercicios. */
+function findLocalMirror(dateStr: string): { sourceDate: string; exercises: Exercise[] } | null {
+  for (const offset of MIRROR_OFFSETS) {
+    const sourceDate = shiftDate(dateStr, offset)
+    const exercises = getExercisesForDate(sourceDate)
+    if (exercises.length > 0) return { sourceDate, exercises }
   }
-  return Array.from(map.values())
+  return null
 }
 
 type SwipeTarget =
@@ -83,10 +76,29 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   const [openSwipe, setOpenSwipe] = useState<SwipeTarget | null>(null)
   const [detailGroupKey, setDetailGroupKey] = useState<string | null>(null)
   const [addFormKey, setAddFormKey] = useState(0)
+  // Rutina del mismo día de la semana anterior, ofrecida como placeholder cada vez que el día queda vacío.
+  const [mirror, setMirror] = useState<{ sourceDate: string; exercises: Exercise[] } | null>(null)
+  const [mirrorPendingKeys, setMirrorPendingKeys] = useState<Set<string>>(new Set())
+  const [mirrorAddAllPending, setMirrorAddAllPending] = useState(false)
+  const [mirrorDraft, setMirrorDraft] = useState<Exercise | null>(null)
+  // Fantasmas guardados con otro nombre desde el formulario: se ocultan hasta que el día vuelva a vaciarse.
+  const [consumedMirrorIds, setConsumedMirrorIds] = useState<Set<string>>(new Set())
+  // Día cuyo listado real ya está cargado — hasta entonces no se sabe si está vacío.
+  const [loadedDate, setLoadedDate] = useState<string | null>(null)
+  const mirrorLookupRef = useRef<string | null>(null)
   const dateInputRef = useRef<HTMLInputElement>(null)
 
   const groups = useMemo(() => groupExercises(exercises), [exercises])
   const detailGroup = detailGroupKey ? groups.find((g) => g.key === detailGroupKey) ?? null : null
+
+  // Los fantasmas de un ejercicio que ya está registrado hoy no se muestran (evita duplicarlo).
+  const mirrorGroups = useMemo(() => {
+    if (!mirror) return []
+    const realNames = new Set(groups.map((g) => g.key))
+    return groupExercises(mirror.exercises.filter((ex) => !consumedMirrorIds.has(ex.id))).filter(
+      (g) => !realNames.has(g.key)
+    )
+  }, [mirror, groups, consumedMirrorIds])
 
   // Close the detail screen once its group no longer exists (e.g. all sets deleted).
   useEffect(() => {
@@ -99,12 +111,14 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
     if (!ex) setAddFormKey((k) => k + 1)
     setEditingExercise(ex)
     setRenamingGroup(null)
+    setMirrorDraft(null)
     setShowForm(true)
   }
 
   const openRenameGroup = (group: ExerciseGroup) => {
     setRenamingGroup(group)
     setEditingExercise(null)
+    setMirrorDraft(null)
     setShowForm(true)
   }
 
@@ -112,6 +126,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
     setShowForm(false)
     setEditingExercise(null)
     setRenamingGroup(null)
+    setMirrorDraft(null)
   }
 
   // Hide the bottom nav whenever any full-screen panel (form or group detail) is open.
@@ -120,8 +135,17 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
   }, [showForm, detailGroupKey, onAddPanelChange])
 
   useEffect(() => {
+    // Al cambiar de día se descarta el espejo anterior y se vuelve a habilitar la búsqueda.
+    setMirror(null)
+    setMirrorPendingKeys(new Set())
+    setMirrorAddAllPending(false)
+    setConsumedMirrorIds(new Set())
+    setLoadedDate(null)
+    mirrorLookupRef.current = null
+
     if (!user?.id) {
       setExercises(getExercisesForDate(selectedDate))
+      setLoadedDate(selectedDate)
       return
     }
     let cancelled = false
@@ -130,12 +154,14 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       .then((list) => {
         if (!cancelled) {
           setExercises(list)
+          setLoadedDate(selectedDate)
           setApiLoading(false)
         }
       })
       .catch(() => {
         if (!cancelled) {
           setExercises(getExercisesForDate(selectedDate))
+          setLoadedDate(selectedDate)
           setApiLoading(false)
         }
       })
@@ -143,6 +169,41 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       cancelled = true
     }
   }, [user?.id, selectedDate])
+
+  // Cada vez que el día queda vacío (al abrirlo o tras borrar todo) se ofrece la rutina espejo completa.
+  useEffect(() => {
+    if (loadedDate !== selectedDate || exercises.length > 0) return
+    // Día vacío ⇒ todos los fantasmas vuelven a estar disponibles.
+    setConsumedMirrorIds((prev) => (prev.size === 0 ? prev : new Set()))
+    // La rutina de origen se busca una sola vez por día; después se reusa la que ya está en memoria.
+    if (mirrorLookupRef.current === selectedDate) return
+    mirrorLookupRef.current = selectedDate
+
+    if (!user?.id) {
+      setMirror(findLocalMirror(selectedDate))
+      return
+    }
+    let cancelled = false
+    // Un solo request cubre los cuatro candidatos (-7, -14, -21, -28).
+    fetchWorkoutLogsByRange(
+      user.id,
+      shiftDate(selectedDate, MIRROR_OFFSETS[MIRROR_OFFSETS.length - 1]),
+      shiftDate(selectedDate, MIRROR_OFFSETS[0])
+    )
+      .then((sessions) => {
+        if (cancelled) return
+        const candidates = new Set(MIRROR_OFFSETS.map((offset) => shiftDate(selectedDate, offset)))
+        // fetchWorkoutLogsByRange devuelve las sesiones de más reciente a más vieja.
+        const match = sessions.find((s) => candidates.has(s.date) && s.exercises.length > 0)
+        if (match) setMirror({ sourceDate: match.date, exercises: match.exercises })
+      })
+      .catch(() => {
+        // Sin espejo disponible: queda el estado vacío de siempre.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [loadedDate, selectedDate, exercises.length, user?.id])
 
   const refresh = (): Promise<void> => {
     if (user?.id) {
@@ -158,6 +219,83 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
     setExercises(getExercisesForDate(selectedDate))
     onUpdate()
     return Promise.resolve()
+  }
+
+  /**
+   * Registra variantes del espejo en el día actual. Los ids del espejo son de la semana pasada:
+   * siempre se crean filas nuevas, nunca se actualizan las viejas.
+   */
+  const acceptMirrorVariants = async (variants: Exercise[]): Promise<void> => {
+    if (variants.length === 0) return
+    if (user?.id) {
+      const results = await Promise.all(
+        variants.map((v) =>
+          createWorkoutLog(user.id, {
+            date: selectedDate,
+            name: v.name,
+            sets: v.sets,
+            reps: v.reps,
+            weight: v.weight,
+          })
+        )
+      )
+      const created = results.filter((r) => r !== null)
+      if (created.length > 0) {
+        setExercises((prev) => [
+          ...prev,
+          ...created.map((row) => ({
+            id: row.id,
+            name: row.name ?? "",
+            sets: row.sets ?? 0,
+            reps: row.reps ?? 0,
+            weight: row.weight ?? 0,
+          })),
+        ])
+        onUpdate()
+      }
+      // Los fantasmas aceptados desaparecen solos: ya existe un ejercicio con ese nombre en el día.
+      if (results.some((r) => r === null)) await refresh()
+      return
+    }
+    for (const v of variants) {
+      addExerciseToDate(selectedDate, { name: v.name, sets: v.sets, reps: v.reps, weight: v.weight })
+    }
+    await refresh()
+  }
+
+  const handleAcceptMirrorGroup = async (group: ExerciseGroup) => {
+    setMirrorPendingKeys((prev) => new Set(prev).add(group.key))
+    try {
+      await acceptMirrorVariants(group.variants)
+    } finally {
+      setMirrorPendingKeys((prev) => {
+        const next = new Set(prev)
+        next.delete(group.key)
+        return next
+      })
+    }
+  }
+
+  const handleAcceptMirrorAll = async () => {
+    setMirrorAddAllPending(true)
+    try {
+      await acceptMirrorVariants(mirrorGroups.flatMap((g) => g.variants))
+    } finally {
+      setMirrorAddAllPending(false)
+    }
+  }
+
+  /** Oculta un fantasma guardado con otro nombre (el filtro por nombre no alcanza para taparlo). */
+  const consumeMirrorId = (id: string) => {
+    setConsumedMirrorIds((prev) => new Set(prev).add(id))
+  }
+
+  /** Abre el formulario precargado con una fila del espejo (sin id ⇒ el submit crea una fila nueva). */
+  const openMirrorDraft = (ex: Exercise) => {
+    setEditingExercise(null)
+    setRenamingGroup(null)
+    setMirrorDraft(ex)
+    setShowForm(true)
   }
 
   const handleDeleteConfirm = async (exId: string) => {
@@ -247,6 +385,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           day: "numeric",
         })
 
+  // El borrador del espejo va sin id: el formulario lo trata como alta, no como edición.
   const formMode: "add" | "edit" | "rename" = renamingGroup
     ? "rename"
     : editingExercise
@@ -254,12 +393,14 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
       : "add"
   const formInitial: Exercise | null = renamingGroup
     ? { id: renamingGroup.key, name: renamingGroup.displayName, sets: 0, reps: 0, weight: 0 }
-    : editingExercise
+    : editingExercise ?? (mirrorDraft ? { ...mirrorDraft, id: "" } : null)
   const formKey = renamingGroup
     ? `rename-${renamingGroup.key}`
     : editingExercise
       ? editingExercise.id
-      : `new-${addFormKey}`
+      : mirrorDraft
+        ? `mirror-${mirrorDraft.id}`
+        : `new-${addFormKey}`
   const formTitle =
     formMode === "rename"
       ? t("training.renameExercise")
@@ -359,13 +500,17 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
                         ok = true
                       }
                     }
-                    if (ok) closeForm()
+                    if (ok) {
+                      if (mirrorDraft) consumeMirrorId(mirrorDraft.id)
+                      closeForm()
+                    }
                   } else {
                     if (data.id) {
                       updateExercise(selectedDate, { ...data, id: data.id })
                     } else {
                       addExerciseToDate(selectedDate, data)
                     }
+                    if (mirrorDraft) consumeMirrorId(mirrorDraft.id)
                     refresh()
                     closeForm()
                   }
@@ -493,7 +638,7 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
           </div>
         )}
 
-        {!apiLoading && exercises.length === 0 && !showForm && (
+        {!apiLoading && exercises.length === 0 && mirrorGroups.length === 0 && !showForm && (
           <div className="bg-card rounded-[32px] px-8 py-9 card-shadow text-center">
             <BicepStatic className="h-12 w-12 mx-auto mb-5 text-muted-foreground/25" />
             <p className="text-[17px] font-semibold tracking-tight text-foreground">{emptyTitle}</p>
@@ -620,6 +765,23 @@ export function TrainingView({ onUpdate, onAddPanelChange }: TrainingViewProps) 
             )
           })}
         </div>
+        )}
+
+        {/* Rutina del mismo día de la semana anterior — placeholder, aún sin guardar */}
+        {!apiLoading && mirror && mirrorGroups.length > 0 && !showForm && (
+          <div className={exercises.length > 0 ? "mt-4" : ""}>
+            <TrainingMirrorCard
+              groups={mirrorGroups}
+              sourceDate={mirror.sourceDate}
+              targetDate={selectedDate}
+              disabled={!subActive}
+              pendingKeys={mirrorPendingKeys}
+              addAllPending={mirrorAddAllPending}
+              onAccept={(group) => void handleAcceptMirrorGroup(group)}
+              onAcceptAll={() => void handleAcceptMirrorAll()}
+              onEdit={openMirrorDraft}
+            />
+          </div>
         )}
       </div>
 
